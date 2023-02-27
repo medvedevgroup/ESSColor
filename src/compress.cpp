@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <iostream>
 #include<sstream>
-#include "BooPHF.h"
+
 using namespace std;
 using namespace sdsl;
 
@@ -234,73 +234,6 @@ namespace CMPH{
 }
 using namespace CMPH;
 
-
-namespace BPHF{
-
-    typedef boomphf::SingleHashFunctor<uint64_t>  hasher_t;
-    typedef boomphf::mphf<  uint64_t, hasher_t  > boophf_t;
-		 boophf_t * bphf; 
-    // void construct_bphf_table( int *& data, int nelem, boophf_t * &bphf ){
-    //     int nthreads = 8;
-    //     double t_begin,t_end; struct timeval timet;
-    //     printf("Construct a BooPHF with  %lli elements  \n",nelem);
-    //     gettimeofday(&timet, NULL); t_begin = timet.tv_sec +(timet.tv_usec/1000000.0);
-    //     auto data_iterator = boomphf::range(static_cast<const int*>(data), static_cast<const int*>(data+nelem));
-    //     double gammaFactor = 7.0; // lowest bit/elem is achieved with gamma=1, higher values lead to larger mphf but faster construction/query
-    //     bphf = new boomphf::mphf<int,hasher_t>(nelem,data_iterator,nthreads,gammaFactor);
-    //     gettimeofday(&timet, NULL); t_end = timet.tv_sec +(timet.tv_usec/1000000.0);	
-    //     printf("BooPHF constructed perfect hash for %llu keys in %.2fs\n", nelem,t_end - t_begin);
-    // }
-
-	void create_table(string filename, int nelem ){
-		InputFile infile(filename);
-		uint64_t* data = (uint64_t * ) calloc(nelem,sizeof(uint64_t));
-		string bv_line;
-		int i = 0;
-		while (getline(infile.fs,bv_line )){
-			data[i++] = std::stoull(bv_line, nullptr, 2) ;
-		}
-		int nthreads = 8;
-        //double t_begin,t_end; struct timeval timet;
-        printf("Construct a BooPHF with  %lli elements  \n",nelem);
-        //gettimeofday(&timet, NULL); t_begin = timet.tv_sec +(timet.tv_usec/1000000.0);
-        auto data_iterator = boomphf::range(static_cast<const uint64_t*>(data), static_cast<const uint64_t*>(data+nelem));
-        double gammaFactor = 7.0; // lowest bit/elem is achieved with gamma=1, higher values lead to larger mphf but faster construction/query
-        bphf = new boomphf::mphf<uint64_t,hasher_t>(nelem,data_iterator,nthreads,gammaFactor);
-        
-		//gettimeofday(&timet, NULL); t_end = timet.tv_sec +(timet.tv_usec/1000000.0);	
-        //printf("BooPHF constructed perfect hash for %llu keys in %.2fs\n", nelem,t_end - t_begin);
-	}
-
-	unsigned int lookup(string str){	
-		return bphf->lookup(std::stoull(str, nullptr, 2));
-	}
-
-	void mphf_destroy(){
-		delete bphf;
-	}
-}   
-//using namespace BPHF; 
-
-//sort -T=~/s/tmp/ export TMPDIR=/tmp
-//position uint64_t
-
-
-	// uint64_t write_block(int block_sz, uint8_t category, int value, vector<int>& positions){
-	// 	uint64_t b_it = 0;
-	// 	write_number_at_loc(positions, num, block_size, b_it);
-
-	// 	//write category
-	// 	if(category==0){ //either log M or log U
-	// 		write_number_at_loc(positions, category, 1, b_it);
-	// 	}else if(category==1){ //log C 
-	// 		write_number_at_loc(positions, category, 2, b_it);
-	// 	}if(category==2){ // RUN of 1
-	// 		write_number_at_loc(positions, category, 2, b_it);
-			
-	// 	}
-	// 	return b_it; // at the end b_it equals size of vector
-	// }
 
 typedef std::vector<bool> HuffCode;
 typedef std::map<u_int32_t, HuffCode> HuffCodeMap;

@@ -1,5 +1,5 @@
 //version: feb 6:pausing the combo
-#include<cmph.h> //#include "BooPHF.h"
+#include <cmph.h> //#include "BooPHF.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -10,17 +10,16 @@
 #include <fstream>
 #include <algorithm>
 #include <sdsl/bit_vectors.hpp>
-#include<unordered_map>
-#include<sstream>
-#include<string>
+#include <unordered_map>
+#include <sstream>
+#include <string>
 #include <queue>
 #include <map>
 #include <climits> // for u_int32_t_BIT
 #include <iterator>
 #include <algorithm>
 #include <iostream>
-#include<sstream>
-#include "BooPHF.h"
+#include <sstream>
 using namespace std;
 using namespace sdsl;
 
