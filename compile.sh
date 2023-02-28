@@ -28,6 +28,6 @@ if [ ! -d lib/cmph-2.0.2 ]; then
 fi
 
 # Compilation
-cmake . && make
+cmake . && make -j
 
 cd $CALL_DIR
