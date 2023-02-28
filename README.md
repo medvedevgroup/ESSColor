@@ -10,7 +10,7 @@ ESS-Color is a bioinformatics tool for constructing compressed representation of
 - GCC >= 4.8 or a C++11 capable compiler
 - Snakemake
 - Git
-- CMake 3.1+
+- CMake 3.12+
 - [ESSCompress](https://github.com/medvedevgroup/ESSCompress)
 - [joinCounts](https://github.com/Transipedia/dekupl-joinCounts)
 - [KMC](https://github.com/refresh-bio/KMC)
@@ -20,8 +20,8 @@ ESS-Color is a bioinformatics tool for constructing compressed representation of
 
 First, install all the pre-requisites and make sure the executables are in your `PATH`. Then, install additional executables from source:
 
-    git clone https://github.com/amatur/ess-color
-    cd ess-color
+    git clone https://github.com/amatur/ESSColor
+    cd ESSColor
     bash compile.sh
     
 You can move/copy ALL the executables in `ess-color/bin` to the bin directory that is already in your PATH. For instance, considering `/usr/bin` is already in PATH, you need to run the command `mv ess-color/bin/* /usr/bin` to move all executables for ESS-Color software. An alternative to moving/copying executables is adding the location of `ess-color/bin` to your PATH.
