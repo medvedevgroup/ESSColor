@@ -10,7 +10,7 @@ ESS-Color is a bioinformatics tool for constructing compressed representation of
 - GCC >= 4.8 or a C++11 capable compiler
 - Snakemake
 - Git
-- CMake 3.1+
+- CMake 3.12+
 - [ESSCompress](https://github.com/medvedevgroup/ESSCompress)
 - [joinCounts](https://github.com/Transipedia/dekupl-joinCounts)
 - [KMC](https://github.com/refresh-bio/KMC)
@@ -35,7 +35,7 @@ After compiling, set up the `config.yaml`. Change to the directory and use [TODO
     
     
 
-## Example to test compression and decompression 
+## Example to test compression and decompression
     
 `cd example/mini_k18c4m7/`  
 

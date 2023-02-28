@@ -1,0 +1,13 @@
+# CMake related
+**/CMakeFiles/
+**/CMakeCache.txt
+**/*.cmake
+**/Makefile
+
+# lib related
+lib/cmph*
+
+# Project related
+**/compress
+**/decompress
+**/kmerlist
