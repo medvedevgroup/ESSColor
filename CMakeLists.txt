@@ -18,6 +18,8 @@ set(CMAKE_CXX_FLAGS "-Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Ofast")
 set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
 # declare libraries
 add_subdirectory(lib)
 
