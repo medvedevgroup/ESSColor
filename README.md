@@ -20,7 +20,7 @@ ESS-Color is a bioinformatics tool for constructing compressed representation of
 
 First, install all the pre-requisites and make sure the executables are in your `PATH`. Then, install additional executables from source:
 
-    git clone https://github.com/amatur/ESSColor
+    git clone https://github.com/medvedevgroup/ESSColor.git
     cd ESSColor
     bash compile.sh
     
