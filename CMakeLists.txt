@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.12)
+# 3.16: Oldest CMake version present on Ubuntu LTS
+cmake_minimum_required(VERSION 3.16)
 
 # set the project name
 project(ESSColor)
@@ -30,5 +31,5 @@ add_executable(compress src/compress.cpp)
 add_executable(decompress src/decompress.cpp)
 
 # link libraries
-target_link_libraries(compress cmph_lib sdsl)
+target_link_libraries(compress cmph_lib sdsl kmcapi)
 target_link_libraries(decompress cmph_lib sdsl)

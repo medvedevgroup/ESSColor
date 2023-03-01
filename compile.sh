@@ -11,13 +11,16 @@ git submodule update
 
 # Prepare SDSL for compilation
 cd lib/sdsl
-sed -i "s/cmake_minimum_required.*/cmake_minimum_required(VERSION 3.12)/g" CMakeLists.txt
+sed -i "s/cmake_minimum_required.*/cmake_minimum_required(VERSION 3.16)/g" CMakeLists.txt
 git submodule init
 git submodule update
-sed -i "s/cmake_minimum_required.*/cmake_minimum_required(VERSION 3.12)/g" external/libdivsufsort/CMakeLists.txt
-sed -i "s/cmake_minimum_required.*/cmake_minimum_required(VERSION 3.12)/g" external/googletest/CMakeLists.txt
-sed -i "s/cmake_minimum_required.*/cmake_minimum_required(VERSION 3.12)/g" external/googletest/googletest/CMakeLists.txt
+sed -i "s/cmake_minimum_required.*/cmake_minimum_required(VERSION 3.16)/g" external/libdivsufsort/CMakeLists.txt
+sed -i "s/cmake_minimum_required.*/cmake_minimum_required(VERSION 3.16)/g" external/googletest/CMakeLists.txt
+sed -i "s/cmake_minimum_required.*/cmake_minimum_required(VERSION 3.16)/g" external/googletest/googletest/CMakeLists.txt
 cd -
+
+# Prepare KMC for compilation
+cp lib/CMakeLists_kmc.txt lib/KMC/kmc_api/CMakeLists.txt
 
 # cmph 2.0.2 dowload
 if [ ! -d lib/cmph-2.0.2 ]; then
