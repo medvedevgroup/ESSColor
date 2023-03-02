@@ -29,7 +29,9 @@ add_subdirectory(lib)
 add_executable(kmerlist src/kmerlist.cpp)
 add_executable(compress src/compress.cpp)
 add_executable(decompress src/decompress.cpp)
+add_executable(genmatrix src/colormatrix.cpp)
 
 # link libraries
-target_link_libraries(compress cmph_lib sdsl kmcapi)
+target_link_libraries(compress cmph_lib sdsl)
 target_link_libraries(decompress cmph_lib sdsl)
+target_link_libraries(genmatrix kmcapi)
