@@ -123,8 +123,15 @@ public:
  **/
 void merge_colors(vector<uint64_t> & colors, const vector<uint64_t> to_merge, size_t first_idx, size_t size)
 {
+	// already used bits from the last uint64_t of colors
+	size_t to_merge_idx = 0;
+
+	if (first_idx % 64 == 0)
+		colors.push_back(0);
+
 	while (size > 0)
 	{
+		// Merge the vector one uint64_t at a time
 		// TODO
 	}
 }
