@@ -62,7 +62,10 @@ public:
 
 	KmerMatrix() : num_datasets(0) {};
 
-	void add_dataset (vector<uint64_t> kmers)
+	/** Add a sorted kmer list to the matrix. Will add 1 bit in each color row and insert absent kmers in the matrix
+	 * @param kmers sorted list of kmers
+	 **/
+	void add_dataset (vector<uint64_t> dataset)
 	{
 		// Verify colors overflow
 		if (num_datasets % 64 == 0)
@@ -74,8 +77,43 @@ public:
 			}
 		}
 
+		// Reserve memory for the merge
+		size_t expected_kmers = this->kmers.size() + dataset.size();
+		vector<uint64_t> new_kmers;
+		vector<vector<uint64_t> > new_colors;
+		new_kmers.reserve(expected_kmers);
+		new_colors.reserve(expected_kmers);
+
 		// Add the kmers from the dataset using a sorted list fusion procedure
 		size_t row_idx=0, dataset_idx=0;
+		while(row_idx < this->kmers.size() and dataset_idx < dataset.size())
+		{
+			if (this->kmers[row_idx] < dataset[dataset_idx])
+			{
+				new_kmers = this->kmers[row_idx];
+				new_colors = this->colors[row_idx];
+				row_idx += 1;
+			}
+			else if (this->kmers[row_idx] == dataset[dataset_idx])
+			{
+				new_kmers = this->kmers[row_idx];
+				new_colors = this->colors[row_idx];
+				new_colors[new_colors.size() - 1][num_datasets / 64] = 1 << (num_datasets % 64);
+				row_idx += 1;
+				dataset_idx += 1;
+			}
+			else
+			{
+				// TODO
+			}
+		}
+
+		// Add the last values
+		//TODO
+
+		// Replace previous vectors
+		this->kmers = new_kmers;
+		this->colors = new_colors;
 	};
 };
 
