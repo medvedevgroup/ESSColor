@@ -123,16 +123,37 @@ public:
  **/
 void merge_colors(vector<uint64_t> & colors, const vector<uint64_t> to_merge, size_t first_idx, size_t size)
 {
-	// already used bits from the last uint64_t of colors
+	assert(first_idx != 0);
+
+	size_t colors_idx = (first_idx - 1) / 64;
 	size_t to_merge_idx = 0;
 
-	if (first_idx % 64 == 0)
-		colors.push_back(0);
+	// occupied bits from the last uint64_t of colors
+	const uint64_t occupied_bits = ((first_idx - 1) % 64) + 1;
+	const uint64_t free_bits = 64 - occupied_bits;
+	const uint64_t first_half_mask = occupied_bits == 64 ? 0 : (1 << free_bits) - 1;
+	const uint64_t second_half_mask = ~first_half_mask;
 
+	// Merge the vector one uint64_t at a time
 	while (size > 0)
 	{
-		// Merge the vector one uint64_t at a time
-		// TODO
+		// Extract the first part of the current merged uint
+		uint64_t first_half = to_merge[to_merge_idx] & first_half_mask;
+		// Insert the first half in the current color uint
+		colors[colors_idx] |= first_half << occupied_bits;
+
+		size -= min(size, free_bits);
+		if (size == 0)
+			break;
+		colors_idx += 1;
+
+		// Extract the last part of the current to_merge uint
+		uint64_t second_half = to_merge[to_merge_idx] & second_half_mask;
+		second_half >>= free_bits;
+		colors.push_back(second_half);
+
+		size -= min(size, occupied_bits);
+		to_merge_idx += 1;
 	}
 }
 
@@ -175,6 +196,54 @@ vector<uint64_t> load_from_file(string db_path)
 
 	return kmers;
 }
+
+
+/** This class is made to amortize mergings. We do not want to merge each new dataset directly.
+ * Merging process is efficient on random distributions when both list have similar sizes.
+ * So, this object keep an ordered list of matricies to merge. When a matrice at a position x has a similar number of rows that x+1, a merge opperation is triggered. If needed, this operation is cascaded.
+ * When all the datasets are present in this structure, a forced cascading merge has to be performed.
+ **/
+class CascadingMergingMatrix
+{
+public:
+	vector<KmerMatrix> matricies;
+	float trigger_ratio;
+
+	CascadingMergingMatrix(float trigger_ratio) : trigger_ratio(trigger_ratio) {};
+
+	void add_matrix(KmerMatrix & matrix)
+	{
+		this->matricies.push_back(matrix);
+		this->cascade_merging();
+	};
+
+	void cascade_merging()
+	{
+		while (true)
+		{
+			// No merging for 0 or 1 matrix
+			if (this->matricies.size() < 2)
+				return;
+
+			// Only cascade on proper trigger ratio
+			size_t n = this->matricies.size();
+			if (this->matricies[n-1].kmers.size() < this->trigger_ratio * this->matricies[n-2].kmers.size())
+				return;
+
+			this->matricies[n-2].merge(this->matricies[n-1]);
+			this->matricies.pop_back();
+		}
+	};
+
+	void force_merging()
+	{
+		for (size_t n(this->matricies.size()) ; n > 1 ; n--)
+		{
+			this->matricies[n-2].merge(this->matricies[n-1]);
+			this->matricies.pop_back();
+		}
+	};
+};
 
 
 int main(int argc, char const *argv[])
