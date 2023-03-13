@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <algorithm>
 
@@ -30,6 +31,49 @@ KmerMatrix& KmerMatrix::operator=(KmerMatrix&& other)
 
 	return *this;
 };
+
+void KmerMatrix::to_color_string_file(const std::string& outfile)
+{
+	ofstream out(outfile);
+
+	for (const vector<uint64_t>& colors_vector : this->colors)
+	{
+		for (uint64_t idx(0) ; idx<this->num_datasets ; idx++)
+		{
+			uint64_t subvector = colors_vector[idx/64];
+			uint64_t color = (subvector >> (idx % 64)) & 0b1;
+			out << (color == 0 ? '0' : '1');
+		}
+		out << endl;
+	}
+
+	out.close();
+}
+
+
+void KmerMatrix::to_color_binary_file(const std::string& outfile)
+{
+	ofstream out(outfile, ios::out | ios::binary);
+
+	for (const vector<uint64_t>& colors_vector : this->colors)
+	{
+		uint8_t array[8];
+		for (const uint64_t color_subvector : colors_vector)
+		{
+			array[0] =  color_subvector        & 0xFF;
+			array[1] = (color_subvector >>  8) & 0xFF;
+			array[2] = (color_subvector >> 16) & 0xFF;
+			array[3] = (color_subvector >> 24) & 0xFF;
+			array[4] = (color_subvector >> 32) & 0xFF;
+			array[5] = (color_subvector >> 40) & 0xFF;
+			array[6] = (color_subvector >> 48) & 0xFF;
+			array[7] = (color_subvector >> 56) & 0xFF;
+		}
+		out.write((char *)array, 8);
+	}
+
+	out.close();
+}
 
 /** Add a sorted kmer list to the matrix. Will add 1 bit in each color row and insert absent kmers in the matrix
  * @param kmers sorted list of kmers
@@ -164,7 +208,7 @@ void merge_colors(vector<uint64_t> & colors, const vector<uint64_t> to_merge, si
  * @param db_path path to kmer database
  * @return Sorted list of kmers (lexicographic order)
  **/
-vector<uint64_t> load_from_file(string db_path)
+vector<uint64_t> load_from_file(const string db_path)
 {
 	vector<uint64_t> kmers;
 
@@ -173,7 +217,7 @@ vector<uint64_t> load_from_file(string db_path)
 	if (!db.OpenForListing(db_path))
 	{
 		cerr << "Impossible to open DB " << db_path << endl;
-		exit(ERROR_DBIO);
+		exit(DBIO_ERROR);
 	}
 
 	// Get the metadata from the database
@@ -235,4 +279,9 @@ void CascadingMergingMatrix::force_merging()
 	}
 };
 
+KmerMatrix& CascadingMergingMatrix::get_matrix()
+{
+	this->force_merging();
+	return this->matricies[0];
+};
 

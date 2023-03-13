@@ -5,7 +5,8 @@
 #include "kmc_file.h"
 
 
-#define ERROR_DBIO 11
+#define DBIO_ERROR 10
+#define OUTPUT_ERROR 11
 
 
 class KmerMatrix
@@ -23,6 +24,15 @@ public:
 	 * @param kmers sorted list of kmers
 	 **/
 	void merge (const KmerMatrix & other);
+
+	/** Generate a color matrix in binary format. Each row is composed of a multiple of 64 bits (the minimum needed to store all the datasets from the matrix).
+	 * @param outfile The filme where the matrix will be written
+	 **/
+	void to_color_binary_file(const std::string& outfile);
+	/** Generate a color matrix in textual format. Should only be used for debug only. The process is very slow. In normal usage, please use the binary version.
+	 * @param outfile The filme where the matrix will be written
+	 **/
+	void to_color_string_file(const std::string& outfile);
 };
 
 
@@ -38,7 +48,7 @@ void merge_colors(std::vector<uint64_t> & colors, const std::vector<uint64_t> to
  * @param db_path path to kmer database
  * @return Sorted list of kmers (lexicographic order)
  **/
-std::vector<uint64_t> load_from_file(std::string db_path);
+std::vector<uint64_t> load_from_file(const std::string db_path);
 
 
 /** This class is made to amortize mergings. We do not want to merge each new dataset directly.
@@ -58,5 +68,5 @@ private:
 public:
 	CascadingMergingMatrix(float trigger_ratio);
 	void add_matrix(KmerMatrix & matrix);
-	KmerMatrix get_matrix();
+	KmerMatrix& get_matrix();
 };

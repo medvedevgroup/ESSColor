@@ -7,6 +7,8 @@
 
 #include "colormatrix.hpp"
 
+using namespace std;
+
 
 #define OPT_PARSING_ERROR 01
 #define DB_LIST_ERROR 02
@@ -14,11 +16,11 @@
 
 
 
-bool test_mandatory_option(const cxxopts::ParseResult& res, const std::string& opt)
+bool test_mandatory_option(const cxxopts::ParseResult& res, const string& opt)
 {
 	if (res.count(opt) == 0) {
-		std::cerr << opt << " missing option" << std::endl;
-		std::cerr << "cmd: genmatrix -c <bd_list.txt>" << std::endl;
+		cerr << opt << " missing option" << endl;
+		cerr << "cmd: genmatrix -c <bd_list.txt>" << endl;
 		return false;
 	}
 	return true;
@@ -30,13 +32,17 @@ cxxopts::ParseResult parse_args(int argc, char const *argv[])
 	cxxopts::Options options("genmatrix", "Generates a kmer color matrix from a list of KMC databases. The outputed matrix has one column per database (in the same order that the input list). The rows of the matrix are kmers. The order of the kmers is the same than the KMC order");
 
 	options.add_options()
-		("c,count-list", "[Mandatory] Path to KMC database files. One line per database", cxxopts::value<std::string>())
+		("c,count-list", "[Mandatory] Path to KMC database files. One line per database", cxxopts::value<string>())
 		("d,debug-verif", "Debug flag to verify if the output coresponds to the input (Time consuming).", cxxopts::value<bool>()->default_value("false"))
+		("o,outmatrix", "[Mandatory] Path to the output color matrix", cxxopts::value<string>())
+		("s,strout", "String output", cxxopts::value<bool>()->default_value("false"))
 		;
 
 	cxxopts::ParseResult res = options.parse(argc, argv);
-	if (not test_mandatory_option(res, "count-list")) {
-		std::cerr << std::endl << options.help() << std::endl;
+	if ((not test_mandatory_option(res, "count-list"))
+		or (not test_mandatory_option(res, "outmatrix"))
+	) {
+		cerr << endl << options.help() << endl;
 		exit(OPT_PARSING_ERROR);
 	}
 
@@ -44,24 +50,24 @@ cxxopts::ParseResult parse_args(int argc, char const *argv[])
 }
 
 
-std::vector<std::string> get_databases(const std::string& list_file)
+vector<string> get_databases(const string& list_file)
 {
-	std::vector<std::string> db_list;
+	vector<string> db_list;
 
-	std::ifstream file(list_file);
+	ifstream file(list_file);
 	if (file.is_open())
 	{
-	    std::string line;
-	    while (std::getline(file, line)) {
-	    	if (line.length() > 0)
-		        std::cout <<  line << std::endl;
+	    string line;
+	    while (getline(file, line)) {
+	    	if (line.length() > 0 and line[0] != '#')
+		        db_list.push_back(line);
 	    }
 	    file.close();
 	}
 	// No file list opened
 	else
 	{
-		std::cerr << "File " << list_file << " cannot be opened. Please verify the path." << std::endl;
+		cerr << "File " << list_file << " cannot be opened. Please verify the path." << endl;
 		exit(DB_LIST_ERROR);
 	}
 
@@ -72,13 +78,24 @@ std::vector<std::string> get_databases(const std::string& list_file)
 int main(int argc, char const *argv[])
 {
 	auto args = parse_args(argc, argv);
-	std::vector<std::string> db_list = get_databases(args["count-list"].as<std::string>());
+	vector<string> db_list = get_databases(args["count-list"].as<string>());
 
-	std::string db_name("data/sarscov2_k31");
-	std::vector<uint64_t> kmers = load_from_file(db_name);
+	CascadingMergingMatrix cmm(0.9);
 
-	// for (uint64_t kmer : kmers)
-	// 	std::cout << kmer << std::endl;
+	// For each file, add it to the cascading matrix constructor
+	for (const string& db_name : db_list)
+	{
+		vector<uint64_t> kmers = load_from_file(db_name);
+		KmerMatrix matrix(kmers);
+		cmm.add_matrix(matrix);
+	}
+
+	// Get the final matrix after the merging
+	KmerMatrix& final_matrix = cmm.get_matrix();
+	if (args["strout"].as<bool>())
+		final_matrix.to_color_string_file(args["outmatrix"].as<string>());
+	else
+		final_matrix.to_color_binary_file(args["outmatrix"].as<string>());
 
 	return 0;
 }
