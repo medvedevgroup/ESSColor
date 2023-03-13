@@ -3,115 +3,121 @@
 #include <algorithm>
 
 #include "kmc_file.h"
+#include "colormatrix.hpp"
 
 using namespace std;
 
 
 #define ERROR_DBIO 1
 
-vector<uint64_t> load_from_file(string db_path);
-void merge_colors(vector<uint64_t> & colors, const vector<uint64_t> to_merge, size_t first_idx, size_t size);
 
-
-
-class KmerMatrix
+KmerMatrix::KmerMatrix(vector<uint64_t> & dataset) : num_datasets(1)
 {
-public:
-	size_t num_datasets;
-	vector<uint64_t> kmers;
-	vector<vector<uint64_t> > colors;
+	this->kmers = dataset;
+	this->colors.resize(dataset.size(), vector<uint64_t>(1, 1));
+};
 
-	KmerMatrix(vector<uint64_t> & dataset) : num_datasets(1)
+KmerMatrix::KmerMatrix(KmerMatrix && other)
+{
+	this->num_datasets = other.num_datasets;
+	this->kmers = std::move(other.kmers);
+	this->colors = std::move(other.colors);
+};
+
+KmerMatrix& KmerMatrix::operator=(KmerMatrix&& other)
+{
+
+	this->num_datasets = other.num_datasets;
+	this->kmers = std::move(other.kmers);
+	this->colors = std::move(other.colors);
+
+	return *this;
+};
+
+/** Add a sorted kmer list to the matrix. Will add 1 bit in each color row and insert absent kmers in the matrix
+ * @param kmers sorted list of kmers
+ **/
+void KmerMatrix::merge (const KmerMatrix & other)
+{
+	// Reserve memory for the merge
+	size_t max_expected_kmers = this->kmers.size() + other.kmers.size();
+	vector<uint64_t> new_kmers;
+	vector<vector<uint64_t> > new_colors;
+	new_kmers.reserve(max_expected_kmers);
+	new_colors.reserve(max_expected_kmers);
+	size_t new_idx = 0;
+
+	// Add the kmers from the dataset using a sorted list fusion procedure
+	size_t my_idx = 0, other_idx = 0;
+	size_t my_color_size = this->colors[0].size();
+	size_t other_color_size = other.colors[0].size();
+	while(my_idx < this->kmers.size() and other_idx < other.kmers.size())
 	{
-		this->kmers = dataset;
-		this->colors.resize(dataset.size(), vector<uint64_t>(1, 1));
-	};
-
-	/** Add a sorted kmer list to the matrix. Will add 1 bit in each color row and insert absent kmers in the matrix
-	 * @param kmers sorted list of kmers
-	 **/
-	void merge (const KmerMatrix & other)
-	{
-		// Reserve memory for the merge
-		size_t max_expected_kmers = this->kmers.size() + other.kmers.size();
-		vector<uint64_t> new_kmers;
-		vector<vector<uint64_t> > new_colors;
-		new_kmers.reserve(max_expected_kmers);
-		new_colors.reserve(max_expected_kmers);
-		size_t new_idx = 0;
-
-		// Add the kmers from the dataset using a sorted list fusion procedure
-		size_t my_idx = 0, other_idx = 0;
-		size_t my_color_size = this->colors[0].size();
-		size_t other_color_size = other.colors[0].size();
-		while(my_idx < this->kmers.size() and other_idx < other.kmers.size())
+		if (this->kmers[my_idx] < other.kmers[other_idx])
 		{
-			if (this->kmers[my_idx] < other.kmers[other_idx])
-			{
-				new_kmers.push_back(this->kmers[my_idx]);
-				new_colors.push_back(this->colors[my_idx]);
-				merge_colors(
-					new_colors[new_colors.size()-1],
-					vector<uint64_t>(other_color_size, 0),
-					this->num_datasets, other.num_datasets
-				);
-				my_idx += 1;
-			}
-			else if (this->kmers[my_idx] > other.kmers[other_idx])
-			{
-				new_kmers.push_back(other.kmers[other_idx]);
-				new_colors.push_back(vector<uint64_t>(my_color_size, 0));
-				merge_colors(
-					new_colors[new_colors.size()-1],
-					other.colors[other_idx],
-					this->num_datasets, other.num_datasets
-				);
-				other_idx += 1;
-			}
-			else
-			{
-				new_kmers.push_back(this->kmers[my_idx]);
-				new_colors.push_back(this->colors[my_idx]);
-				merge_colors(
-					new_colors[new_colors.size()-1],
-					other.colors[other_idx],
-					this->num_datasets, other.num_datasets
-				);
-				my_idx += 1;
-				other_idx += 1;
-			}
-
-			new_idx += 1;
-		}
-
-		// Add the last values
-		for (size_t idx=my_idx ; idx<this->kmers.size() ; idx++)
-		{
-			new_kmers.push_back(this->kmers[idx]);
-			new_colors.push_back(this->colors[idx]);
+			new_kmers.push_back(this->kmers[my_idx]);
+			new_colors.push_back(this->colors[my_idx]);
 			merge_colors(
 				new_colors[new_colors.size()-1],
 				vector<uint64_t>(other_color_size, 0),
 				this->num_datasets, other.num_datasets
 			);
+			my_idx += 1;
 		}
-		for (size_t idx=other_idx ; idx<other.kmers.size() ; idx++)
+		else if (this->kmers[my_idx] > other.kmers[other_idx])
 		{
-			new_kmers.push_back(other.kmers[idx]);
+			new_kmers.push_back(other.kmers[other_idx]);
 			new_colors.push_back(vector<uint64_t>(my_color_size, 0));
 			merge_colors(
 				new_colors[new_colors.size()-1],
-				other.colors[idx],
+				other.colors[other_idx],
 				this->num_datasets, other.num_datasets
 			);
 			other_idx += 1;
 		}
+		else
+		{
+			new_kmers.push_back(this->kmers[my_idx]);
+			new_colors.push_back(this->colors[my_idx]);
+			merge_colors(
+				new_colors[new_colors.size()-1],
+				other.colors[other_idx],
+				this->num_datasets, other.num_datasets
+			);
+			my_idx += 1;
+			other_idx += 1;
+		}
 
-		// Replace previous vectors
-		this->kmers = new_kmers;
-		this->colors = new_colors;
-		this->num_datasets += other.num_datasets;
-	};
+		new_idx += 1;
+	}
+
+	// Add the last values
+	for (size_t idx=my_idx ; idx<this->kmers.size() ; idx++)
+	{
+		new_kmers.push_back(this->kmers[idx]);
+		new_colors.push_back(this->colors[idx]);
+		merge_colors(
+			new_colors[new_colors.size()-1],
+			vector<uint64_t>(other_color_size, 0),
+			this->num_datasets, other.num_datasets
+		);
+	}
+	for (size_t idx=other_idx ; idx<other.kmers.size() ; idx++)
+	{
+		new_kmers.push_back(other.kmers[idx]);
+		new_colors.push_back(vector<uint64_t>(my_color_size, 0));
+		merge_colors(
+			new_colors[new_colors.size()-1],
+			other.colors[idx],
+			this->num_datasets, other.num_datasets
+		);
+		other_idx += 1;
+	}
+
+	// Replace previous vectors
+	this->kmers = new_kmers;
+	this->colors = new_colors;
+	this->num_datasets += other.num_datasets;
 };
 
 
@@ -155,7 +161,7 @@ void merge_colors(vector<uint64_t> & colors, const vector<uint64_t> to_merge, si
 		size -= min(size, occupied_bits);
 		to_merge_idx += 1;
 	}
-}
+};
 
 /** Loads a kmer list from a KMC database and sort the kmers.
  * @param db_path path to kmer database
@@ -195,64 +201,42 @@ vector<uint64_t> load_from_file(string db_path)
 	sort(kmers.begin(), kmers.end());
 
 	return kmers;
-}
-
-
-/** This class is made to amortize mergings. We do not want to merge each new dataset directly.
- * Merging process is efficient on random distributions when both list have similar sizes.
- * So, this object keep an ordered list of matricies to merge. When a matrice at a position x has a similar number of rows that x+1, a merge opperation is triggered. If needed, this operation is cascaded.
- * When all the datasets are present in this structure, a forced cascading merge has to be performed.
- **/
-class CascadingMergingMatrix
-{
-public:
-	vector<KmerMatrix> matricies;
-	float trigger_ratio;
-
-	CascadingMergingMatrix(float trigger_ratio) : trigger_ratio(trigger_ratio) {};
-
-	void add_matrix(KmerMatrix & matrix)
-	{
-		this->matricies.push_back(matrix);
-		this->cascade_merging();
-	};
-
-	void cascade_merging()
-	{
-		while (true)
-		{
-			// No merging for 0 or 1 matrix
-			if (this->matricies.size() < 2)
-				return;
-
-			// Only cascade on proper trigger ratio
-			size_t n = this->matricies.size();
-			if (this->matricies[n-1].kmers.size() < this->trigger_ratio * this->matricies[n-2].kmers.size())
-				return;
-
-			this->matricies[n-2].merge(this->matricies[n-1]);
-			this->matricies.pop_back();
-		}
-	};
-
-	void force_merging()
-	{
-		for (size_t n(this->matricies.size()) ; n > 1 ; n--)
-		{
-			this->matricies[n-2].merge(this->matricies[n-1]);
-			this->matricies.pop_back();
-		}
-	};
 };
 
 
-int main(int argc, char const *argv[])
+CascadingMergingMatrix::CascadingMergingMatrix(float trigger_ratio) : trigger_ratio(trigger_ratio) {};
+
+void CascadingMergingMatrix::add_matrix(KmerMatrix & matrix)
 {
-	string db_name("data/sarscov2_k31");
-	vector<uint64_t> kmers = load_from_file(db_name);
+	this->matricies.push_back(move(matrix));
+	this->cascade_merging();
+};
 
-	for (uint64_t kmer : kmers)
-		cout << kmer << endl;
+void CascadingMergingMatrix::cascade_merging()
+{
+	while (true)
+	{
+		// No merging for 0 or 1 matrix
+		if (this->matricies.size() < 2)
+			return;
 
-	return 0;
-}
+		// Only cascade on proper trigger ratio
+		size_t n = this->matricies.size();
+		if (this->matricies[n-1].kmers.size() < this->trigger_ratio * this->matricies[n-2].kmers.size())
+			return;
+
+		this->matricies[n-2].merge(this->matricies[n-1]);
+		this->matricies.pop_back();
+	}
+};
+
+void CascadingMergingMatrix::force_merging()
+{
+	for (size_t n(this->matricies.size()) ; n > 1 ; n--)
+	{
+		this->matricies[n-2].merge(this->matricies[n-1]);
+		this->matricies.pop_back();
+	}
+};
+
+

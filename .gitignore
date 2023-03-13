@@ -3,6 +3,7 @@
 **/CMakeCache.txt
 **/*.cmake
 **/Makefile
+**/*.a
 
 # lib related
 lib/cmph*
@@ -11,3 +12,5 @@ lib/cmph*
 **/compress
 **/decompress
 **/kmerlist
+**/genmatrix
+data/
