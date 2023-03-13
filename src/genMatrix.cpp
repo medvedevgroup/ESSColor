@@ -53,7 +53,8 @@ std::vector<std::string> get_databases(const std::string& list_file)
 	{
 	    std::string line;
 	    while (std::getline(file, line)) {
-	        std::cout <<  line << std::endl;
+	    	if (line.length() > 0)
+		        std::cout <<  line << std::endl;
 	    }
 	    file.close();
 	}
