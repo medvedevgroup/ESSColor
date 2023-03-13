@@ -4,3 +4,6 @@
 [submodule "lib/KMC"]
 	path = lib/KMC
 	url = https://github.com/refresh-bio/KMC.git
+[submodule "lib/cxxopts"]
+	path = lib/cxxopts
+	url = https://github.com/jarro2783/cxxopts.git

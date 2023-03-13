@@ -35,4 +35,4 @@ add_executable(genmatrix src/genMatrix.cpp)
 # link libraries
 target_link_libraries(compress cmph_lib sdsl)
 target_link_libraries(decompress cmph_lib sdsl)
-target_link_libraries(genmatrix essc_lib)
+target_link_libraries(genmatrix essc_lib cxxopts)

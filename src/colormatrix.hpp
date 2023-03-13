@@ -4,20 +4,18 @@
 
 #include "kmc_file.h"
 
-using namespace std;
 
-
-#define ERROR_DBIO 1
+#define ERROR_DBIO 11
 
 
 class KmerMatrix
 {
 public:
 	size_t num_datasets;
-	vector<uint64_t> kmers;
-	vector<vector<uint64_t> > colors;
+	std::vector<uint64_t> kmers;
+	std::vector<std::vector<uint64_t> > colors;
 
-	KmerMatrix(vector<uint64_t> & dataset);
+	KmerMatrix(std::vector<uint64_t> & dataset);
 	KmerMatrix(KmerMatrix && other);
 	KmerMatrix& operator=(KmerMatrix&& other);
 
@@ -34,13 +32,13 @@ public:
  * @param first_index The first bit of colors where to_merge will be inserted.
  * @param size Size of the insertion (in bits)
  **/
-void merge_colors(vector<uint64_t> & colors, const vector<uint64_t> to_merge, size_t first_idx, size_t size);
+void merge_colors(std::vector<uint64_t> & colors, const std::vector<uint64_t> to_merge, size_t first_idx, size_t size);
 
 /** Loads a kmer list from a KMC database and sort the kmers.
  * @param db_path path to kmer database
  * @return Sorted list of kmers (lexicographic order)
  **/
-vector<uint64_t> load_from_file(string db_path);
+std::vector<uint64_t> load_from_file(std::string db_path);
 
 
 /** This class is made to amortize mergings. We do not want to merge each new dataset directly.
@@ -52,7 +50,7 @@ class CascadingMergingMatrix
 {
 private:
 	float trigger_ratio;
-	vector<KmerMatrix> matricies;
+	std::vector<KmerMatrix> matricies;
 
 	void cascade_merging();
 	void force_merging();

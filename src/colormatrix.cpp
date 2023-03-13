@@ -8,9 +8,6 @@
 using namespace std;
 
 
-#define ERROR_DBIO 1
-
-
 KmerMatrix::KmerMatrix(vector<uint64_t> & dataset) : num_datasets(1)
 {
 	this->kmers = dataset;
@@ -186,8 +183,7 @@ vector<uint64_t> load_from_file(string db_path)
 	db.Info(_kmer_length, _mode, _counter_size, _lut_prefix_length, _signature_len, _min_count, _max_count, _total_kmers);
 	assert(_kmer_length <= 32);
 	kmers.resize(_total_kmers);
-	cout << _kmer_length << " " << _total_kmers << endl;
-
+	
 	// Load the kmers
 	size_t idx = 0;
 	CKmerAPI kmer(_kmer_length);
