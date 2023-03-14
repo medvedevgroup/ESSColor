@@ -34,3 +34,15 @@ After compiling, set up the `config.yaml`. Change to the directory and use [TODO
 
 
 
+## Command lines
+
+### Color matrix generation
+
+Generates a color matrix from a KMC database list.
+
+    genmatrix [OPTION...]
+    -c, --count-list arg  [Mandatory] Path to KMC database files. One line per database
+    -d, --debug-verif     Debug flag to verify if the output coresponds to the input (Time consuming).
+    -o, --outmatrix arg   [Mandatory] Path to the output color matrix
+    -s, --strout          String output (default is binary)
+

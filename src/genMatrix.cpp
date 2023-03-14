@@ -75,6 +75,12 @@ vector<string> get_databases(const string& list_file)
 }
 
 
+void verif(KmerMatrix & matrix, vector<string> db_list)
+{
+
+}
+
+
 int main(int argc, char const *argv[])
 {
 	auto args = parse_args(argc, argv);
@@ -83,19 +89,28 @@ int main(int argc, char const *argv[])
 	CascadingMergingMatrix cmm(0.9);
 
 	// For each file, add it to the cascading matrix constructor
+	int db_idx=1;
 	for (const string& db_name : db_list)
 	{
+		cout << "processing database " << db_idx++ << "/" << db_list.size() << endl;
 		vector<uint64_t> kmers = load_from_file(db_name);
 		KmerMatrix matrix(kmers);
 		cmm.add_matrix(matrix);
 	}
 
 	// Get the final matrix after the merging
+	cout << "Finalization of the matrix..." << endl;
 	KmerMatrix& final_matrix = cmm.get_matrix();
 	if (args["strout"].as<bool>())
 		final_matrix.to_color_string_file(args["outmatrix"].as<string>());
 	else
 		final_matrix.to_color_binary_file(args["outmatrix"].as<string>());
+
+
+	if (args["debug-verif"].as<bool>())
+	{
+		verif(final_matrix, db_list);
+	}
 
 	return 0;
 }
