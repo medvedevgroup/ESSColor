@@ -73,15 +73,17 @@ void KmerMatrix::to_color_binary_file(const std::string& outfile)
 	out.close();
 }
 
-/** Add a sorted kmer list to the matrix. Will add 1 bit in each color row and insert absent kmers in the matrix
+/** Add a sorted kmer list to the matrix. Will add 1 bit in each color row and insert absent kmers in the matrix. Both matrices are destroyed in the process
  * @param kmers sorted list of kmers
  **/
 void KmerMatrix::merge (KmerMatrix & other)
 {
+	cout << "MERGING" << endl;
 	// Reserve memory for the merge
-	size_t max_expected_kmers = this->kmers.size() + other.kmers.size();
+	// size_t max_expected_kmers = this->kmers.size() + other.kmers.size();
+	size_t cleaning_threshold = max(this->kmers.size(), other.kmers.size()) / 10;
 	const size_t num_colors = this->num_datasets + other.num_datasets;
-	const size_t num_uints_per_row = (num_colors + 63) / 64;
+	// const size_t num_uints_per_row = (num_colors + 63) / 64;
 	size_t my_color_uint_size = (this->num_datasets + 63) / 64;
 	size_t other_color_uint_size = (other.num_datasets + 63) / 64;
 	size_t my_color_offset = ((this->num_datasets - 1) % 64) + 1;
@@ -92,8 +94,8 @@ void KmerMatrix::merge (KmerMatrix & other)
 	// New datastructs for the merge
 	vector<uint64_t> new_kmers;
 	vector<uint64_t> new_colors;
-	new_kmers.reserve(max_expected_kmers);
-	new_colors.reserve(max_expected_kmers * num_uints_per_row);
+	// new_kmers.reserve(max_expected_kmers);
+	// new_colors.reserve(max_expected_kmers * num_uints_per_row);
 	size_t new_idx = 0;
 
 	// Setup variable for the merges
@@ -107,38 +109,65 @@ void KmerMatrix::merge (KmerMatrix & other)
 		if (this->kmers[my_idx] < other.kmers[other_idx])
 		{
 			new_kmers.push_back(this->kmers[my_idx]);
+			// cout << "< " << new_colors.size() << " -> ";
 			new_colors.insert(new_colors.end(), my_color_iter, my_color_iter + my_color_uint_size);
+			// cout << new_colors.size() << " -> ";
 			merge_colors(
 				new_colors, my_color_offset,
 				other_empty_color_vector.begin(), other.num_datasets
 			);
+			// cout << new_colors.size() << endl;
 			my_idx += 1;
 			my_color_iter += my_color_uint_size;
 		}
 		else if (this->kmers[my_idx] > other.kmers[other_idx])
 		{
 			new_kmers.push_back(other.kmers[other_idx]);
+			// cout << "> " << new_colors.size() << " -> ";
 			new_colors.insert(new_colors.end(), my_empty_color_vector.begin(), my_empty_color_vector.end());
+			// cout << new_colors.size() << " -> ";
 			merge_colors(
 				new_colors, my_color_offset,
 				other_color_iter, other.num_datasets
 			);
+			// cout << new_colors.size() << endl;
 			other_idx += 1;
 			other_color_iter += other_color_uint_size;
 		}
 		else
 		{
 			new_kmers.push_back(this->kmers[my_idx]);
+			// cout << "= " << new_colors.size() << " -> ";
 			new_colors.insert(new_colors.end(), my_color_iter, my_color_iter + my_color_uint_size);
+			// cout << new_colors.size() << " -> ";
 			merge_colors(
 				new_colors, my_color_offset,
 				other_color_iter, other.num_datasets
 			);
+			// cout << new_colors.size() << endl;
 			my_idx += 1; my_color_iter += my_color_uint_size;
 			other_idx += 1; other_color_iter += other_color_uint_size;
 		}
-
 		new_idx += 1;
+		cout << new_kmers.size() << " " << new_colors.size() << endl;
+
+		// Memory saving procedure
+		if ((my_idx + other_idx) >= cleaning_threshold)
+		{
+			cout << "cleaning " << my_idx << "+" << other_idx << " <=> " << cleaning_threshold << endl;
+			cout << this->kmers.size() << " " << other.kmers.size() << " " << new_kmers.size() << endl;
+			// Modify current matrix
+			this->kmers.erase(this->kmers.begin(), this->kmers.begin()+my_idx);
+			my_idx = 0;
+			this->colors.erase(this->colors.begin(), my_color_iter);
+			my_color_iter = this->colors.begin();
+
+			// Modify the other matrix
+			other.kmers.erase(other.kmers.begin(), other.kmers.begin()+other_idx);
+			other_idx = 0;
+			other.colors.erase(other.colors.begin(), other_color_iter);
+			other_color_iter = other.colors.begin();
+		}
 	}
 
 	// Add the last values
@@ -167,6 +196,7 @@ void KmerMatrix::merge (KmerMatrix & other)
 	this->kmers = new_kmers;
 	this->colors = new_colors;
 	this->num_datasets += other.num_datasets;
+	cout << "/merging" << endl;
 };
 
 
@@ -180,10 +210,10 @@ void merge_colors(vector<uint64_t> & colors, size_t first_idx, vector<uint64_t>:
 {
 	assert(first_idx != 0 and first_idx <= 64);
 
-	size_t colors_idx = (first_idx - 1) / 64;
+	size_t colors_idx = colors.size() - 1;
 
 	// occupied bits from the last uint64_t of colors
-	const uint64_t occupied_bits = ((first_idx - 1) % 64) + 1;
+	const uint64_t occupied_bits = first_idx;
 	const uint64_t free_bits = 64 - occupied_bits;
 	const uint64_t first_half_mask = occupied_bits == 64 ? 0 : (1 << free_bits) - 1;
 	const uint64_t second_half_mask = ~first_half_mask;
