@@ -94,7 +94,9 @@ int main(int argc, char const *argv[])
 	{
 		cout << "processing database " << db_idx++ << "/" << db_list.size() << endl;
 		vector<uint64_t> kmers = load_from_file(db_name);
+		// exit(0);
 		KmerMatrix matrix(kmers);
+		// exit(0);
 		cmm.add_matrix(matrix);
 	}
 

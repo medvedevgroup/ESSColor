@@ -14,7 +14,7 @@ class KmerMatrix
 public:
 	size_t num_datasets;
 	std::vector<uint64_t> kmers;
-	std::vector<std::vector<uint64_t> > colors;
+	std::vector<uint64_t> colors;
 
 	KmerMatrix(std::vector<uint64_t> & dataset);
 	KmerMatrix(KmerMatrix && other);
@@ -23,7 +23,7 @@ public:
 	/** Add a sorted kmer list to the matrix. Will add 1 bit in each color row and insert absent kmers in the matrix
 	 * @param kmers sorted list of kmers
 	 **/
-	void merge (const KmerMatrix & other);
+	void merge (KmerMatrix & other);
 
 	/** Generate a color matrix in binary format. Each row is composed of a multiple of 64 bits (the minimum needed to store all the datasets from the matrix).
 	 * @param outfile The filme where the matrix will be written
@@ -36,13 +36,13 @@ public:
 };
 
 
-/** Merges the to_merge vector inside of the colors vector. The to_merge vector is inserted from the position first_idx in the colors vector assuming that all the bits after that position are 0.
+/** Merges a subvector pointed by the iterator to_merge inside of the colors vector. The subvector is inserted starting at the last uint of colors at bit first_idx. The function assumes that all the bits after that position are 0.
  * @param colors Vector of colors that will be modified by the merge process
- * @param to_merge Vector of colors to insert
- * @param first_index The first bit of colors where to_merge will be inserted.
+ * @param first_index The first bit of colors where to_merge will be inserted [1-64].
+ * @param to_merge Iterator that contains the colors to insert
  * @param size Size of the insertion (in bits)
  **/
-void merge_colors(std::vector<uint64_t> & colors, const std::vector<uint64_t> to_merge, size_t first_idx, size_t size);
+void merge_colors(std::vector<uint64_t> & colors, size_t first_idx, std::vector<uint64_t>::iterator to_merge, size_t size);
 
 /** Loads a kmer list from a KMC database and sort the kmers.
  * @param db_path path to kmer database
