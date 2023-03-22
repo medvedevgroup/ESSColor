@@ -88,6 +88,70 @@ void KmerMatrix::to_color_binary_file(const std::string& outfile)
 	out.close();
 }
 
+/** Generates a binary file containing all the sorted kmers that correspond to the matrix rows.
+ * All the values are 64bits little endian uints.
+ * The 2 first values are the k value and the number of kmers in the file
+ * Then each 64bits uint is a kmer with encoding A:0, C:1, G:2, T:3
+ **/
+void KmerMatrix::to_kmer_binary_file(const std::string& outfile)
+{
+	ofstream out(outfile, ios::out | ios::binary);
+
+	uint8_t array[8];
+
+	// k value
+	array[0] =  this->k        & 0xFF;
+	array[1] = (this->k >>  8) & 0xFF;
+	array[2] = (this->k >> 16) & 0xFF;
+	array[3] = (this->k >> 24) & 0xFF;
+	array[4] = (this->k >> 32) & 0xFF;
+	array[5] = (this->k >> 40) & 0xFF;
+	array[6] = (this->k >> 48) & 0xFF;
+	array[7] = (this->k >> 56) & 0xFF;
+	out.write((char *)array, 8);
+
+	// number of kmers
+	array[0] =  this->kmers.size()        & 0xFF;
+	array[1] = (this->kmers.size() >>  8) & 0xFF;
+	array[2] = (this->kmers.size() >> 16) & 0xFF;
+	array[3] = (this->kmers.size() >> 24) & 0xFF;
+	array[4] = (this->kmers.size() >> 32) & 0xFF;
+	array[5] = (this->kmers.size() >> 40) & 0xFF;
+	array[6] = (this->kmers.size() >> 48) & 0xFF;
+	array[7] = (this->kmers.size() >> 56) & 0xFF;
+	out.write((char *)array, 8);
+
+	for (const uint64_t kmer : this->kmers)
+	{
+		array[0] =  kmer        & 0xFF;
+		array[1] = (kmer >>  8) & 0xFF;
+		array[2] = (kmer >> 16) & 0xFF;
+		array[3] = (kmer >> 24) & 0xFF;
+		array[4] = (kmer >> 32) & 0xFF;
+		array[5] = (kmer >> 40) & 0xFF;
+		array[6] = (kmer >> 48) & 0xFF;
+		array[7] = (kmer >> 56) & 0xFF;
+		out.write((char *)array, 8);
+	}
+
+	out.close();
+}
+
+/** Generates a text file containing all the sorted kmers that correspond to the matrix rows.
+ * The file contains one line per kmer
+ **/
+void KmerMatrix::to_kmer_string_file(const std::string& outfile)
+{
+	ofstream out(outfile);
+
+	for (uint64_t kmer: this->kmers)
+		out << kmer2str(kmer, this->k);
+
+	out.close();
+};
+
+
+
 /** Add a sorted kmer list to the matrix. Will add 1 bit in each color row and insert absent kmers in the matrix. Both matrices are destroyed in the process
  * @param kmers sorted list of kmers
  **/

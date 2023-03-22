@@ -96,7 +96,7 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 
 		// Looks for all the kmers from the db
 		uint64_t list_idx=0, matrix_idx=0;
-		while(list_idx < kmers.size() or matrix_idx < matrix.kmers.size())
+		while(list_idx < kmers.size() and matrix_idx < matrix.kmers.size())
 		{
 			// Missing kmer from the db
 			if (kmers[list_idx] < matrix.kmers[matrix_idx])
@@ -104,14 +104,14 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 				cerr << kmer2str(kmers[list_idx], k) << " not in matrix while in db" << endl;
 				db_missing_kmers += 1;
 				list_idx += 1;
-				exit(1);
+				// exit(1);
 			}
 			// Kmer from the matrix that is not present inside of the current db
 			else
 			{
 				// Get the current_row
 				matrix.get_row(matrix_idx, row);
-				uint64_t sub_row = dataset_idx / 64;
+				uint64_t sub_row = row[dataset_idx / 64];
 				bool is_present = 1 == ((sub_row >> (dataset_idx % 64)) & 0b1);
 
 				if (kmers[list_idx] > matrix.kmers[matrix_idx])
@@ -120,7 +120,7 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 					{
 						db_overpresent_kmers += 1;
 						cerr << kmer2str(matrix.kmers[matrix_idx], k) << " in matrix while not in db" << endl;
-						exit(1);
+						// exit(1);
 					}
 					matrix_idx += 1;
 				}
@@ -130,7 +130,7 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 					{
 						db_missing_kmers += 1;
 						cerr << kmer2str(kmers[list_idx], k) << " not in matrix row while in db" << endl;
-						exit(1);
+						// exit(1);
 					}
 					matrix_idx += 1;
 					list_idx += 1;
@@ -138,6 +138,17 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 			}
 		}
 
+		// Potential remaining kmers after full consumption of the matrix
+		if (list_idx < kmers.size())
+		{
+			for (uint64_t i(list_idx) ; i<kmers.size() ; i++)
+			{
+				cerr << kmer2str(kmers[i], k) << " not in matrix while in db" << endl;
+				db_missing_kmers += 1;
+			}
+		}
+
+		// Error stats
 		missing_kmers += db_missing_kmers;
 		overpresent_kmers += db_overpresent_kmers;
 		dataset_idx += 1;
@@ -177,12 +188,17 @@ int main(int argc, char const *argv[])
 	// Get the final matrix after the merging
 	cout << "Finalization of the matrix..." << endl;
 	KmerMatrix& final_matrix = cmm.get_matrix();
+	cout << "Writing the matrix on disk..." << endl;
 	if (args["strout"].as<bool>())
+	{
 		final_matrix.to_color_string_file(args["outmatrix"].as<string>());
+		final_matrix.to_kmer_string_file(args["kmer-list"].as<string>());
+	}
 	else
+	{
 		final_matrix.to_color_binary_file(args["outmatrix"].as<string>());
-
-	cout << final_matrix.kmers[1] << " " << kmer2str(final_matrix.kmers[1], 31) << endl;
+		final_matrix.to_kmer_binary_file(args["kmer-list"].as<string>());
+	}
 
 	if (args["debug-verif"].as<bool>())
 	{

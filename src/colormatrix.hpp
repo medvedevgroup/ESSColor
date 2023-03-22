@@ -40,6 +40,17 @@ public:
 	 * @param outfile The filme where the matrix will be written
 	 **/
 	void to_color_string_file(const std::string& outfile);
+
+	/** Generates a binary file containing all the sorted kmers that correspond to the matrix rows.
+	 * All the values are 64bits little endian uints.
+	 * The 2 first values are the k value and the number of kmers in the file
+	 * Then each 64bits uint is a kmer with encoding A:0, C:1, G:2, T:3
+	 **/
+	void to_kmer_binary_file(const std::string& outfile);
+	/** Generates a text file containing all the sorted kmers that correspond to the matrix rows.
+	 * The file contains one line per kmer
+	 **/
+	void to_kmer_string_file(const std::string& outfile);
 };
 
 
