@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include <algorithm>
 
 #include "kmc_file.h"
@@ -9,7 +10,7 @@
 using namespace std;
 
 
-KmerMatrix::KmerMatrix(vector<uint64_t> & dataset) : num_datasets(1)
+KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k) : num_datasets(1), k(k)
 {
 	this->kmers = dataset;
 	this->colors.resize(dataset.size(), 1);
@@ -18,19 +19,33 @@ KmerMatrix::KmerMatrix(vector<uint64_t> & dataset) : num_datasets(1)
 KmerMatrix::KmerMatrix(KmerMatrix && other)
 {
 	this->num_datasets = other.num_datasets;
+	this->k = other.k;
 	this->kmers = std::move(other.kmers);
 	this->colors = std::move(other.colors);
 };
 
 KmerMatrix& KmerMatrix::operator=(KmerMatrix&& other)
 {
-
 	this->num_datasets = other.num_datasets;
+	this->k = other.k;
 	this->kmers = std::move(other.kmers);
 	this->colors = std::move(other.colors);
 
 	return *this;
 };
+
+void KmerMatrix::get_row(uint64_t row_idx, vector<uint64_t>& to_fill)
+{
+	size_t nb_uints = (this->num_datasets + 63) / 64;
+	to_fill.resize(nb_uints);
+
+	size_t row_offset = nb_uints * row_idx;
+
+	for (size_t i(0) ; i<nb_uints ; i++)
+	{
+		to_fill[i] = this->colors[row_offset + i];
+	}
+}
 
 void KmerMatrix::to_color_string_file(const std::string& outfile)
 {
@@ -78,11 +93,11 @@ void KmerMatrix::to_color_binary_file(const std::string& outfile)
  **/
 void KmerMatrix::merge (KmerMatrix & other)
 {
-	cout << "MERGING" << endl;
+	// cout << "MERGING" << endl;
 	// Reserve memory for the merge
 	// size_t max_expected_kmers = this->kmers.size() + other.kmers.size();
 	size_t cleaning_threshold = max(this->kmers.size(), other.kmers.size()) / 10;
-	const size_t num_colors = this->num_datasets + other.num_datasets;
+	// const size_t num_colors = this->num_datasets + other.num_datasets;
 	// const size_t num_uints_per_row = (num_colors + 63) / 64;
 	size_t my_color_uint_size = (this->num_datasets + 63) / 64;
 	size_t other_color_uint_size = (other.num_datasets + 63) / 64;
@@ -149,13 +164,13 @@ void KmerMatrix::merge (KmerMatrix & other)
 			other_idx += 1; other_color_iter += other_color_uint_size;
 		}
 		new_idx += 1;
-		cout << new_kmers.size() << " " << new_colors.size() << endl;
+		// cout << new_kmers.size() << " " << new_colors.size() << endl;
 
 		// Memory saving procedure
 		if ((my_idx + other_idx) >= cleaning_threshold)
 		{
-			cout << "cleaning " << my_idx << "+" << other_idx << " <=> " << cleaning_threshold << endl;
-			cout << this->kmers.size() << " " << other.kmers.size() << " " << new_kmers.size() << endl;
+			// cout << "cleaning " << my_idx << "+" << other_idx << " <=> " << cleaning_threshold << endl;
+			// cout << this->kmers.size() << " " << other.kmers.size() << " " << new_kmers.size() << endl;
 			// Modify current matrix
 			this->kmers.erase(this->kmers.begin(), this->kmers.begin()+my_idx);
 			my_idx = 0;
@@ -196,7 +211,7 @@ void KmerMatrix::merge (KmerMatrix & other)
 	this->kmers = new_kmers;
 	this->colors = new_colors;
 	this->num_datasets += other.num_datasets;
-	cout << "/merging" << endl;
+	// cout << "/merging" << endl;
 };
 
 
@@ -244,9 +259,10 @@ void merge_colors(vector<uint64_t> & colors, size_t first_idx, vector<uint64_t>:
 
 /** Loads a kmer list from a KMC database and sort the kmers.
  * @param db_path path to kmer database
+ * @param k kmer size. This value is filled during the loading process
  * @return Sorted list of kmers (lexicographic order)
  **/
-vector<uint64_t> load_from_file(const string db_path)
+vector<uint64_t> load_from_file(const string db_path, uint64_t& k)
 {
 	vector<uint64_t> kmers;
 
@@ -265,6 +281,7 @@ vector<uint64_t> load_from_file(const string db_path)
 	db.Info(_kmer_length, _mode, _counter_size, _lut_prefix_length, _signature_len, _min_count, _max_count, _total_kmers);
 	assert(_kmer_length <= 32);
 	kmers.resize(_total_kmers);
+	k = _kmer_length;
 	
 	// Load the kmers
 	size_t idx = 0;
@@ -323,3 +340,21 @@ KmerMatrix& CascadingMergingMatrix::get_matrix()
 	return this->matricies[0];
 };
 
+
+
+string kmer2str(uint64_t kmer, uint64_t k)
+{
+	static const char nucleotides[] = {'A', 'C', 'G', 'T'};
+	stringstream ss;
+
+	for (uint64_t i(0) ; i<k ; i++)
+	{
+		ss << nucleotides[kmer & 0b11];
+		kmer >>= 2;
+	}
+
+	string s = ss.str();
+	std::reverse(s.begin(), s.end());
+
+	return s;
+};

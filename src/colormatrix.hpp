@@ -13,12 +13,19 @@ class KmerMatrix
 {
 public:
 	size_t num_datasets;
+	uint64_t k;
 	std::vector<uint64_t> kmers;
 	std::vector<uint64_t> colors;
 
-	KmerMatrix(std::vector<uint64_t> & dataset);
+	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k);
 	KmerMatrix(KmerMatrix && other);
 	KmerMatrix& operator=(KmerMatrix&& other);
+
+	/** Fill the to_fill vector with the uints from the row of row_idx idx.
+	 * @param row_idx Index of the matrix row of interest
+	 * @param to_fill A uint vector that will be modified to store the row
+	 **/
+	void get_row(uint64_t row_idx, std::vector<uint64_t>& to_fill);
 
 	/** Add a sorted kmer list to the matrix. Will add 1 bit in each color row and insert absent kmers in the matrix
 	 * @param kmers sorted list of kmers
@@ -46,9 +53,18 @@ void merge_colors(std::vector<uint64_t> & colors, size_t first_idx, std::vector<
 
 /** Loads a kmer list from a KMC database and sort the kmers.
  * @param db_path path to kmer database
+ * @param k kmer size. This value is filled during the loading process.
  * @return Sorted list of kmers (lexicographic order)
  **/
-std::vector<uint64_t> load_from_file(const std::string db_path);
+std::vector<uint64_t> load_from_file(const std::string db_path, uint64_t& k);
+
+
+/** Translate a uint64_t kmer into a string
+ * @param kmer the kmer integer version
+ * @param k kmer size (in nucleotides)
+ * @return string version of the kmer
+ **/
+std::string kmer2str(uint64_t kmer, uint64_t k);
 
 
 /** This class is made to amortize mergings. We do not want to merge each new dataset directly.
