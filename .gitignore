@@ -1,0 +1,16 @@
+# CMake related
+**/CMakeFiles/
+**/CMakeCache.txt
+**/*.cmake
+**/Makefile
+**/*.a
+
+# lib related
+lib/cmph*
+
+# Project related
+**/compress
+**/decompress
+**/kmerlist
+**/genmatrix
+data/

@@ -1,0 +1,91 @@
+project(cmph_lib)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+set(CMAKE_CXX_FLAGS "-Wall")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -Ofast")
+set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
+
+set(SRCS
+    bdz.c
+    bdz_ph.c
+    bm_numbers.c
+    bmz8.c
+    bmz.c
+    brz.c
+    buffer_entry.c
+    buffer_manager.c
+    chd.c
+    chd_ph.c
+    chm.c
+    cmph_benchmark.c
+    cmph.c
+    cmph_structs.c
+    compressed_rank.c
+    compressed_seq.c
+    fch_buckets.c
+    fch.c
+    graph.c
+    hash.c
+    jenkins_hash.c
+    linear_string_map.c
+    miller_rabin.c
+    select.c
+    vqueue.c
+    vstack.c
+    wingetopt.c
+    )
+    
+set(HEADERS
+    bdz.h
+    bdz_ph.h
+    bdz_structs.h
+    bdz_structs_ph.h
+    bitbool.h
+    bmz8.h
+    bmz8_structs.h
+    bmz.h
+    bmz_structs.h
+    brz.h
+    brz_structs.h
+    buffer_entry.h
+    buffer_manager.h
+    chd.h
+    chd_ph.h
+    chd_structs.h
+    chd_structs_ph.h
+    chm.h
+    chm_structs.h
+    cmph_benchmark.h
+    cmph.h
+    cmph_structs.h
+    cmph_time.h
+    cmph_types.h
+    compressed_rank.h
+    compressed_seq.h
+    debug.h
+    fch_buckets.h
+    fch.h
+    fch_structs.h
+    graph.h
+    hash.h
+    hash_state.h
+    jenkins_hash.h
+    linear_string_map.h
+    miller_rabin.h
+    select.h
+    select_lookup_tables.h
+    vqueue.h
+    vstack.h
+    wingetopt.h
+    )
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+link_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+add_library(cmph_lib ${SRCS} ${HEADERS})
+target_include_directories(cmph_lib
+    PUBLIC
+    ./
+)
