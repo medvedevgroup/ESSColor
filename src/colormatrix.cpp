@@ -356,9 +356,10 @@ vector<uint64_t> load_from_file(const string db_path, uint64_t& k)
 		kmer.to_long(kmer_uint);
 		//amatur comments out //kmers[idx++] = kmer_uint[0];
 		//amatur adding
-		string kmerstr=kmer2str(kmer, k);
-		size_t mphf_idx = mphf_query(kmer); //TODO
-		kmers[mphf_idx] = kmer_uint[0];
+		// string kmerstr=kmer2str(kmer, k);
+		// size_t mphf_idx = mphf_query(kmer); //TODO
+		// kmers[mphf_idx] = kmer_uint[0];
+		kmers[idx] =  kmer_uint[0];;
 		idx++;
 
 	}
