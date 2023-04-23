@@ -34,23 +34,23 @@ add_executable(genmatrix src/genMatrix.cpp)
 add_executable(amatur src/amatur.cpp)
 
 
-set(Z_LIB_SOURCES_2
-  lib/sshash/include/gz/zip_stream.cpp
-)
+# set(Z_LIB_SOURCES_2
+#   lib/sshash/include/gz/zip_stream.cpp
+# )
 
-set(SSHASH_SOURCES_2
-  lib/sshash/include/dictionary.cpp
-  lib/sshash/include/info.cpp
-  lib/sshash/include/dump.cpp
-  lib/sshash/include/statistics.cpp
-  lib/sshash/include/builder/build.cpp
-)
+# set(SSHASH_SOURCES_2
+#   lib/sshash/include/dictionary.cpp
+#   lib/sshash/include/info.cpp
+#   lib/sshash/include/dump.cpp
+#   lib/sshash/include/statistics.cpp
+#   lib/sshash/include/builder/build.cpp
+# )
 
-# Create a static lib
-add_library(sshash_static_2 STATIC
-  ${Z_LIB_SOURCES_2}
-  ${SSHASH_SOURCES_2}
-)
+# # Create a static lib
+# add_library(sshash_static_2 STATIC
+#   ${Z_LIB_SOURCES_2}
+#   ${SSHASH_SOURCES_2}
+# )
 
 
 # link libraries
@@ -59,7 +59,7 @@ target_link_libraries(decompress cmph_lib sdsl)
 target_link_libraries(genmatrix essc_lib cxxopts)
 # target_link_libraries(amatur sshash)
 # add_executable(sshash src/sshash.cpp)
-target_link_libraries(amatur
-  sshash_static_2
-  z
-)
+# target_link_libraries(amatur
+#   sshash_static_2
+#   z
+# )
