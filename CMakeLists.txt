@@ -34,6 +34,25 @@ add_executable(genmatrix src/genMatrix.cpp)
 add_executable(amatur src/amatur.cpp)
 
 
+set(Z_LIB_SOURCES
+  lib/sshash/include/gz/zip_stream.cpp
+)
+
+set(SSHASH_SOURCES
+  lib/sshash/include/dictionary.cpp
+  lib/sshash/include/info.cpp
+  lib/sshash/include/dump.cpp
+  lib/sshash/include/statistics.cpp
+  lib/sshash/include/builder/build.cpp
+)
+
+# Create a static lib
+add_library(sshash_static STATIC
+  ${Z_LIB_SOURCES}
+  ${SSHASH_SOURCES}
+)
+
+
 # link libraries
 target_link_libraries(compress cmph_lib sdsl)
 target_link_libraries(decompress cmph_lib sdsl)
