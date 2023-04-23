@@ -30,8 +30,12 @@ if [ ! -d lib/cmph-2.0.2 ]; then
 	cp lib/CMakeLists_cmph.txt lib/cmph-2.0.2/src/CMakeLists.txt
 fi
 
+git submodule add https://github.com/jermp/sshash.git lib/sshash
+
 cd lib/ESSCompress
 ./INSTALL
+
+
 
 cd ../../
 
