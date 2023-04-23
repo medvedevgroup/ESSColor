@@ -1,11 +1,11 @@
 #include <iostream>
 
-#include "lib/sdsl/src/common.hpp"
-#include "lib/sdsl/src/bench_utils.hpp"
-#include "lib/sdsl/src/check_utils.hpp"
-#include "lib/sdsl/src/build.cpp"
-#include "lib/sdsl/src/query.cpp"
-#include "lib/sdsl/src/permute.cpp"
+#include "lib/sshash/src/common.hpp"
+#include "lib/sshash/src/bench_utils.hpp"
+#include "lib/sshash/src/check_utils.hpp"
+#include "lib/sshash/src/build.cpp"
+#include "lib/sshash/src/query.cpp"
+#include "lib/sshash/src/permute.cpp"
 
 
 // using namespace sshash;
