@@ -38,4 +38,9 @@ add_executable(amatur src/amatur.cpp)
 target_link_libraries(compress cmph_lib sdsl)
 target_link_libraries(decompress cmph_lib sdsl)
 target_link_libraries(genmatrix essc_lib cxxopts)
-target_link_libraries(amatur sshash)
+# target_link_libraries(amatur sshash)
+# add_executable(sshash src/sshash.cpp)
+target_link_libraries(amatur
+  sshash_static
+  z
+)
