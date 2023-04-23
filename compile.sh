@@ -31,7 +31,7 @@ if [ ! -d lib/cmph-2.0.2 ]; then
 fi
 
 cd lib
-git clone --recursive https://github.com/jermp/sshash.git
+# git clone --recursive https://github.com/jermp/sshash.git
 git clone --recursive https://github.com/medvedevgroup/ESSCompress.git
 
 cd ../
