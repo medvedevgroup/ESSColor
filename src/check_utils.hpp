@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../lib/sshash/include/gz/zip_stream.hpp"
+#include "include/gz/zip_stream.hpp"
 
 namespace sshash {
 
