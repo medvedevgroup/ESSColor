@@ -32,6 +32,8 @@ fi
 
 cd lib
 git clone --recursive https://github.com/jermp/sshash.git
+git clone --recursive https://github.com/medvedevgroup/ESSCompress.git
+
 cd ../
 # git submodule add https://github.com/jermp/sshash.git lib/sshash
 
