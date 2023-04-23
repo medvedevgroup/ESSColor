@@ -8,7 +8,7 @@
 // #include "permute.cpp"
 
 
-// using namespace sshash;
+using namespace sshash;
 
 int main(int argc, char** argv) {
     std::string input_filename = "mega.essd";
