@@ -60,6 +60,5 @@ target_link_libraries(genmatrix essc_lib cxxopts)
 # target_link_libraries(amatur sshash)
 # add_executable(sshash src/sshash.cpp)
 target_link_libraries(amatur
-  sshash_static
-  z
+  lib/sshash/libsshash_static.a
 )

@@ -1,14 +1,14 @@
 #include <iostream>
 
-#include "lib/sshash/src/common.hpp"
-#include "lib/sshash/src/bench_utils.hpp"
-#include "lib/sshash/src/check_utils.hpp"
-// #include "lib/sshash/src/build.cpp"
-// #include "lib/sshash/src/query.cpp"
-#include "lib/sshash/src/permute.cpp"
+// #include "lib/sshash/src/common.hpp"
+// #include "lib/sshash/src/bench_utils.hpp"
+// #include "lib/sshash/src/check_utils.hpp"
+// // #include "lib/sshash/src/build.cpp"
+// // #include "lib/sshash/src/query.cpp"
+// #include "lib/sshash/src/permute.cpp"
 
 
-// using namespace sshash;
+using namespace sshash;
 
 int main(int argc, char** argv) {
     std::string input_filename = "mega.essd";
