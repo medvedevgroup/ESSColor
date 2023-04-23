@@ -30,7 +30,16 @@ if [ ! -d lib/cmph-2.0.2 ]; then
 	cp lib/CMakeLists_cmph.txt lib/cmph-2.0.2/src/CMakeLists.txt
 fi
 
+cd lib/ESSCompress
+./INSTALL
+
+cd ../../
+
 # Compilation
 cmake . && make -j
 
+export PATH=$BASEDIR/lib/ESSCompress/bin:$BASEDIR/bin:$PATH
+
+echo "Path of ESS-Compress $(which ESSCompress)"
+echo "Path of ESS-Color $(which genMatrix;)"
 cd $CALL_DIR

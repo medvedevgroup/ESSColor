@@ -31,8 +31,11 @@ add_executable(kmerlist src/kmerlist.cpp)
 add_executable(compress src/compress.cpp)
 add_executable(decompress src/decompress.cpp)
 add_executable(genmatrix src/genMatrix.cpp)
+add_executable(amatur src/amatur.cpp)
+
 
 # link libraries
 target_link_libraries(compress cmph_lib sdsl)
 target_link_libraries(decompress cmph_lib sdsl)
 target_link_libraries(genmatrix essc_lib cxxopts)
+target_link_libraries(amatur sshash)

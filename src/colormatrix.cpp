@@ -354,10 +354,16 @@ vector<uint64_t> load_from_file(const string db_path, uint64_t& k)
 	uint32 counter;
 	while (db.ReadNextKmer(kmer, counter)) {
 		kmer.to_long(kmer_uint);
-		kmers[idx++] = kmer_uint[0];
+		//amatur comments out //kmers[idx++] = kmer_uint[0];
+		//amatur adding
+		string kmerstr=kmer2str(kmer, k);
+		size_t mphf_idx = mphf_query(kmer); //TODO
+		kmers[mphf_idx] = kmer_uint[0];
+		idx++;
+
 	}
 
-	sort(kmers.begin(), kmers.end());
+	//amatur  comments out  //sort(kmers.begin(), kmers.end());
 
 	return kmers;
 };
