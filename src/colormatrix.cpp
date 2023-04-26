@@ -90,9 +90,9 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 		string thekmer=kmer2str(kmers[kmer_idx], this->k);
 		auto answer = dict.lookup_advanced(thekmer.c_str());
             if( answer.kmer_id != constants::invalid_uint64){
-                std::cout<<kmer<<" "<<answer.kmer_id<<std::endl;
+                std::cout<<thekmer<<" "<<answer.kmer_id<<std::endl;
             }else{
-                std::cout<<kmer<<" "<<-1<<std::endl;
+                std::cout<<thekmer<<" "<<-1<<std::endl;
             }
     
 		for (uint64_t dataset_idx(0) ; dataset_idx<this->num_datasets ; dataset_idx++)
