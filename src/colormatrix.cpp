@@ -19,11 +19,12 @@ using namespace sshash;
 
 
 
-KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k, std::string ess_order_file) : num_datasets(1), k(k) 
+KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k) : num_datasets(1), k(k) 
 {
+	//std::string ess_order_file
 	this->kmers = dataset;
 	this->colors.resize(dataset.size(), 1);
-	this->ess_order_file = ess_order_file;
+	//this->ess_order_file = ess_order_file;
 };
 
 KmerMatrix::KmerMatrix(KmerMatrix && other)
@@ -32,7 +33,7 @@ KmerMatrix::KmerMatrix(KmerMatrix && other)
 	this->k = other.k;
 	this->kmers = std::move(other.kmers);
 	this->colors = std::move(other.colors);
-	this->ess_order_file = other.ess_order_file;
+	//this->ess_order_file = other.ess_order_file;
 };
 
 KmerMatrix& KmerMatrix::operator=(KmerMatrix&& other)
@@ -41,7 +42,7 @@ KmerMatrix& KmerMatrix::operator=(KmerMatrix&& other)
 	this->k = other.k;
 	this->kmers = std::move(other.kmers);
 	this->colors = std::move(other.colors);
-	this->ess_order_file = other.ess_order_file;
+	//this->ess_order_file = other.ess_order_file;
 
 	return *this;
 };
