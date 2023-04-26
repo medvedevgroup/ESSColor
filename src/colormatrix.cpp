@@ -64,7 +64,7 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 {
 	//, std::string ess_order_file
 	auto k = 5;
-    auto m = k/2;
+    auto m = 3;
     dictionary dict;
 
     build_configuration build_config;
