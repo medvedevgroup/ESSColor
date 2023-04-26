@@ -423,7 +423,8 @@ vector<uint64_t> load_from_file(const string db_path, uint64_t& k)
 
 	}
 
-	//amatur  comments out  //sort(kmers.begin(), kmers.end());
+	//amatur  comments out  
+	sort(kmers.begin(), kmers.end());
 
 	return kmers;
 };
