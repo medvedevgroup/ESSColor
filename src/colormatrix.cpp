@@ -59,8 +59,9 @@ void KmerMatrix::get_row(uint64_t row_idx, vector<uint64_t>& to_fill)
 	}
 }
 
-void KmerMatrix::to_color_string_file(const std::string& outfile, std::string ess_order_file)
+void KmerMatrix::to_color_string_file(const std::string& outfile)
 {
+	//, std::string ess_order_file
 	auto k = 5;
     auto m = k/2;
     dictionary dict;
@@ -181,20 +182,20 @@ void KmerMatrix::to_kmer_binary_file(const std::string& outfile)
 
 
 
-void KmerMatrix::to_kmer_string_file_sorted(const std::string& outfile)
-{
-	ofstream out(outfile);
+// void KmerMatrix::to_kmer_string_file_sorted(const std::string& outfile)
+// {
+// 	ofstream out(outfile);
 
-	uint64_t actual_idx = 0;
-	uint64_t mapped_idx = 0;
-	for (uint64_t kmer: this->kmers){
-		out << kmer2str(kmer, this->k);
-		actual_idx++;
-	}
+// 	uint64_t actual_idx = 0;
+// 	uint64_t mapped_idx = 0;
+// 	for (uint64_t kmer: this->kmers){
+// 		out << kmer2str(kmer, this->k);
+// 		actual_idx++;
+// 	}
 		
 
-	out.close();
-};
+// 	out.close();
+// };
 
 /** Generates a text file containing all the sorted kmers that correspond to the matrix rows.
  * The file contains one line per kmer
