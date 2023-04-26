@@ -78,7 +78,7 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
     dict.build("/home/aur1111/s/proj4/minireal/k5/mega.essd", build_config);
     assert(dict.k() == k);
     std::cout<<"dict built complete";
-	dict.streaming_query_from_file("/home/aur1111/s/proj4/minireal/k5/mega.essd");
+	//dict.streaming_query_from_file("/home/aur1111/s/proj4/minireal/k5/mega.essd");
 
 	ofstream out(outfile);
 
