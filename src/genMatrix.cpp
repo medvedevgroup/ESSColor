@@ -37,6 +37,7 @@ cxxopts::ParseResult parse_args(int argc, char const *argv[])
 		("o,outmatrix", "[Mandatory] Path to the output color matrix", cxxopts::value<string>())
 		("l,kmer-list", "[Mandatory] Path to the output ordered kmer list file", cxxopts::value<string>())
 		("s,strout", "String output", cxxopts::value<bool>()->default_value("false"))
+		("e,ess-order-file", "[Mandatory] Path to SPSS (mega.essd)", cxxopts::value<string>())
 		;
 
 	cxxopts::ParseResult res = options.parse(argc, argv);

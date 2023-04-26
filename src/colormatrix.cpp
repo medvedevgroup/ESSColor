@@ -8,12 +8,22 @@
 #include "colormatrix.hpp"
 
 using namespace std;
+#include "common.hpp"
+#include "bench_utils.hpp"
+#include "check_utils.hpp"
+// #include "lib/sshash/src/build.cpp"
+// #include "lib/sshash/src/query.cpp"
+#include "permute.cpp"
+
+using namespace sshash;
 
 
-KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k) : num_datasets(1), k(k)
+
+KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k, std::string ess_order_file) : num_datasets(1), k(k) 
 {
 	this->kmers = dataset;
 	this->colors.resize(dataset.size(), 1);
+	this->ess_order_file = ess_order_file;
 };
 
 KmerMatrix::KmerMatrix(KmerMatrix && other)
@@ -22,6 +32,7 @@ KmerMatrix::KmerMatrix(KmerMatrix && other)
 	this->k = other.k;
 	this->kmers = std::move(other.kmers);
 	this->colors = std::move(other.colors);
+	this->ess_order_file = other.ess_order_file;
 };
 
 KmerMatrix& KmerMatrix::operator=(KmerMatrix&& other)
@@ -30,6 +41,7 @@ KmerMatrix& KmerMatrix::operator=(KmerMatrix&& other)
 	this->k = other.k;
 	this->kmers = std::move(other.kmers);
 	this->colors = std::move(other.colors);
+	this->ess_order_file = other.ess_order_file;
 
 	return *this;
 };
@@ -47,13 +59,33 @@ void KmerMatrix::get_row(uint64_t row_idx, vector<uint64_t>& to_fill)
 	}
 }
 
-void KmerMatrix::to_color_string_file(const std::string& outfile)
+void KmerMatrix::to_color_string_file(const std::string& outfile, std::string ess_order_file)
 {
+	auto k = 5;
+    auto m = k/2;
+    dictionary dict;
+
+    build_configuration build_config;
+    build_config.k = k;
+    build_config.m = m;
+
+    build_config.canonical_parsing = true;
+    build_config.verbose = true;
+    build_config.print();
+
+    dict.build("/home/aur1111/s/proj4/minireal/k5/mega.essd", build_config);
+    assert(dict.k() == k);
+    std::cout<<"dict built complete";
+	dict.streaming_query_from_file("/home/aur1111/s/proj4/minireal/k5/mega.essd");
+
 	ofstream out(outfile);
 
 	const uint64_t num_uints_per_row = (this->num_datasets + 63) / 64;
+
+	//build dictionary on ess_order_file
 	for (uint64_t kmer_idx(0) ; kmer_idx<this->kmers.size() ; kmer_idx++)
 	{
+		//kmer_idx_mphf_mapped = mphf_query[kmer]
 		for (uint64_t dataset_idx(0) ; dataset_idx<this->num_datasets ; dataset_idx++)
 		{
 			uint64_t subvector = this->colors[kmer_idx * num_uints_per_row + dataset_idx / 64];
@@ -61,6 +93,8 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 			out << (color == 0 ? '0' : '1');
 		}
 		out << endl;
+		
+		//this->ess_order_file = other.ess_order_file;
 	}
 
 	out.close();
@@ -136,6 +170,23 @@ void KmerMatrix::to_kmer_binary_file(const std::string& outfile)
 
 	out.close();
 }
+
+
+
+void KmerMatrix::to_kmer_string_file_sorted(const std::string& outfile)
+{
+	ofstream out(outfile);
+
+	uint64_t actual_idx = 0;
+	uint64_t mapped_idx = 0;
+	for (uint64_t kmer: this->kmers){
+		out << kmer2str(kmer, this->k);
+		actual_idx++;
+	}
+		
+
+	out.close();
+};
 
 /** Generates a text file containing all the sorted kmers that correspond to the matrix rows.
  * The file contains one line per kmer
