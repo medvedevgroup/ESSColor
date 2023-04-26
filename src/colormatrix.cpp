@@ -85,15 +85,17 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 	const uint64_t num_uints_per_row = (this->num_datasets + 63) / 64;
 
 	//build dictionary on ess_order_file
-	for (uint64_t kmer_idx(0) ; kmer_idx<this->kmers.size() ; kmer_idx++)
+	uint64_t kmer_idx;
+	for (uint64_t iter_idx(0) ; iter_idx<this->kmers.size() ; iter_idx++)
 	{
 		//kmer_idx_mphf_mapped = mphf_query[kmer]
-		string thekmer=kmer2str(kmers[kmer_idx], this->k);
+		string thekmer=kmer2str(kmers[iter_idx], this->k);
 		auto answer = dict.lookup_advanced(thekmer.c_str());
             if( answer.kmer_id != constants::invalid_uint64){
-                std::cout<<thekmer<<" "<<answer.kmer_id<<std::endl;
+                //std::cout<<thekmer<<" "<<answer.kmer_id<<std::endl;
+				kmer_idx = answer.kmer_id;
             }else{
-                std::cout<<thekmer<<" "<<-1<<std::endl;
+                //std::cout<<thekmer<<" "<<-1<<std::endl;
             }
     
 		for (uint64_t dataset_idx(0) ; dataset_idx<this->num_datasets ; dataset_idx++)
