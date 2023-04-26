@@ -71,3 +71,29 @@ target_link_libraries(amatur
   sshash_static
   z
 )
+
+
+
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+# declare libraries
+add_subdirectory(lib)
+add_subdirectory(src)
+
+target_link_libraries(compress cmph_lib sdsl)
+target_link_libraries(decompress cmph_lib sdsl)
+# target_link_libraries(amatur sshash)
+# add_executable(sshash src/sshash.cpp)
+target_link_libraries(genmatrix
+essc_lib
+cxxopts
+  sshash_static
+  z
+)
+
+# add the executable
+add_executable(kmerlist src/kmerlist.cpp)
+add_executable(compress src/compress.cpp)
+add_executable(decompress src/decompress.cpp)
+add_executable(genmatrix src/genMatrix.cpp)
