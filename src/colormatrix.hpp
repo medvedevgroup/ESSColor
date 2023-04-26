@@ -18,7 +18,9 @@ public:
 	std::vector<uint64_t> colors;
 	std::string ess_order_file;
 
-	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, std::string ess_order_file);
+	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k);
+
+//	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, std::string ess_order_file);
 	KmerMatrix(KmerMatrix && other);
 	KmerMatrix& operator=(KmerMatrix&& other);
 
