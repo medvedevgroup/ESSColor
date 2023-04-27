@@ -7,7 +7,6 @@
 
 #include <vector>
 
-#include "common.hpp"
 // #include "bench_utils.hpp"
 // #include "check_utils.hpp"
 // // #include "lib/sshash/src/build.cpp"
@@ -18,9 +17,9 @@ using namespace sshash;
 
 namespace sshash {
 
-void random_kmer(char* kmer, uint64_t k) {
-    for (uint64_t i = 0; i != k; ++i) kmer[i] = "ACGT"[rand() % 4];
-}
+// void random_kmer(char* kmer, uint64_t k) {
+//     for (uint64_t i = 0; i != k; ++i) kmer[i] = "ACGT"[rand() % 4];
+// }
 
 void load_dictionary(dictionary& dict, std::string const& index_filename, bool verbose) {
     uint64_t num_bytes_read = essentials::load(dict, index_filename.c_str());
