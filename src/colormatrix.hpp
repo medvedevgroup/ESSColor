@@ -8,8 +8,6 @@
 #define DBIO_ERROR 10
 #define OUTPUT_ERROR 11
 
-#include "common.hpp"
-
 #include "../external/pthash/external/cmd_line_parser/include/parser.hpp"
 #include "../include/dictionary.hpp"
 
