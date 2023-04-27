@@ -18,7 +18,7 @@ using namespace std;
 // using namespace sshash;
 
 
-KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k, MPHFComparator& mphfcomparator)  
+KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k, MPHFComparatoror& mphfcomparator)  
 {
 	num_datasets = 1; 
 	this-> k = k; 
