@@ -84,9 +84,9 @@ class MPHFComparatoror
 	}	
 
 	bool comparefn(uint64_t kmer1, uint64_t kmer2)
-{
-    return get_kmer_id(kmer1) < get_kmer_id(kmer2);
-}
+	{
+	return get_kmer_id(kmer1) < get_kmer_id(kmer2);
+	}
 
     bool operator()(uint64_t kmer1, uint64_t kmer2)
     {
