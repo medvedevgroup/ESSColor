@@ -56,7 +56,7 @@ class MPHFComparator
         return answer1.kmer_id < answer2.kmer_id;
     }
 
-	int MPHFCompare(uint64_t kmer1, uint64_t kmer2, int k)
+	int MPHFCompare(uint64_t kmer1, uint64_t kmer2)
 	{
 		string kmer1_str=kmer2str(kmer1_str, k);
 		string kmer2_str=kmer2str(kmer2_str, k);

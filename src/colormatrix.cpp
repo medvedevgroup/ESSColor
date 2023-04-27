@@ -252,7 +252,7 @@ void KmerMatrix::merge (KmerMatrix & other)
 	while(my_idx < this->kmers.size() and other_idx < other.kmers.size())
 	{
 		/// amatur remove: if (this->kmers[my_idx] < other.kmers[other_idx])
-		if (mphfcomparator.MPHFCompare(this->kmers[my_idx], other.kmers[other_idx], k) == -1)
+		if (this->mphfcomparator.MPHFCompare(this->kmers[my_idx], other.kmers[other_idx]) == -1)
 		{
 			new_kmers.push_back(this->kmers[my_idx]);
 			// cout << "< " << new_colors.size() << " -> ";
@@ -266,7 +266,7 @@ void KmerMatrix::merge (KmerMatrix & other)
 			my_idx += 1;
 			my_color_iter += my_color_uint_size;
 		}
-		else if (mphfcomparator.MPHFCompare(this->kmers[my_idx], other.kmers[other_idx], k) == +1)
+		else if (this->mphfcomparator.MPHFCompare(this->kmers[my_idx], other.kmers[other_idx]) == 1)
 		{
 			new_kmers.push_back(other.kmers[other_idx]);
 			// cout << "> " << new_colors.size() << " -> ";
