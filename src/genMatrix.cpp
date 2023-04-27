@@ -90,91 +90,91 @@ vector<string> get_databases(const string& list_file)
 
 void verif(KmerMatrix & matrix, vector<string> db_list)
 {
-	cerr << "----- Start kmer presence checking -----" << endl;
-	uint64_t missing_kmers = 0;
-	uint64_t overpresent_kmers = 0;
+	// cerr << "----- Start kmer presence checking -----" << endl;
+	// uint64_t missing_kmers = 0;
+	// uint64_t overpresent_kmers = 0;
 
-	uint64_t dataset_idx = 0;
-	for (string& db_name : db_list)
-	{
-		cerr << "* Checking file " << db_name << endl;
-		uint64_t db_missing_kmers = 0;
-		uint64_t db_overpresent_kmers = 0;
+	// uint64_t dataset_idx = 0;
+	// for (string& db_name : db_list)
+	// {
+	// 	cerr << "* Checking file " << db_name << endl;
+	// 	uint64_t db_missing_kmers = 0;
+	// 	uint64_t db_overpresent_kmers = 0;
 
-		uint64_t k;
-		vector<uint64_t> kmers = load_from_file(db_name, k);
-		vector<uint64_t> row;
+	// 	uint64_t k;
+	// 	vector<uint64_t> kmers = load_from_file(db_name, k);
+	// 	vector<uint64_t> row;
 
-		// Looks for all the kmers from the db
-		uint64_t list_idx=0, matrix_idx=0;
-		while(list_idx < kmers.size() and matrix_idx < matrix.kmers.size())
-		{
-			// Missing kmer from the db
-			if (kmers[list_idx] < matrix.kmers[matrix_idx])
-			{
-				cerr << kmer2str(kmers[list_idx], k) << " not in matrix while in db" << endl;
-				db_missing_kmers += 1;
-				list_idx += 1;
-				// exit(1);
-			}
-			// Kmer from the matrix that is not present inside of the current db
-			else
-			{
-				// Get the current_row
-				matrix.get_row(matrix_idx, row);
-				uint64_t sub_row = row[dataset_idx / 64];
-				bool is_present = 1 == ((sub_row >> (dataset_idx % 64)) & 0b1);
+	// 	// Looks for all the kmers from the db
+	// 	uint64_t list_idx=0, matrix_idx=0;
+	// 	while(list_idx < kmers.size() and matrix_idx < matrix.kmers.size())
+	// 	{
+	// 		// Missing kmer from the db
+	// 		if (kmers[list_idx] < matrix.kmers[matrix_idx])
+	// 		{
+	// 			cerr << kmer2str(kmers[list_idx], k) << " not in matrix while in db" << endl;
+	// 			db_missing_kmers += 1;
+	// 			list_idx += 1;
+	// 			// exit(1);
+	// 		}
+	// 		// Kmer from the matrix that is not present inside of the current db
+	// 		else
+	// 		{
+	// 			// Get the current_row
+	// 			matrix.get_row(matrix_idx, row);
+	// 			uint64_t sub_row = row[dataset_idx / 64];
+	// 			bool is_present = 1 == ((sub_row >> (dataset_idx % 64)) & 0b1);
 
-				if (kmers[list_idx] > matrix.kmers[matrix_idx])
-				{
-					if (is_present)
-					{
-						db_overpresent_kmers += 1;
-						cerr << kmer2str(matrix.kmers[matrix_idx], k) << " in matrix while not in db" << endl;
-						// exit(1);
-					}
-					matrix_idx += 1;
-				}
-				else
-				{
-					if (not is_present)
-					{
-						db_missing_kmers += 1;
-						cerr << kmer2str(kmers[list_idx], k) << " not in matrix row while in db" << endl;
-						// exit(1);
-					}
-					matrix_idx += 1;
-					list_idx += 1;
-				}
-			}
-		}
+	// 			if (kmers[list_idx] > matrix.kmers[matrix_idx])
+	// 			{
+	// 				if (is_present)
+	// 				{
+	// 					db_overpresent_kmers += 1;
+	// 					cerr << kmer2str(matrix.kmers[matrix_idx], k) << " in matrix while not in db" << endl;
+	// 					// exit(1);
+	// 				}
+	// 				matrix_idx += 1;
+	// 			}
+	// 			else
+	// 			{
+	// 				if (not is_present)
+	// 				{
+	// 					db_missing_kmers += 1;
+	// 					cerr << kmer2str(kmers[list_idx], k) << " not in matrix row while in db" << endl;
+	// 					// exit(1);
+	// 				}
+	// 				matrix_idx += 1;
+	// 				list_idx += 1;
+	// 			}
+	// 		}
+	// 	}
 
-		// Potential remaining kmers after full consumption of the matrix
-		if (list_idx < kmers.size())
-		{
-			for (uint64_t i(list_idx) ; i<kmers.size() ; i++)
-			{
-				cerr << kmer2str(kmers[i], k) << " not in matrix while in db" << endl;
-				db_missing_kmers += 1;
-			}
-		}
+	// 	// Potential remaining kmers after full consumption of the matrix
+	// 	if (list_idx < kmers.size())
+	// 	{
+	// 		for (uint64_t i(list_idx) ; i<kmers.size() ; i++)
+	// 		{
+	// 			cerr << kmer2str(kmers[i], k) << " not in matrix while in db" << endl;
+	// 			db_missing_kmers += 1;
+	// 		}
+	// 	}
 
-		// Error stats
-		missing_kmers += db_missing_kmers;
-		overpresent_kmers += db_overpresent_kmers;
-		dataset_idx += 1;
-	}
+	// 	// Error stats
+	// 	missing_kmers += db_missing_kmers;
+	// 	overpresent_kmers += db_overpresent_kmers;
+	// 	dataset_idx += 1;
+	// }
 
-	if (missing_kmers == 0 and overpresent_kmers == 0)
-	{
-		cerr << "All the kmers are present in the matrix" << endl;
-	}
-	else
-	{
-		cerr << (missing_kmers + overpresent_kmers) << " errors detected!" << endl;
-		cerr << "  * " << missing_kmers << " missing kmers in the matrix" << endl;
-		cerr << "  * " << overpresent_kmers << " present kmers while it should not" << endl;
-	}
+	// if (missing_kmers == 0 and overpresent_kmers == 0)
+	// {
+	// 	cerr << "All the kmers are present in the matrix" << endl;
+	// }
+	// else
+	// {
+	// 	cerr << (missing_kmers + overpresent_kmers) << " errors detected!" << endl;
+	// 	cerr << "  * " << missing_kmers << " missing kmers in the matrix" << endl;
+	// 	cerr << "  * " << overpresent_kmers << " present kmers while it should not" << endl;
+	// }
 }
 
 

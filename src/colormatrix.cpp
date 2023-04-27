@@ -252,7 +252,7 @@ void KmerMatrix::merge (KmerMatrix & other)
 	while(my_idx < this->kmers.size() and other_idx < other.kmers.size())
 	{
 		/// amatur remove: if (this->kmers[my_idx] < other.kmers[other_idx])
-		if (this->mphfcomparator.MPHFCompare(this->kmers[my_idx], other.kmers[other_idx]) == -1)
+		if ((this->mphfcomparator).MPHFCompare(this->kmers[my_idx], other.kmers[other_idx]) == -1)
 		{
 			new_kmers.push_back(this->kmers[my_idx]);
 			// cout << "< " << new_colors.size() << " -> ";
@@ -266,7 +266,7 @@ void KmerMatrix::merge (KmerMatrix & other)
 			my_idx += 1;
 			my_color_iter += my_color_uint_size;
 		}
-		else if (this->mphfcomparator.MPHFCompare(this->kmers[my_idx], other.kmers[other_idx]) == 1)
+		else if ((this->mphfcomparator).MPHFCompare(this->kmers[my_idx], other.kmers[other_idx]) == 1)
 		{
 			new_kmers.push_back(other.kmers[other_idx]);
 			// cout << "> " << new_colors.size() << " -> ";
@@ -393,7 +393,7 @@ void merge_colors(vector<uint64_t> & colors, size_t first_idx, vector<uint64_t>:
  * @param k kmer size. This value is filled during the loading process
  * @return Sorted list of kmers (lexicographic order)
  **/KmerMatrix
-vector<uint64_t> load_from_file(const string db_path, uint64_t& k, MPHFComparator& mphfcomparator)
+vector<uint64_t> load_from_file(const string db_path, uint64_t& k, MPHFComparatoror& mphfcomparator)
 {
 	vector<uint64_t> kmers;
 
