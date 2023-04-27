@@ -85,7 +85,7 @@ add_subdirectory(src)
 # add_executable(kmerlist src/kmerlist.cpp)
 # add_executable(compress src/compress.cpp)
 # add_executable(decompress src/decompress.cpp)
-# add_executable(genmatrix src/genMatrix.cpp)
+add_executable(genmatrix src/genMatrix.cpp)
 
 # target_link_libraries(compress cmph_lib sdsl)
 # target_link_libraries(decompress cmph_lib sdsl)
