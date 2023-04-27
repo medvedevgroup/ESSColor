@@ -61,8 +61,8 @@ class MPHFComparatoror
 
 	int MPHFCompare(uint64_t kmer1, uint64_t kmer2)
 	{
-		string kmer1_str=kmer2str(kmer1_str, k);
-		string kmer2_str=kmer2str(kmer2_str, k);
+		std::string kmer1_str=kmer2str(kmer1, k);
+		std::string kmer2_str=kmer2str(kmer2, k);
 		auto answer1 = dict.lookup_advanced(kmer1_str.c_str());
 		auto answer2 = dict.lookup_advanced(kmer2_str.c_str());
 		assert(answer1.kmer_id != constants::invalid_uint64);
