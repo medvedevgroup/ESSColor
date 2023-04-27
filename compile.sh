@@ -39,9 +39,6 @@ cd ../
 
 cd lib/ESSCompress
 ./INSTALL
-
-
-
 cd ../../
 
 # Compilation
