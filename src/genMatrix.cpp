@@ -183,7 +183,7 @@ int main(int argc, char const *argv[])
 	auto args = parse_args(argc, argv);
 	vector<string> db_list = get_databases(args["count-list"].as<string>());
 
-	MPHFComparator mphfcomparator(5);
+	MPHFComparatoror mphfcomparator(5);
 	CascadingMergingMatrix cmm(0.9);
 	
 
