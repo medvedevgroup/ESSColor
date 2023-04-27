@@ -20,67 +20,6 @@
 using namespace sshash;
 void load_dictionary_sshash(dictionary& dict, std::string const& index_filename, bool verbose);
 std::string kmer2str(uint64_t kmer, uint64_t k);
-class MPHFComparatoror
-{
-	public:
-	int k;
-	dictionary dict;
-
-	MPHFComparatoror() {
-	}
-
-    MPHFComparatoror(int k) {
-		this->k = k;
-		k = 5;
-		auto m = 3;
-		//dictionary dict;
-
-		build_configuration build_config;
-		build_config.k = k;
-		build_config.m = m;
-
-		build_config.canonical_parsing = true;
-		build_config.verbose = true;
-		build_config.print();
-
-		dict.build("/home/aur1111/s/proj4/minireal/k5/mega.essd", build_config);
-		assert(dict.k() == k);
-		std::cout<<"dict built complete";
-		//dict.streaming_query_from_file("/home/aur1111/s/proj4/minireal/k5/mega.essd");
-
-	}
-
-	uint64_t get_kmer_id(uint64_t kmer1){
-		std::string kmer1_str=kmer2str(kmer1, k);
-		auto answer1 = dict.lookup_advanced(kmer1_str.c_str());
-		assert(answer1.kmer_id != constants::invalid_uint64);
-		return answer1.kmer_id;
-	}	
-
-	
-
-    // bool operator()(uint64_t kmer1, uint64_t kmer2)
-    // {
-    //     return get_kmer_id(kmer1) < get_kmer_id(kmer2);
-    // }
-
-	int MPHFCompare(uint64_t kmer1, uint64_t kmer2)
-	{
-		std::string kmer1_str=kmer2str(kmer1, k);
-		std::string kmer2_str=kmer2str(kmer2, k);
-		auto answer1 = dict.lookup_advanced(kmer1_str.c_str());
-		auto answer2 = dict.lookup_advanced(kmer2_str.c_str());
-		assert(answer1.kmer_id != constants::invalid_uint64);
-		assert(answer2.kmer_id != constants::invalid_uint64);
-		if(answer1.kmer_id < answer2.kmer_id){
-			return -1;
-		}else if (answer1.kmer_id > answer2.kmer_id){
-			return +1;
-		}else{
-			return 0;
-		}        
-	}
-};
 
 
 class KmerMatrix
