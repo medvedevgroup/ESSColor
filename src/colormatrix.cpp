@@ -16,7 +16,7 @@ using namespace std;
 // #include "permute.cpp"
 
 // using namespace sshash;
-
+MPHFComparatoror mphfcomparator;
 
 KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k, MPHFComparatoror& mphfcomparator)  
 {
@@ -393,9 +393,13 @@ void merge_colors(vector<uint64_t> & colors, size_t first_idx, vector<uint64_t>:
  * @param k kmer size. This value is filled during the loading process
  * @return Sorted list of kmers (lexicographic order)
  **/
-vector<uint64_t> load_from_file(const string db_path, uint64_t& k, MPHFComparatoror& mphfcomparator)
+bool fancy_comparison(uint64_t a, uint64_t b) {
+  return mphfcomparator.get_kmer_id(a) <  mphfcomparator.get_kmer_id(b) ;
+}
+vector<uint64_t> load_from_file(const string db_path, uint64_t& k, MPHFComparatoror& mphfcomparator2)
 {
 	vector<uint64_t> kmers;
+	mphfcomparator = mphfcomparator2;
 
 	// Opening the database
 	CKMCFile db;
@@ -432,10 +436,7 @@ vector<uint64_t> load_from_file(const string db_path, uint64_t& k, MPHFComparato
 	}
 
 	//amatur  comments out  
-	sort(kmers.begin(), kmers.end(), [](const uint64_t & a, const uint64_t & b) -> bool
-{ 
-	return mphfcomparator.comparefn(a, b);
-});
+	sort(kmers.begin(), kmers.end(), fancy_comparison);
 
 	return kmers;
 };
