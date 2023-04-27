@@ -82,7 +82,7 @@ public:
 	std::vector<uint64_t> kmers;
 	std::vector<uint64_t> colors;
 	std::string ess_order_file;
-	MPHFComparator mphfcomparator;
+	MPHFComparator mphfcomparator(k);
 
 	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, MPHFComparator& mphfcomparator);
 

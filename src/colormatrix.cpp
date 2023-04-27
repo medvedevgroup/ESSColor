@@ -18,8 +18,10 @@ using namespace std;
 using namespace sshash;
 
 
-KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k, MPHFComparator& mphfcomparator) : num_datasets(1), k(k) 
+KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k, MPHFComparator& mphfcomparator)  
 {
+	num_datasets = 1; 
+	this-> k = k; 
 	//std::string ess_order_file
 	this->kmers = dataset;
 	this->colors.resize(dataset.size(), 1);
@@ -390,7 +392,7 @@ void merge_colors(vector<uint64_t> & colors, size_t first_idx, vector<uint64_t>:
  * @param db_path path to kmer database
  * @param k kmer size. This value is filled during the loading process
  * @return Sorted list of kmers (lexicographic order)
- **/
+ **/KmerMatrix
 vector<uint64_t> load_from_file(const string db_path, uint64_t& k, MPHFComparator& mphfcomparator)
 {
 	vector<uint64_t> kmers;
