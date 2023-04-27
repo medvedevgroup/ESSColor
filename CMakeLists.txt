@@ -60,17 +60,17 @@ add_library(sshash_static STATIC
   ${SSHASH_SOURCES}
 )
 
-add_executable(sshash src/sshash.cpp)
-target_link_libraries(sshash
-  sshash_static
-  z
-)
+# add_executable(sshash src/sshash.cpp)
+# target_link_libraries(sshash
+#   sshash_static
+#   z
+# )
 
-add_executable(amatur src/amatur.cpp)
-target_link_libraries(amatur
-  sshash_static
-  z
-)
+# add_executable(amatur src/amatur.cpp)
+# target_link_libraries(amatur
+#   sshash_static
+#   z
+# )
 
 
 
