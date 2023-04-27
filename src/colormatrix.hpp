@@ -16,36 +16,10 @@
 #include <vector>
 
 
-namespace sshash {
-void load_dictionary(dictionary& dict, std::string const& index_filename, bool verbose) {
-    uint64_t num_bytes_read = essentials::load(dict, index_filename.c_str());
-    if (verbose) {
-        std::cout << "index size: " << essentials::convert(num_bytes_read, essentials::MB)
-                  << " [MB] (" << (num_bytes_read * 8.0) / dict.size() << " [bits/kmer])"
-                  << std::endl;
-        dict.print_info();
-    }
-}
-}  // namespace sshash
 
 using namespace sshash;
-
-std::string kmer2str(uint64_t kmer, uint64_t k)
-{
-	static const char nucleotides[] = {'A', 'C', 'G', 'T'};
-	std::stringstream ss;
-
-	for (uint64_t i(0) ; i<k ; i++)
-	{
-		ss << nucleotides[kmer & 0b11];
-		kmer >>= 2;
-	}
-
-	std::string s = ss.str();
-	std::reverse(s.begin(), s.end());
-
-	return s;
-};
+void load_dictionary_sshash(dictionary& dict, std::string const& index_filename, bool verbose);
+std::string kmer2str(uint64_t kmer, uint64_t k);
 class MPHFComparatoror
 {
 	public:
@@ -83,15 +57,12 @@ class MPHFComparatoror
 		return answer1.kmer_id;
 	}	
 
-	bool comparefn(uint64_t kmer1, uint64_t kmer2)
-	{
-	return get_kmer_id(kmer1) < get_kmer_id(kmer2);
-	}
+	
 
-    bool operator()(uint64_t kmer1, uint64_t kmer2)
-    {
-        return get_kmer_id(kmer1) < get_kmer_id(kmer2);
-    }
+    // bool operator()(uint64_t kmer1, uint64_t kmer2)
+    // {
+    //     return get_kmer_id(kmer1) < get_kmer_id(kmer2);
+    // }
 
 	int MPHFCompare(uint64_t kmer1, uint64_t kmer2)
 	{
