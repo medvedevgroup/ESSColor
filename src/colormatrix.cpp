@@ -434,7 +434,7 @@ vector<uint64_t> load_from_file(const string db_path, uint64_t& k, MPHFComparato
 	//amatur  comments out  
 	sort(kmers.begin(), kmers.end(), [](const uint64_t & a, const uint64_t & b) -> bool
 { 
-	return mphfcomparator.comparefn(uint64_t a, uint64_t b);
+	return mphfcomparator.comparefn(a, b);
 });
 
 	return kmers;
