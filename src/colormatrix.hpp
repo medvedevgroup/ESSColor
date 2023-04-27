@@ -75,12 +75,12 @@ void merge_colors(std::vector<uint64_t> & colors, size_t first_idx, std::vector<
 std::vector<uint64_t> load_from_file(const std::string db_path, uint64_t& k, MPHFComparatoror& mphfcomparator);
 
 
-/** Translate a uint64_t kmer into a string
- * @param kmer the kmer integer version
- * @param k kmer size (in nucleotides)
- * @return string version of the kmer
- **/
-std::string kmer2str(uint64_t kmer, uint64_t k);
+// /** Translate a uint64_t kmer into a string
+//  * @param kmer the kmer integer version
+//  * @param k kmer size (in nucleotides)
+//  * @return string version of the kmer
+//  **/
+// std::string kmer2str(uint64_t kmer, uint64_t k);
 
 
 /** This class is made to amortize mergings. We do not want to merge each new dataset directly.
