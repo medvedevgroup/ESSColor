@@ -18,13 +18,16 @@
 
 using namespace sshash;
 
-class MPHFComparator
+class MPHFComparatoror
 {
 	public:
 	int k;
 	dictionary dict;
 
-    MPHFComparator(int k) {
+	MPHFComparatoror() {
+	}
+
+    MPHFComparatoror(int k) {
 		this->k = k;
 		k = 5;
 		auto m = 3;
@@ -82,9 +85,9 @@ public:
 	std::vector<uint64_t> kmers;
 	std::vector<uint64_t> colors;
 	std::string ess_order_file;
-	MPHFComparator mphfcomparator(k);
+	MPHFComparatoror mphfcomparator;
 
-	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, MPHFComparator& mphfcomparator);
+	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, MPHFComparatoror& mphfcomparator);
 
 //	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, std::string ess_order_file);
 	KmerMatrix(KmerMatrix && other);
