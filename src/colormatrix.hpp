@@ -9,6 +9,71 @@
 #define OUTPUT_ERROR 11
 
 
+#include "common.hpp"
+#include "bench_utils.hpp"
+#include "check_utils.hpp"
+// #include "lib/sshash/src/build.cpp"
+// #include "lib/sshash/src/query.cpp"
+#include "permute.cpp"
+
+using namespace sshash;
+
+class MPHFComparator
+{
+	public:
+	int k;
+	dictionary dict;
+
+    MPHFComparator(int k) {
+		this->k = k;
+		k = 5;
+		auto m = 3;
+		//dictionary dict;
+
+		build_configuration build_config;
+		build_config.k = k;
+		build_config.m = m;
+
+		build_config.canonical_parsing = true;
+		build_config.verbose = true;
+		build_config.print();
+
+		dict.build("/home/aur1111/s/proj4/minireal/k5/mega.essd", build_config);
+		assert(dict.k() == k);
+		std::cout<<"dict built complete";
+		//dict.streaming_query_from_file("/home/aur1111/s/proj4/minireal/k5/mega.essd");
+
+	}
+
+    bool operator()(uint64_t kmer1, uint64_t kmer2)
+    {
+		string kmer1_str=kmer2str(kmer1_str, k);
+		string kmer2_str=kmer2str(kmer2_str, k);
+		auto answer1 = dict.lookup_advanced(kmer1_str.c_str());
+		auto answer2 = dict.lookup_advanced(kmer2_str.c_str());
+		assert(answer1.kmer_id != constants::invalid_uint64);
+		assert(answer2.kmer_id != constants::invalid_uint64);
+        return answer1.kmer_id < answer2.kmer_id;
+    }
+
+	int MPHFCompare(uint64_t kmer1, uint64_t kmer2, int k)
+	{
+		string kmer1_str=kmer2str(kmer1_str, k);
+		string kmer2_str=kmer2str(kmer2_str, k);
+		auto answer1 = dict.lookup_advanced(kmer1_str.c_str());
+		auto answer2 = dict.lookup_advanced(kmer2_str.c_str());
+		assert(answer1.kmer_id != constants::invalid_uint64);
+		assert(answer2.kmer_id != constants::invalid_uint64);
+		if(answer1.kmer_id < answer2.kmer_id){
+			return -1;
+		}else if (answer1.kmer_id > answer2.kmer_id){
+			return +1;
+		}else{
+			return 0;
+		}        
+	}
+};
+
 class KmerMatrix
 {
 public:
@@ -17,8 +82,9 @@ public:
 	std::vector<uint64_t> kmers;
 	std::vector<uint64_t> colors;
 	std::string ess_order_file;
+	MPHFComparator mphfcomparator;
 
-	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k);
+	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, MPHFComparator& mphfcomparator);
 
 //	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, std::string ess_order_file);
 	KmerMatrix(KmerMatrix && other);

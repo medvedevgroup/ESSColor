@@ -9,10 +9,21 @@
 
 using namespace std;
 
+#include "common.hpp"
+#include "bench_utils.hpp"
+#include "check_utils.hpp"
+// #include "lib/sshash/src/build.cpp"
+// #include "lib/sshash/src/query.cpp"
+#include "permute.cpp"
+
+using namespace sshash;
+
 
 #define OPT_PARSING_ERROR 01
 #define DB_LIST_ERROR 02
 
+
+using namespace std;
 
 
 
@@ -172,7 +183,9 @@ int main(int argc, char const *argv[])
 	auto args = parse_args(argc, argv);
 	vector<string> db_list = get_databases(args["count-list"].as<string>());
 
+	MPHFComparator mphfcomparator;
 	CascadingMergingMatrix cmm(0.9);
+	
 
 	// For each file, add it to the cascading matrix constructor
 	int db_idx = 1;
@@ -180,8 +193,8 @@ int main(int argc, char const *argv[])
 	for (const string& db_name : db_list)
 	{
 		cout << "processing database " << db_idx++ << "/" << db_list.size() << endl;
-		vector<uint64_t> kmers = load_from_file(db_name, k);
-		KmerMatrix matrix(kmers, k);
+		vector<uint64_t> kmers = load_from_file(db_name, k, mphfcomparator);
+		KmerMatrix matrix(kmers, k, mphfcomparator);
 		cmm.add_matrix(matrix);
 	}
 

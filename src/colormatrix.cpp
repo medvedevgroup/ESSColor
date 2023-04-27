@@ -18,12 +18,12 @@ using namespace std;
 using namespace sshash;
 
 
-
-KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k) : num_datasets(1), k(k) 
+KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k, MPHFComparator& mphfcomparator) : num_datasets(1), k(k) 
 {
 	//std::string ess_order_file
 	this->kmers = dataset;
 	this->colors.resize(dataset.size(), 1);
+	this->mphfcomparator = mphfcomparator;
 	//this->ess_order_file = ess_order_file;
 };
 
@@ -33,6 +33,7 @@ KmerMatrix::KmerMatrix(KmerMatrix && other)
 	this->k = other.k;
 	this->kmers = std::move(other.kmers);
 	this->colors = std::move(other.colors);
+	this->mphfcomparator = other.mphfcomparator;
 	//this->ess_order_file = other.ess_order_file;
 };
 
@@ -42,6 +43,7 @@ KmerMatrix& KmerMatrix::operator=(KmerMatrix&& other)
 	this->k = other.k;
 	this->kmers = std::move(other.kmers);
 	this->colors = std::move(other.colors);
+	this->mphfcomparator = other.mphfcomparator;
 	//this->ess_order_file = other.ess_order_file;
 
 	return *this;
@@ -63,40 +65,39 @@ void KmerMatrix::get_row(uint64_t row_idx, vector<uint64_t>& to_fill)
 void KmerMatrix::to_color_string_file(const std::string& outfile)
 {
 	//, std::string ess_order_file
-	auto k = 5;
-    auto m = 3;
-    dictionary dict;
+	// auto k = 5;
+    // auto m = 3;
+    // dictionary dict;
 
-    build_configuration build_config;
-    build_config.k = k;
-    build_config.m = m;
+    // build_configuration build_config;
+    // build_config.k = k;
+    // build_config.m = m;
 
-    build_config.canonical_parsing = true;
-    build_config.verbose = true;
-    build_config.print();
+    // build_config.canonical_parsing = true;
+    // build_config.verbose = true;
+    // build_config.print();
 
-    dict.build("/home/aur1111/s/proj4/minireal/k5/mega.essd", build_config);
-    assert(dict.k() == k);
-    std::cout<<"dict built complete";
-	//dict.streaming_query_from_file("/home/aur1111/s/proj4/minireal/k5/mega.essd");
+    // dict.build("/home/aur1111/s/proj4/minireal/k5/mega.essd", build_config);
+    // assert(dict.k() == k);
+    // std::cout<<"dict built complete";
+	// //dict.streaming_query_from_file("/home/aur1111/s/proj4/minireal/k5/mega.essd");
 
 	ofstream out(outfile);
 
 	const uint64_t num_uints_per_row = (this->num_datasets + 63) / 64;
 
 	//build dictionary on ess_order_file
-	uint64_t kmer_idx;
-	for (uint64_t iter_idx(0) ; iter_idx<this->kmers.size() ; iter_idx++)
+	//uint64_t kmer_idx;
+	for (uint64_t kmer_idx(0) ; kmer_idx<this->kmers.size() ; kmer_idx++)
 	{
-		//kmer_idx_mphf_mapped = mphf_query[kmer]
-		string thekmer=kmer2str(kmers[iter_idx], this->k);
-		auto answer = dict.lookup_advanced(thekmer.c_str());
-            if( answer.kmer_id != constants::invalid_uint64){
-                //std::cout<<thekmer<<" "<<answer.kmer_id<<std::endl;
-				kmer_idx = answer.kmer_id;
-            }else{
-                //std::cout<<thekmer<<" "<<-1<<std::endl;
-            }
+		// string thekmer=kmer2str(kmers[iter_idx], this->k);
+		// auto answer = dict.lookup_advanced(thekmer.c_str());
+        //     if( answer.kmer_id != constants::invalid_uint64){
+        //         //std::cout<<thekmer<<" "<<answer.kmer_id<<std::endl;
+		// 		kmer_idx = answer.kmer_id;
+        //     }else{
+        //         //std::cout<<thekmer<<" "<<-1<<std::endl;
+        //     }
     
 		for (uint64_t dataset_idx(0) ; dataset_idx<this->num_datasets ; dataset_idx++)
 		{
@@ -248,7 +249,8 @@ void KmerMatrix::merge (KmerMatrix & other)
 	// Add the kmers from the dataset using a sorted list fusion procedure
 	while(my_idx < this->kmers.size() and other_idx < other.kmers.size())
 	{
-		if (this->kmers[my_idx] < other.kmers[other_idx])
+		/// amatur remove: if (this->kmers[my_idx] < other.kmers[other_idx])
+		if (mphfcomparator.MPHFCompare(this->kmers[my_idx], other.kmers[other_idx], k) == -1)
 		{
 			new_kmers.push_back(this->kmers[my_idx]);
 			// cout << "< " << new_colors.size() << " -> ";
@@ -262,7 +264,7 @@ void KmerMatrix::merge (KmerMatrix & other)
 			my_idx += 1;
 			my_color_iter += my_color_uint_size;
 		}
-		else if (this->kmers[my_idx] > other.kmers[other_idx])
+		else if (mphfcomparator.MPHFCompare(this->kmers[my_idx], other.kmers[other_idx], k) == +1)
 		{
 			new_kmers.push_back(other.kmers[other_idx]);
 			// cout << "> " << new_colors.size() << " -> ";
@@ -389,7 +391,7 @@ void merge_colors(vector<uint64_t> & colors, size_t first_idx, vector<uint64_t>:
  * @param k kmer size. This value is filled during the loading process
  * @return Sorted list of kmers (lexicographic order)
  **/
-vector<uint64_t> load_from_file(const string db_path, uint64_t& k)
+vector<uint64_t> load_from_file(const string db_path, uint64_t& k, MPHFComparator& mphfcomparator)
 {
 	vector<uint64_t> kmers;
 
@@ -428,7 +430,7 @@ vector<uint64_t> load_from_file(const string db_path, uint64_t& k)
 	}
 
 	//amatur  comments out  
-	sort(kmers.begin(), kmers.end());
+	sort(kmers.begin(), kmers.end(), mphfcomparator);
 
 	return kmers;
 };
