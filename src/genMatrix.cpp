@@ -9,14 +9,14 @@
 
 using namespace std;
 
-#include "common.hpp"
-#include "bench_utils.hpp"
-#include "check_utils.hpp"
-// #include "lib/sshash/src/build.cpp"
-// #include "lib/sshash/src/query.cpp"
-#include "permute.cpp"
+// #include "common.hpp"
+// #include "bench_utils.hpp"
+// #include "check_utils.hpp"
+// // #include "lib/sshash/src/build.cpp"
+// // #include "lib/sshash/src/query.cpp"
+// #include "permute.cpp"
 
-using namespace sshash;
+// using namespace sshash;
 
 
 #define OPT_PARSING_ERROR 01
@@ -183,7 +183,7 @@ int main(int argc, char const *argv[])
 	auto args = parse_args(argc, argv);
 	vector<string> db_list = get_databases(args["count-list"].as<string>());
 
-	MPHFComparator mphfcomparator;
+	MPHFComparator mphfcomparator(5);
 	CascadingMergingMatrix cmm(0.9);
 	
 
