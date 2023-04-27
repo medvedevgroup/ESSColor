@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef COMMON_MYTYPES_H
+#define COMMON_MYTYPES_H
 #include "../external/pthash/external/cmd_line_parser/include/parser.hpp"
 #include "../include/dictionary.hpp"
 
@@ -22,3 +24,5 @@ void load_dictionary(dictionary& dict, std::string const& index_filename, bool v
 }
 
 }  // namespace sshash
+
+#endif

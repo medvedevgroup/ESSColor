@@ -9,7 +9,7 @@
 #define OUTPUT_ERROR 11
 
 
-// #include "common.hpp"
+#include "common.hpp"
 // #include "bench_utils.hpp"
 // #include "check_utils.hpp"
 // // #include "lib/sshash/src/build.cpp"
