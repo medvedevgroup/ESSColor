@@ -5,7 +5,7 @@
 #include <algorithm>
 
 #include "kmc_file.h"
-// #include "colormatrix.hpp"
+#include "colormatrix.hpp"
 
 using namespace std;
 // #include "common.hpp"
