@@ -19,10 +19,10 @@
 using namespace sshash;
 
 
-string kmer2str(uint64_t kmer, uint64_t k)
+std::string kmer2str(uint64_t kmer, uint64_t k)
 {
 	static const char nucleotides[] = {'A', 'C', 'G', 'T'};
-	stringstream ss;
+	std::stringstream ss;
 
 	for (uint64_t i(0) ; i<k ; i++)
 	{
@@ -30,7 +30,7 @@ string kmer2str(uint64_t kmer, uint64_t k)
 		kmer >>= 2;
 	}
 
-	string s = ss.str();
+	std::string s = ss.str();
 	std::reverse(s.begin(), s.end());
 
 	return s;
