@@ -50,8 +50,8 @@ class MPHFComparatoror
 
     bool operator()(uint64_t kmer1, uint64_t kmer2)
     {
-		string kmer1_str=kmer2str(kmer1_str, k);
-		string kmer2_str=kmer2str(kmer2_str, k);
+		string kmer1_str=kmer2str(kmer1, k);
+		string kmer2_str=kmer2str(kmer2, k);
 		auto answer1 = dict.lookup_advanced(kmer1_str.c_str());
 		auto answer2 = dict.lookup_advanced(kmer2_str.c_str());
 		assert(answer1.kmer_id != constants::invalid_uint64);
@@ -139,7 +139,7 @@ void merge_colors(std::vector<uint64_t> & colors, size_t first_idx, std::vector<
  * @param k kmer size. This value is filled during the loading process.
  * @return Sorted list of kmers (lexicographic order)
  **/
-std::vector<uint64_t> load_from_file(const std::string db_path, uint64_t& k);
+std::vector<uint64_t> load_from_file(const std::string db_path, uint64_t& k, MPHFComparatoror& mphfcomparator);
 
 
 /** Translate a uint64_t kmer into a string
