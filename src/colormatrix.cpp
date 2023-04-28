@@ -163,13 +163,13 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 	const uint64_t num_uints_per_row = (this->num_datasets + 63) / 64;
 	uint64_t* mphf_mapping = new uint64_t[this->kmers.size()]; 
 	cout<<"kmers"<<this->kmers.size()<<endl;
-	for (uint64_t kmer_idx(0) ; kmer_idx<this->kmers.size() ; kmer_idx++)
-	{
-		string thekmer=kmer2str(kmers[kmer_idx], this->k);
-		auto answer = dict.lookup_advanced(thekmer.c_str());
-		assert(answer.kmer_id != constants::invalid_uint64);
-        mphf_mapping[answer.kmer_id] = kmer_idx;	
-	}
+	// for (uint64_t kmer_idx(0) ; kmer_idx<this->kmers.size() ; kmer_idx++)
+	// {
+	// 	string thekmer=kmer2str(kmers[kmer_idx], this->k);
+	// 	auto answer = dict.lookup_advanced(thekmer.c_str());
+	// 	assert(answer.kmer_id != constants::invalid_uint64);
+    //     mphf_mapping[answer.kmer_id] = kmer_idx;	
+	// }
 	std::cout<<"Finished mphf mapping"<<endl;
 	//build dictionary on ess_order_file
 	uint64_t kmer_idx;
@@ -183,7 +183,8 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
         //     }else{
         //         //std::cout<<thekmer<<" "<<-1<<std::endl;
         //     }
-		kmer_idx = mphf_mapping[iter_idx];
+		//kmer_idx = mphf_mapping[iter_idx];
+		kmer_idx = iter_idx;
 		for (uint64_t dataset_idx(0) ; dataset_idx<this->num_datasets ; dataset_idx++)
 		{
 			uint64_t subvector = this->colors[kmer_idx * num_uints_per_row + dataset_idx / 64];
