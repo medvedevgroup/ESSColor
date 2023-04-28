@@ -161,11 +161,13 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 	ofstream out(outfile);
 
 	const uint64_t num_uints_per_row = (this->num_datasets + 63) / 64;
-	vector<uint64_t> mphf_mapping(this->kmers.size()); 
+	uint64_t* mphf_mapping = new uint64_t[this->kmers.size()]; 
+	cout<<"kmers"<<this->kmers.size()<<endl;
 	for (uint64_t kmer_idx(0) ; kmer_idx<this->kmers.size() ; kmer_idx++)
 	{
 		string thekmer=kmer2str(kmers[kmer_idx], this->k);
 		auto answer = dict.lookup_advanced(thekmer.c_str());
+		assert(answer.kmer_id != constants::invalid_uint64);
         mphf_mapping[answer.kmer_id] = kmer_idx;	
 	}
 	std::cout<<"Finished mphf mapping"<<endl;
@@ -192,6 +194,7 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 		
 		//this->ess_order_file = other.ess_order_file;
 	}
+	delete mphf_mapping;
 
 	out.close();
 }
