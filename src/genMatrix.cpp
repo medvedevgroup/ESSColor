@@ -181,7 +181,8 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 
 
 void build_mphf(int k, dictionary& dict, string spss_file) {
-	auto m = 15;
+	auto m = (int) k/2;
+	if(m<10) m = k;
 	//dictionary dict;
 
 	build_configuration build_config;
