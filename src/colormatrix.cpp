@@ -78,7 +78,7 @@ uint64_t KmerMatrix::mphf_get_kmer_id(uint64_t kmer1){
 		return answer1.kmer_id;
 	}	
 uint64_t global_mphf_get_kmer_id(uint64_t kmer1){
-		std::string kmer1_str=kmer2str(kmer1, k);
+		std::string kmer1_str=kmer2str(kmer1, global_dict.k());
 		auto answer1 = global_dict.lookup_advanced(kmer1_str.c_str());
 		assert(answer1.kmer_id != constants::invalid_uint64);
 		return answer1.kmer_id;

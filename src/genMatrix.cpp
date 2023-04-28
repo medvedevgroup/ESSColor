@@ -178,12 +178,32 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 }
 
 
+void build_mphf(int k, dictionary& dict) {
+	k = 5;
+	auto m = 3;
+	//dictionary dict;
+
+	build_configuration build_config;
+	build_config.k = k;
+	build_config.m = m;
+
+	build_config.canonical_parsing = true;
+	build_config.verbose = true;
+	build_config.print();
+
+	dict.build("/home/aur1111/s/proj4/minireal/k5/mega.essd", build_config);
+	assert(dict.k() == k);
+	std::cout<<"dict built complete";
+	//dict.streaming_query_from_file("/home/aur1111/s/proj4/minireal/k5/mega.essd");
+}
 int main(int argc, char const *argv[])
 {
 	auto args = parse_args(argc, argv);
 	vector<string> db_list = get_databases(args["count-list"].as<string>());
 
-	MPHFComparatoror mphfcomparator(5);
+	dictionary dict;
+	build_mphf(k,dict);
+
 	CascadingMergingMatrix cmm(0.9);
 	
 
@@ -193,8 +213,8 @@ int main(int argc, char const *argv[])
 	for (const string& db_name : db_list)
 	{
 		cout << "processing database " << db_idx++ << "/" << db_list.size() << endl;
-		vector<uint64_t> kmers = load_from_file(db_name, k, mphfcomparator);
-		KmerMatrix matrix(kmers, k, mphfcomparator);
+		vector<uint64_t> kmers = load_from_file(db_name, k, dict);
+		KmerMatrix matrix(kmers, k, dict);
 		cmm.add_matrix(matrix);
 	}
 
