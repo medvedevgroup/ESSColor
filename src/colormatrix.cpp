@@ -33,7 +33,7 @@ using namespace std;
 //     //     return get_kmer_id(kmer1) < get_kmer_id(kmer2);
 //     // }
 
-int MPHFCompare(uint64_t kmer1, uint64_t kmer2, dictionary &dict)
+int KmerMatrix::MPHFCompare(uint64_t kmer1, uint64_t kmer2)
 {
 	std::string kmer1_str=kmer2str(kmer1, k);
 	std::string kmer2_str=kmer2str(kmer2, k);
@@ -71,7 +71,7 @@ std::string kmer2str(uint64_t kmer, uint64_t k)
 	return s;
 };
 
-uint64_t mphf_get_kmer_id(uint64_t kmer1){
+uint64_t KmerMatrix::mphf_get_kmer_id(uint64_t kmer1){
 		std::string kmer1_str=kmer2str(kmer1, k);
 		auto answer1 = dict.lookup_advanced(kmer1_str.c_str());
 		assert(answer1.kmer_id != constants::invalid_uint64);
@@ -312,7 +312,7 @@ void KmerMatrix::merge (KmerMatrix & other)
 	while(my_idx < this->kmers.size() and other_idx < other.kmers.size())
 	{
 		/// amatur remove: if (this->kmers[my_idx] < other.kmers[other_idx])
-		if (MPHFCompare(this->kmers[my_idx], other.kmers[other_idx]) == -1))
+		if (MPHFCompare(this->kmers[my_idx], other.kmers[other_idx]) == -1)
 		{
 			new_kmers.push_back(this->kmers[my_idx]);
 			// cout << "< " << new_colors.size() << " -> ";
@@ -458,15 +458,17 @@ void load_dictionary_sshash(dictionary& dict, std::string const& index_filename,
 }
 
 
+
+bool fancy_comparison(uint64_t a, uint64_t b) {
+  return mphf_get_kmer_id(a) <  mphf_get_kmer_id(b) ;
+}
+
 /** Loads a kmer list from a KMC database and sort the kmers.
  * @param db_path path to kmer database
  * @param k kmer size. This value is filled during the loading process
  * @return Sorted list of kmers (lexicographic order)
  **/
-bool fancy_comparison(uint64_t a, uint64_t b) {
-  return mphf_get_kmer_id(a) <  mphf_get_kmer_id(b) ;
-}
-vector<uint64_t> load_from_file(const string db_path, uint64_t& k)
+vector<uint64_t> load_from_file(const string db_path, uint64_t& k, dictionary& dict)
 {
 	vector<uint64_t> kmers;
 

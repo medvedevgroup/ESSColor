@@ -38,6 +38,9 @@ public:
 	KmerMatrix(KmerMatrix && other);
 	KmerMatrix& operator=(KmerMatrix&& other);
 
+	uint64_t mphf_get_kmer_id(uint64_t kmer);
+	MPHFCompare(uint64_t kmer1, uint64_t kmer2);
+
 	/** Fill the to_fill vector with the uints from the row of row_idx idx.
 	 * @param row_idx Index of the matrix row of interest
 	 * @param to_fill A uint vector that will be modified to store the row
