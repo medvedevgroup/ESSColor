@@ -161,30 +161,26 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 	ofstream out(outfile);
 
 	const uint64_t num_uints_per_row = (this->num_datasets + 63) / 64;
-	uint64_t* mphf_mapping = new uint64_t[this->kmers.size()]; 
-	cout<<"kmers"<<this->kmers.size()<<endl;
-	// for (uint64_t kmer_idx(0) ; kmer_idx<this->kmers.size() ; kmer_idx++)
-	// {
-	// 	string thekmer=kmer2str(kmers[kmer_idx], this->k);
-	// 	auto answer = dict.lookup_advanced(thekmer.c_str());
-	// 	assert(answer.kmer_id != constants::invalid_uint64);
-    //     mphf_mapping[answer.kmer_id] = kmer_idx;	
-	// }
+	vector<uint64_t> mphf_mapping(this->kmers.size()); 
+	cout<<"Total number of k-mers: "<<this->kmers.size()<<endl;
+	for (uint64_t kmer_idx(0) ; kmer_idx<this->kmers.size() ; kmer_idx++)
+	{
+		string thekmer=kmer2str(kmers[kmer_idx], this->k);
+		auto answer = dict.lookup_advanced(thekmer.c_str());
+		assert(answer.kmer_id != constants::invalid_uint64);
+		if(answer.kmer_id <0 || answer.kmer_id>=this->kmers.size()){
+			cout<<"Erroneus mphf."<<endl;
+			exit(3);
+		}
+        mphf_mapping[answer.kmer_id] = kmer_idx;	
+	}
 	std::cout<<"Finished mphf mapping"<<endl;
-	//build dictionary on ess_order_file
+
 	uint64_t kmer_idx;
 	for (uint64_t iter_idx(0) ; iter_idx<this->kmers.size() ; iter_idx++)
 	{
-		// string thekmer=kmer2str(kmers[iter_idx], this->k);
-		// auto answer = dict.lookup_advanced(thekmer.c_str());
-        //     if( answer.kmer_id != constants::invalid_uint64){
-        //         //std::cout<<thekmer<<" "<<answer.kmer_id<<std::endl;
-		// 		kmer_idx = answer.kmer_id;
-        //     }else{
-        //         //std::cout<<thekmer<<" "<<-1<<std::endl;
-        //     }
-		//kmer_idx = mphf_mapping[iter_idx];
-		kmer_idx = iter_idx;
+		kmer_idx = mphf_mapping[iter_idx];
+		//kmer_idx = iter_idx;
 		for (uint64_t dataset_idx(0) ; dataset_idx<this->num_datasets ; dataset_idx++)
 		{
 			uint64_t subvector = this->colors[kmer_idx * num_uints_per_row + dataset_idx / 64];
@@ -192,11 +188,7 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 			out << (color == 0 ? '0' : '1');
 		}
 		out << endl;
-		
-		//this->ess_order_file = other.ess_order_file;
 	}
-	delete mphf_mapping;
-
 	out.close();
 }
 
