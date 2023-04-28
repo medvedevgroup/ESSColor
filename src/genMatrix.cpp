@@ -205,8 +205,6 @@ void write_ess_boundary(string spss_file, int k){
 	stat_nkmer_ess_file.close();
 	spssfile.close();
 	spss_boundary_file.close();
-    return 0;
-
 	
 }
 
