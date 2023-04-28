@@ -30,9 +30,9 @@ public:
 	std::vector<uint64_t> kmers;
 	std::vector<uint64_t> colors;
 	std::string ess_order_file;
-	MPHFComparatoror mphfcomparator;
+	dictionary dict;
 
-	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, MPHFComparatoror& mphfcomparator);
+	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, dictionary& dict);
 
 //	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, std::string ess_order_file);
 	KmerMatrix(KmerMatrix && other);
@@ -84,7 +84,7 @@ void merge_colors(std::vector<uint64_t> & colors, size_t first_idx, std::vector<
  * @param k kmer size. This value is filled during the loading process.
  * @return Sorted list of kmers (lexicographic order)
  **/
-std::vector<uint64_t> load_from_file(const std::string db_path, uint64_t& k, MPHFComparatoror& mphfcomparator);
+std::vector<uint64_t> load_from_file(const std::string db_path, uint64_t& k, dictionary& dict);
 
 
 // /** Translate a uint64_t kmer into a string
