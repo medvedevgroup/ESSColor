@@ -180,7 +180,38 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 }
 
 
+void write_ess_boundary(string spss_file, int k){
+	vector<uint64_t> positions;
+	 ifstream spssfile(spss_file);
+	 ofstream spss_boundary_file("ess_boundary_bit.txt");
+	 ofstream stat_nkmer_ess_file("stat_nkmer_ess");
+
+	string ess_boundary = "";
+	string line;
+	uint64_t totkmers = 0;
+	while(getline(spssfile, line)){
+		if(line[0]!='>'){
+			uint64_t numkmer = line.length() - k + 1;
+			spss_boundary_file << "1" <<endl;
+			for(uint64_t i = 0 ; i< numkmer-1; i++){
+				spss_boundary_file << "0" <<endl;
+			}
+			totkmers+=numkmer;
+		}
+		// int precision = numkmer-1;
+    	// ess_boundary.insert(ess_boundary.size(), precision, '0');
+	}
+	stat_nkmer_ess_file<<totkmers<<endl;
+	stat_nkmer_ess_file.close();
+	spssfile.close();
+	spss_boundary_file.close();
+    return 0;
+
+	
+}
+
 void build_mphf(int k, dictionary& dict, string spss_file) {
+	write_ess_boundary(spss_file, k);
 	auto m = (int) k/2;
 	if(m<10) m = k;
 	//dictionary dict;
@@ -194,6 +225,8 @@ void build_mphf(int k, dictionary& dict, string spss_file) {
 	build_config.print();
 
 	dict.build(spss_file, build_config);
+
+	
 	// dict.build("/home/aur1111/s/proj4/minireal/k5/mega.essd", build_config);
 	assert(dict.k() == k);
 	std::cout<<"dict built complete";
