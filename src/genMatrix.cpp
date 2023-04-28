@@ -181,11 +181,11 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 
 
 void write_ess_boundary(string spss_file, int k){
-	vector<uint64_t> positions;
 	 ifstream spssfile(spss_file);
 	 ofstream spss_boundary_file("ess_boundary_bit.txt");
 	 ofstream stat_nkmer_ess_file("stat_nkmer_ess");
 
+	cout<<"Writing boundary..."<<endl;
 	string ess_boundary = "";
 	string line;
 	uint64_t totkmers = 0;
@@ -205,11 +205,12 @@ void write_ess_boundary(string spss_file, int k){
 	stat_nkmer_ess_file.close();
 	spssfile.close();
 	spss_boundary_file.close();
+
 	
 }
 
 void build_mphf(int k, dictionary& dict, string spss_file) {
-	write_ess_boundary(spss_file, k);
+	//write_ess_boundary(spss_file, k);
 	auto m = (int) k/2;
 	if(m<10) m = k;
 	//dictionary dict;
