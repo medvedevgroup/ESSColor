@@ -220,7 +220,9 @@ int main(int argc, char const *argv[])
 	// Get the final matrix after the merging
 	cout << "Finalization of the matrix..." << endl;
 	KmerMatrix& final_matrix = cmm.get_matrix();
+	final_matrix.dict = dict;
 	cout << "Writing the matrix on disk..." << endl;
+	final_matrix.to_color_string_file(args["outmatrix"].as<string>());
 	if (args["strout"].as<bool>())
 	{
 		final_matrix.to_color_string_file(args["outmatrix"].as<string>());
