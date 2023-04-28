@@ -170,7 +170,7 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 	}
 	std::cout<<"Finished mphf mapping"<<endl;
 	//build dictionary on ess_order_file
-	//uint64_t kmer_idx;
+	uint64_t kmer_idx;
 	for (uint64_t iter_idx(0) ; iter_idx<this->kmers.size() ; iter_idx++)
 	{
 		// string thekmer=kmer2str(kmers[iter_idx], this->k);
