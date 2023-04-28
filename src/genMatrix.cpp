@@ -202,7 +202,7 @@ int main(int argc, char const *argv[])
 	vector<string> db_list = get_databases(args["count-list"].as<string>());
 
 	dictionary dict;
-	build_mphf(k,dict);
+	build_mphf(5,dict);
 
 	CascadingMergingMatrix cmm(0.9);
 	
