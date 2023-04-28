@@ -190,7 +190,8 @@ void build_mphf(int k, dictionary& dict) {
 	build_config.verbose = true;
 	build_config.print();
 
-	dict.build("/home/aur1111/s/proj4/ecoli/mers31/mega.essd", build_config);
+	//dict.build("/home/aur1111/s/proj4/ecoli/mers31/mega.essd", build_config);
+	 dict.build("/home/aur1111/s/proj4/minireal/k5/mega.essd", build_config);
 	assert(dict.k() == k);
 	std::cout<<"dict built complete";
 	//dict.streaming_query_from_file("/home/aur1111/s/proj4/minireal/k5/mega.essd");
@@ -201,7 +202,7 @@ int main(int argc, char const *argv[])
 	vector<string> db_list = get_databases(args["count-list"].as<string>());
 
 	dictionary dict;
-	build_mphf(31,dict);
+	build_mphf(5,dict);
 
 	CascadingMergingMatrix cmm(0.9);
 	
