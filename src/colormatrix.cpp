@@ -77,6 +77,12 @@ uint64_t KmerMatrix::mphf_get_kmer_id(uint64_t kmer1){
 		assert(answer1.kmer_id != constants::invalid_uint64);
 		return answer1.kmer_id;
 	}	
+uint64_t global_mphf_get_kmer_id(uint64_t kmer1, dictionary &dict){
+		std::string kmer1_str=kmer2str(kmer1, k);
+		auto answer1 = dict.lookup_advanced(kmer1_str.c_str());
+		assert(answer1.kmer_id != constants::invalid_uint64);
+		return answer1.kmer_id;
+	}	
 
 KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k, dictionary& dict)  
 {
@@ -459,9 +465,17 @@ void load_dictionary_sshash(dictionary& dict, std::string const& index_filename,
 
 
 
-bool fancy_comparison(uint64_t a, uint64_t b) {
-  return mphf_get_kmer_id(a) <  mphf_get_kmer_id(b) ;
-}
+// bool fancy_comparison(uint64_t a, uint64_t b) {
+//   return mphf_get_kmer_id(a) <  mphf_get_kmer_id(b) ;
+// }
+// [] (uint64_t const& s1, uint64_t const& s2) -> bool 
+// {
+//        return global_mphf_get_kmer_id(a, dict) <  global_mphf_get_kmer_id(b, dict);
+// };
+auto sortRuleLambda = [] (uint64_t const& s1, uint64_t const& s2, dictionary & dict) -> bool
+    {
+       return global_mphf_get_kmer_id(s1, dict) <  global_mphf_get_kmer_id(s2, dict);
+    };
 
 /** Loads a kmer list from a KMC database and sort the kmers.
  * @param db_path path to kmer database
@@ -507,7 +521,7 @@ vector<uint64_t> load_from_file(const string db_path, uint64_t& k, dictionary& d
 	}
 
 	//amatur  comments out  
-	sort(kmers.begin(), kmers.end(), fancy_comparison);
+	sort(kmers.begin(), kmers.end(), sortRuleLambda);
 
 	return kmers;
 };
