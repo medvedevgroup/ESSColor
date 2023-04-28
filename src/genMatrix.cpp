@@ -46,14 +46,16 @@ cxxopts::ParseResult parse_args(int argc, char const *argv[])
 		("c,count-list", "[Mandatory] Path to KMC database files. One line per database", cxxopts::value<string>())
 		("d,debug-verif", "Debug flag to verify if the output coresponds to the input (Time consuming).", cxxopts::value<bool>()->default_value("false"))
 		("o,outmatrix", "[Mandatory] Path to the output color matrix", cxxopts::value<string>())
-		("l,kmer-list", "[Mandatory] Path to the output ordered kmer list file", cxxopts::value<string>())
+		("l,spss", "[Mandatory] Path to the corresponding union SPSS", cxxopts::value<string>())
 		("s,strout", "String output", cxxopts::value<bool>()->default_value("false"))
+		("k,kmer-size", "[Mandatory] k-mer size", cxxopts::value<int>())
 		;
 
 	cxxopts::ParseResult res = options.parse(argc, argv);
 	if ((not test_mandatory_option(res, "count-list"))
 		or (not test_mandatory_option(res, "outmatrix"))
-		or (not test_mandatory_option(res, "kmer-list"))
+		or (not test_mandatory_option(res, "spss"))
+		or (not test_mandatory_option(res, "kmer-size"))
 	) {
 		cerr << endl << options.help() << endl;
 		exit(OPT_PARSING_ERROR);
@@ -178,7 +180,7 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 }
 
 
-void build_mphf(int k, dictionary& dict) {
+void build_mphf(int k, dictionary& dict, string spss_file) {
 	auto m = 15;
 	//dictionary dict;
 
@@ -190,7 +192,7 @@ void build_mphf(int k, dictionary& dict) {
 	build_config.verbose = true;
 	build_config.print();
 
-	dict.build("/home/aur1111/s/proj4/ecoli/mers31/mega.essd", build_config);
+	dict.build(spss_file, build_config);
 	// dict.build("/home/aur1111/s/proj4/minireal/k5/mega.essd", build_config);
 	assert(dict.k() == k);
 	std::cout<<"dict built complete";
@@ -202,7 +204,7 @@ int main(int argc, char const *argv[])
 	vector<string> db_list = get_databases(args["count-list"].as<string>());
 
 	dictionary dict;
-	build_mphf(31,dict);
+	build_mphf(args["kmer-size"].as<int>(),dict, args["spss"].as<string>());
 
 	CascadingMergingMatrix cmm(0.9);
 	
@@ -223,16 +225,16 @@ int main(int argc, char const *argv[])
 	KmerMatrix& final_matrix = cmm.get_matrix();
 	final_matrix.dict = dict;
 	cout << "Writing the matrix on disk..." << endl;
-	final_matrix.to_color_string_file(args["outmatrix"].as<string>());
+	
 	if (args["strout"].as<bool>())
 	{
 		final_matrix.to_color_string_file(args["outmatrix"].as<string>());
-		final_matrix.to_kmer_string_file(args["kmer-list"].as<string>());
+		//final_matrix.to_kmer_string_file(args["kmer-list"].as<string>());
 	}
 	else
 	{
 		final_matrix.to_color_binary_file(args["outmatrix"].as<string>());
-		final_matrix.to_kmer_binary_file(args["kmer-list"].as<string>());
+		//final_matrix.to_kmer_binary_file(args["kmer-list"].as<string>());
 	}
 
 	if (args["debug-verif"].as<bool>())
