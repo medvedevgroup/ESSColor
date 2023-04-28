@@ -25,7 +25,7 @@ using namespace std;
 // 	MPHFComparatoror() {
 // 	}
 
-    
+dictionary global_dict;    
 	
 
 //     // bool operator()(uint64_t kmer1, uint64_t kmer2)
@@ -77,9 +77,9 @@ uint64_t KmerMatrix::mphf_get_kmer_id(uint64_t kmer1){
 		assert(answer1.kmer_id != constants::invalid_uint64);
 		return answer1.kmer_id;
 	}	
-uint64_t global_mphf_get_kmer_id(uint64_t kmer1, dictionary &dict){
+uint64_t global_mphf_get_kmer_id(uint64_t kmer1){
 		std::string kmer1_str=kmer2str(kmer1, k);
-		auto answer1 = dict.lookup_advanced(kmer1_str.c_str());
+		auto answer1 = global_dict.lookup_advanced(kmer1_str.c_str());
 		assert(answer1.kmer_id != constants::invalid_uint64);
 		return answer1.kmer_id;
 	}	
@@ -472,9 +472,9 @@ void load_dictionary_sshash(dictionary& dict, std::string const& index_filename,
 // {
 //        return global_mphf_get_kmer_id(a, dict) <  global_mphf_get_kmer_id(b, dict);
 // };
-auto sortRuleLambda = [] (uint64_t const& s1, uint64_t const& s2, dictionary & dict) -> bool
+auto sortRuleLambda = [] (uint64_t const& s1, uint64_t const& s2) -> bool
     {
-       return global_mphf_get_kmer_id(s1, dict) <  global_mphf_get_kmer_id(s2, dict);
+       return global_mphf_get_kmer_id(s1) <  global_mphf_get_kmer_id(s2);
     };
 
 /** Loads a kmer list from a KMC database and sort the kmers.
@@ -485,6 +485,7 @@ auto sortRuleLambda = [] (uint64_t const& s1, uint64_t const& s2, dictionary & d
 vector<uint64_t> load_from_file(const string db_path, uint64_t& k, dictionary& dict)
 {
 	vector<uint64_t> kmers;
+	global_dict = dict;
 
 	// Opening the database
 	CKMCFile db;
