@@ -179,7 +179,7 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 
 
 void build_mphf(int k, dictionary& dict) {
-	auto m = 4;
+	auto m = 15;
 	//dictionary dict;
 
 	build_configuration build_config;
