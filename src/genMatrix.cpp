@@ -179,8 +179,7 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 
 
 void build_mphf(int k, dictionary& dict) {
-	k = 5;
-	auto m = 3;
+	auto m = (int)k/2;
 	//dictionary dict;
 
 	build_configuration build_config;
@@ -202,7 +201,7 @@ int main(int argc, char const *argv[])
 	vector<string> db_list = get_databases(args["count-list"].as<string>());
 
 	dictionary dict;
-	build_mphf(5,dict);
+	build_mphf(31,dict);
 
 	CascadingMergingMatrix cmm(0.9);
 	
