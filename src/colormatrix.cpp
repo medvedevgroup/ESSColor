@@ -178,16 +178,20 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 	for (uint64_t kmer_idx(0) ; kmer_idx<this->kmers.size() ; kmer_idx++)
 	{
 		//
-		//string thekmer=kmer2str(kmers[kmer_idx], this->k);
-		//auto answer = dict.lookup_advanced(thekmer.c_str());
-		uint64_t answer_id = dict.lookup_uint((kmer_t) kmers[kmer_idx], true);
-		//assert(answer.kmer_id != constants::invalid_uint64);
-		cout<<"and"<<answer_id<<endl;
-		assert(answer_id != constants::invalid_uint64);
-		if(answer_id <0 || answer_id>=this->kmers.size()){
+		string thekmer=kmer2str(kmers[kmer_idx], this->k);
+		auto answer = dict.lookup_advanced(thekmer.c_str());
+		//uint64_t answer_id = dict.lookup_uint((kmer_t) kmers[kmer_idx], true);
+		assert(answer.kmer_id != constants::invalid_uint64);
+		//cout<<"and"<<answer_id<<endl;
+		//assert(answer_id != constants::invalid_uint64);
+		if(answer.kmer_id  <0 || answer.kmer_id >=this->kmers.size()){
 			cout<<"Erroneus mphf."<<endl;
 			exit(3);
 		}
+		// if(answer_id <0 || answer_id>=this->kmers.size()){
+		// 	cout<<"Erroneus mphf."<<endl;
+		// 	exit(3);
+		// }
         mphf_mapping[answer_id] = kmer_idx;	
 	}
 	std::cout<<"Finished mphf mapping"<<endl;
