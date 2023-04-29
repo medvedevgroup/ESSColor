@@ -35,13 +35,13 @@ dictionary global_dict;
 
 int KmerMatrix::MPHFCompare(uint64_t kmer1, uint64_t kmer2)
 {
-	// if(kmer1 < kmer2){
-	// 	return -1;
-	// }else if (kmer1 > kmer2){
-	// 	return +1;
-	// }else{
-	// 	return 0;
-	// }      
+	if(kmer1 < kmer2){
+		return -1;
+	}else if (kmer1 > kmer2){
+		return +1;
+	}else{
+		return 0;
+	}      
 
 	std::string kmer1_str=kmer2str(kmer1, k);
 	std::string kmer2_str=kmer2str(kmer2, k);
@@ -62,34 +62,22 @@ int KmerMatrix::MPHFCompare(uint64_t kmer1, uint64_t kmer2)
 
 	
 
-std::string kmer2str(uint64_t x, uint64_t k)
+std::string kmer2str(uint64_t kmer, uint64_t k)
 {
-	std::stringstream ss;
 	static const char nucleotides[] = {'A', 'C', 'G', 'T'};
-	//char nucleotides[4] = {'A', 'C', 'T', 'G'};
-	//static void uint_kmer_to_string_no_reverse(kmer_t x, char* str, uint64_t k) {
-	//std::string str (k, 'A');
-    for (uint64_t i = 0; i != k; ++i) {
-        ss<<nucleotides[x & 3];
-        x >>= 2;
-    }
+	std::stringstream ss;
+
+	for (uint64_t i(0) ; i<k ; i++)
+	{
+		ss << nucleotides[kmer & 0b11];
+		kmer >>= 2;
+	}
+
 	std::string s = ss.str();
+	std::reverse(s.begin(), s.end());
+
 	return s;
-}
-	// static const char nucleotides[] = {'A', 'C', 'G', 'T'};
-	// std::stringstream ss;
-
-	// for (uint64_t i(0) ; i<k ; i++)
-	// {
-	// 	ss << nucleotides[kmer & 0b11];
-	// 	kmer >>= 2;
-	// }
-
-	// std::string s = ss.str();
-	// std::reverse(s.begin(), s.end());
-
-	// return s;
-//};
+};
 
 uint64_t KmerMatrix::mphf_get_kmer_id(uint64_t kmer1){
 		std::string kmer1_str=kmer2str(kmer1, k);
@@ -178,23 +166,15 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 	for (uint64_t kmer_idx(0) ; kmer_idx<this->kmers.size() ; kmer_idx++)
 	{
 		//
-		string thekmer=kmer2str(kmers[kmer_idx], this->k);
-		auto answer = dict.lookup_advanced(thekmer.c_str());
-		//uint64_t answer_id = dict.lookup_uint((kmer_t) kmers[kmer_idx], true);
+		//string thekmer=kmer2str(kmers[kmer_idx], this->k);
+		//auto answer = dict.lookup_advanced(thekmer.c_str());
+		auto answer = dict.lookup_advanced_uint(kmers[kmer_idx]);
 		assert(answer.kmer_id != constants::invalid_uint64);
-		//cout<<"and"<<answer_id<<endl;
-		//assert(answer_id != constants::invalid_uint64);
-		if(answer.kmer_id  <0 || answer.kmer_id >=this->kmers.size()){
+		if(answer.kmer_id <0 || answer.kmer_id>=this->kmers.size()){
 			cout<<"Erroneus mphf."<<endl;
 			exit(3);
 		}
-		// if(answer_id <0 || answer_id>=this->kmers.size()){
-		// 	cout<<"Erroneus mphf."<<endl;
-		// 	exit(3);
-		// }
-        //mphf_mapping[answer_id] = kmer_idx;
         mphf_mapping[answer.kmer_id] = kmer_idx;	
-
 	}
 	std::cout<<"Finished mphf mapping"<<endl;
 
@@ -555,9 +535,9 @@ vector<uint64_t> load_from_file(const string db_path, uint64_t& k, dictionary& d
 	}
 
 	//amatur  comments out  
-	//sort(kmers.begin(), kmers.end());
+	sort(kmers.begin(), kmers.end());
 
-	sort(kmers.begin(), kmers.end(), sortRuleLambda);
+	//sort(kmers.begin(), kmers.end(), sortRuleLambda);
 
 	return kmers;
 };
@@ -603,6 +583,5 @@ KmerMatrix& CascadingMergingMatrix::get_matrix()
 	this->force_merging();
 	return this->matricies[0];
 };
-
 
 
