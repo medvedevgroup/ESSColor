@@ -62,21 +62,33 @@ int KmerMatrix::MPHFCompare(uint64_t kmer1, uint64_t kmer2)
 
 	
 
-std::string kmer2str(uint64_t kmer, uint64_t k)
+std::string kmer2str(uint64_t x, uint64_t k)
 {
-	static const char nucleotides[] = {'A', 'C', 'G', 'T'};
 	std::stringstream ss;
-
-	for (uint64_t i(0) ; i<k ; i++)
-	{
-		ss << nucleotides[kmer & 0b11];
-		kmer >>= 2;
-	}
-
+	static const char nucleotides[] = {'A', 'C', 'G', 'T'};
+	//char nucleotides[4] = {'A', 'C', 'T', 'G'};
+	//static void uint_kmer_to_string_no_reverse(kmer_t x, char* str, uint64_t k) {
+	//std::string str (k, 'A');
+    for (uint64_t i = 0; i != k; ++i) {
+        ss<<nucleotides[x & 3];
+        x >>= 2;
+    }
 	std::string s = ss.str();
-	std::reverse(s.begin(), s.end());
-
 	return s;
+}
+	// static const char nucleotides[] = {'A', 'C', 'G', 'T'};
+	// std::stringstream ss;
+
+	// for (uint64_t i(0) ; i<k ; i++)
+	// {
+	// 	ss << nucleotides[kmer & 0b11];
+	// 	kmer >>= 2;
+	// }
+
+	// std::string s = ss.str();
+	// std::reverse(s.begin(), s.end());
+
+	// return s;
 };
 
 uint64_t KmerMatrix::mphf_get_kmer_id(uint64_t kmer1){
@@ -168,7 +180,7 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 		//
 		//string thekmer=kmer2str(kmers[kmer_idx], this->k);
 		//auto answer = dict.lookup_advanced(thekmer.c_str());
-		auto answer = dict.lookup_advanced_uint(kmers[kmer_idx]);
+		auto answer = dict.lookup_uint(kmers[kmer_idx]);
 		assert(answer.kmer_id != constants::invalid_uint64);
 		if(answer.kmer_id <0 || answer.kmer_id>=this->kmers.size()){
 			cout<<"Erroneus mphf."<<endl;
