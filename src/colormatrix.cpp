@@ -192,7 +192,9 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 		// 	cout<<"Erroneus mphf."<<endl;
 		// 	exit(3);
 		// }
-        mphf_mapping[answer_id] = kmer_idx;	
+        //mphf_mapping[answer_id] = kmer_idx;
+        mphf_mapping[answer.kmer_id] = kmer_idx;	
+
 	}
 	std::cout<<"Finished mphf mapping"<<endl;
 
