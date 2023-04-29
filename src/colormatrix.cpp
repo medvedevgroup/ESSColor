@@ -180,13 +180,14 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 		//
 		//string thekmer=kmer2str(kmers[kmer_idx], this->k);
 		//auto answer = dict.lookup_advanced(thekmer.c_str());
-		auto answer = dict.lookup_uint((kmer_t) kmers[kmer_idx]);
-		assert(answer.kmer_id != constants::invalid_uint64);
-		if(answer.kmer_id <0 || answer.kmer_id>=this->kmers.size()){
+		auto answer_id = dict.lookup_uint((kmer_t) kmers[kmer_idx]);
+		//assert(answer.kmer_id != constants::invalid_uint64);
+		assert(answer_id != constants::invalid_uint64);
+		if(answer_id <0 || answer_id>=this->kmers.size()){
 			cout<<"Erroneus mphf."<<endl;
 			exit(3);
 		}
-        mphf_mapping[answer.kmer_id] = kmer_idx;	
+        mphf_mapping[answer_id] = kmer_idx;	
 	}
 	std::cout<<"Finished mphf mapping"<<endl;
 
