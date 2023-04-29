@@ -35,9 +35,9 @@ dictionary global_dict;
 
 int KmerMatrix::MPHFCompare(uint64_t kmer1, uint64_t kmer2)
 {
-	if(kmer1 > kmer2){
+	if(kmer1 < kmer2){
 		return -1;
-	}else if (kmer1 < kmer2){
+	}else if (kmer1 > kmer2){
 		return +1;
 	}else{
 		return 0;
@@ -180,8 +180,9 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 		//
 		//string thekmer=kmer2str(kmers[kmer_idx], this->k);
 		//auto answer = dict.lookup_advanced(thekmer.c_str());
-		auto answer_id = dict.lookup_uint((kmer_t) kmers[kmer_idx]);
+		uint64_t answer_id = dict.lookup_uint((kmer_t) kmers[kmer_idx], false);
 		//assert(answer.kmer_id != constants::invalid_uint64);
+		cout<<"and"<<answer_id<<endl;
 		assert(answer_id != constants::invalid_uint64);
 		if(answer_id <0 || answer_id>=this->kmers.size()){
 			cout<<"Erroneus mphf."<<endl;
