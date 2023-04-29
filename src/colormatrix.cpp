@@ -89,7 +89,7 @@ std::string kmer2str(uint64_t x, uint64_t k)
 	// std::reverse(s.begin(), s.end());
 
 	// return s;
-};
+//};
 
 uint64_t KmerMatrix::mphf_get_kmer_id(uint64_t kmer1){
 		std::string kmer1_str=kmer2str(kmer1, k);
