@@ -35,9 +35,9 @@ dictionary global_dict;
 
 int KmerMatrix::MPHFCompare(uint64_t kmer1, uint64_t kmer2)
 {
-	if(kmer1 < kmer2){
+	if(kmer1 > kmer2){
 		return -1;
-	}else if (kmer1 > kmer2){
+	}else if (kmer1 < kmer2){
 		return +1;
 	}else{
 		return 0;
