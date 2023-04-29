@@ -35,13 +35,13 @@ dictionary global_dict;
 
 int KmerMatrix::MPHFCompare(uint64_t kmer1, uint64_t kmer2)
 {
-	if(kmer1 < kmer2){
-		return -1;
-	}else if (kmer1 > kmer2){
-		return +1;
-	}else{
-		return 0;
-	}      
+	// if(kmer1 < kmer2){
+	// 	return -1;
+	// }else if (kmer1 > kmer2){
+	// 	return +1;
+	// }else{
+	// 	return 0;
+	// }      
 
 	std::string kmer1_str=kmer2str(kmer1, k);
 	std::string kmer2_str=kmer2str(kmer2, k);
@@ -555,9 +555,9 @@ vector<uint64_t> load_from_file(const string db_path, uint64_t& k, dictionary& d
 	}
 
 	//amatur  comments out  
-	sort(kmers.begin(), kmers.end());
+	//sort(kmers.begin(), kmers.end());
 
-	//sort(kmers.begin(), kmers.end(), sortRuleLambda);
+	sort(kmers.begin(), kmers.end(), sortRuleLambda);
 
 	return kmers;
 };
