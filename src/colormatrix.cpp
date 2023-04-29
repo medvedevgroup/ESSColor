@@ -139,10 +139,10 @@ void KmerMatrix::get_row(uint64_t row_idx, vector<uint64_t>& to_fill)
 }
 
 __uint128_t thegetval(uint64_t r) {
-    return ((__uint128_t)r <<  0) |
+    return ((__uint128_t)0 <<  0) |
            ((__uint128_t)0 << 32) |
            ((__uint128_t)0 << 64) |
-           ((__uint128_t)0 << 96);
+           ((__uint128_t)r << 96);
 }
 
 void KmerMatrix::to_color_string_file(const std::string& outfile)
