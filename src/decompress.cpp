@@ -1,5 +1,7 @@
-//version: feb 6:pausing the combo
-#include <cmph.h> //#include "BooPHF.h"
+//version: mar 1: trying to fix gut
+#define VERSION_NAME "APR21,LIMITBITS_FOR_LOCAL_PLUS_SINGLE"
+#include<cmph.h> //#include "BooPHF.h"
+#include<csignal>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -10,33 +12,39 @@
 #include <fstream>
 #include <algorithm>
 #include <sdsl/bit_vectors.hpp>
-#include <unordered_map>
-#include <sstream>
-#include <string>
+#include<unordered_map>
+#include<sstream>
+#include<string>
 #include <queue>
 #include <map>
 #include <climits> // for u_int32_t_BIT
 #include <iterator>
 #include <algorithm>
 #include <iostream>
-#include <sstream>
+#include<sstream>
+
 using namespace std;
 using namespace sdsl;
+
+const int MAX_BUFFER_STRING=2048;
+
+
 
 uint64_t written_kmer = 0;
 #include <unordered_map>
 
-
-void dbg(){
-
-}
 uint64_t CATEGORY_RUN=(uint64_t) 3;
 uint64_t CATEGORY_COLCLASS=(uint64_t) 0;
 uint64_t CATEGORY_COLVEC=(uint64_t) 2;
 uint64_t CATEGORY_COLVEC_ONE = (uint64_t) 4; //100
 uint64_t CATEGORY_COLVEC_TWO = (uint64_t) 5; //101
 
-bool DEBUG_MODE = true;
+
+bool TESTING_SPEED=false;
+bool DEBUG_MODE = false;
+const bool SINGLE_COLOR_METABIT = false; //if persimplitig_L == 1, force bigD=1, skip=0
+const bool USE_MAX_UNIQ_CLASS_PER_SIMP = false;
+const int MAX_UNIQ_CLASS_PER_SIMP=8;
 
 namespace TimeMeasure
 {
@@ -47,7 +55,7 @@ namespace TimeMeasure
 	void time_end(string msg){
 		gettimeofday(&timet, NULL); t_end = timet.tv_sec +(timet.tv_usec/1000000.0);	
 		cout<<msg<<" time = ";
-		printf("%.2fs\n",t_end - t_begin);
+		printf("%.8fs\n",t_end - t_begin);
 	}
 } using namespace TimeMeasure;
 
@@ -238,31 +246,156 @@ namespace Huffman{
 			GenerateCodes(in->right, rightPrefix, outCodes);
 		}
 	}
+}
+using namespace Huffman;
+HuffCodeMap huff_code_map;
 
-    u_int32_t HuffDecode(const INode *root, string s, int &start_loc)
+
+class BlockStream{
+    public:
+
+        std::fstream fs;
+        uint64_t b_it;
+        string str;
+        string filename;
+         char str_c[MAX_BUFFER_STRING] = "";
+    
+    BlockStream(string filename){
+       
+        str = "";
+        b_it = 0;
+        //fs as file input
+        this->filename = filename;
+        fs.open(filename, std::fstream::in);
+        //fs >> setw(MAX_BUFFER_STRING) >> str;
+
+        //         char b[3] = "";
+        // ifstream f("prad.txt");
+
+        str_c[0] = '\0';
+        fs.read(str_c, sizeof(str_c)); // Read one less that sizeof(b) to ensure null
+        // istream& get (char* s, streamsize n );
+        string s2(str_c);
+        str = s2;
+        //cout<<str<<endl;
+        //std::cout.write(reinterpret_cast<char*>(&str_c), sizeof(str_c));
+        cout<<"Block size: "<<MAX_BUFFER_STRING<<endl;
+    }
+
+    ~BlockStream(){
+        fs.close();
+    }
+    bool end_reached(){
+        if(b_it==0 && str.length()==0){
+            return true;
+        }
+        if(str.length()< MAX_BUFFER_STRING && b_it == str.length()){
+            return true;
+        }else{
+            return false;
+        }
+    }
+    void load_string_if_max_exceeds(){
+        //char str_c[MAX_BUFFER_STRING] = "";
+
+        if(b_it >= MAX_BUFFER_STRING){
+            str = "";
+            fs.read(str_c, sizeof(str_c)); // Read one less that sizeof(b) to ensure null
+            string s2(str_c);
+            str = s2;
+            //fs >> setw(MAX_BUFFER_STRING) >> str;
+            // if(str.length()< MAX_BUFFER_STRING){
+            //     end_reached = true;
+            // }
+            b_it = 0;
+            //cout<<str<<endl;
+             
+             //std::cout.write(reinterpret_cast<char*>(&str_c), sizeof(str_c));
+
+        }
+    }
+    
+
+    uint64_t read_uint(int block_sz){ //convert_binary_string_to_uint
+        char* str_copy = new char[block_sz+1];
+        str_copy[block_sz]='\0';
+        uint64_t b_it_copy = b_it;
+        for(int i = 0 ; i<block_sz; i++){
+            str_copy[i] = str_c[b_it++];
+            load_string_if_max_exceeds();
+        }
+        //cout<<"uint:";
+       //      std::cout.write(reinterpret_cast<char*>(&str_copy), sizeof(str_copy));
+
+        uint64_t res = 0;
+        //int block_sz = end - start + 1;
+        uint64_t end = block_sz - 1;
+// 		assert(block_sz==block_sz2);
+        uint64_t i = 0;
+        uint64_t j = end;
+
+
+        while(true){
+            if (str_copy[j]=='1') {
+                res |= 1 << i;
+            }
+            i+=1;
+            if(j!=0){
+                j--;
+            }else{
+                break;
+            }
+        }
+
+        return res;
+    }
+
+    char peek(){
+        if(b_it < str.length()){
+            //cout<<"peeking str:"<< str_c[b_it]<<endl;
+            return str_c[b_it];
+        }else if(b_it == str.length() ){
+            //cout<<"peeking fs:"<< fs.peek()<<endl;
+            return fs.peek();
+        }else{
+            cout<<"ERROR"<<endl;
+            exit(5);
+        }
+        
+    }
+
+    char read_one_bit(){ //convert_binary_string_to_uint
+        char toreturn = str_c[b_it];
+        b_it++;
+        load_string_if_max_exceeds();
+        return toreturn;
+    }
+    u_int32_t HuffDecode(const INode *root)
     {
         string ans = "";
         u_int32_t ansint = 0;
         const INode *curr = root;
-        for (int i = start_loc; i < s.size() + 1; i++)
+
+        while(true)
         {
             if (const LeafNode *lf = dynamic_cast<const LeafNode *>(curr))
             {
                 ansint = (u_int32_t)(lf->c);
-                start_loc = i;
                 return ansint;
                 curr = root;
             }
             else if (const InternalNode *internal = dynamic_cast<const InternalNode *>(curr))
             {
-                if (s[i] == '0')
+                if (str_c[b_it++] == '0')
                     curr = internal->left;
                 else
                     curr = internal->right;
+                load_string_if_max_exceeds();
 
                 if (const LeafNode *lf = dynamic_cast<const LeafNode *>(curr))
                 {
                     ansint = (u_int32_t)(lf->c);
+
                     // cout<< ansint;
                 }
             }
@@ -272,28 +405,63 @@ namespace Huffman{
             }
         }
         // cout<<ans<<endl;
-
         return ansint;
     }
 
-    vector<int> read_l_huff_codes(int l, string s, uint64_t& b_it, INode* root){
-        DebugFile logfile_huff_decode("logfile_huff_decode");
-		 vector<int> v ;
-        int loc  = b_it;
-        if(DEBUG_MODE) logfile_huff_decode.fs<<l<<":";
-		while(l){
-			u_int32_t decoded_col_class = HuffDecode(root, s, loc);
-            v.push_back(decoded_col_class);
-            if(DEBUG_MODE) logfile_huff_decode.fs<<decoded_col_class<<",";
-			l--;
-		}
-        b_it = loc;
-        if(DEBUG_MODE) logfile_huff_decode.fs<<endl;
-        return v;
+    vector<int> read_l_huff_codes(INode* root, int l){
+        vector<int> huffcodes;
+        while(l){
+            u_int32_t decoded_col_class = HuffDecode(root);
+            huffcodes.push_back(decoded_col_class);
+            l--;
+        }
+        return huffcodes;
 	}
-}
-using namespace Huffman;
-HuffCodeMap huff_code_map;
+
+
+    int read_number_encoded_in_unary_zero(){ 
+        int length = 0;
+        while(true){
+            if(str_c[b_it]=='0'){
+                length+=1;
+                b_it+=1;
+                load_string_if_max_exceeds();
+            }else{
+                break;
+            }
+        }
+        return length;
+    }
+
+    int read_number_encoded_in_unary_one(){ 
+        int length = 0;
+        while(true){
+            if(str_c[b_it]=='1'){
+                length+=1;
+                b_it+=1;
+                load_string_if_max_exceeds();
+            }else{
+                break;
+            }
+        }
+        return length;
+    }
+
+    
+    void read_string_of_length(char* col_vec, int C){
+        int i = 0;
+        while(C){
+            col_vec[i++] = str_c[b_it];
+            b_it++;
+            load_string_if_max_exceeds();
+            C--;
+        }
+        return;
+    }
+};
+
+
+
 
 class COLESS_Decompress{
 public:
@@ -324,12 +492,15 @@ public:
     int l_of_curr_simplitig;
     char per_simplitig_use_local_id;
     uint64_t per_simplitig_bigD;
+    char singlecolor;
+
     
     bool USE_LOCAL_TABLE = true;
     bool USE_HUFFMAN = true;
     bool ALWAYS_LOCAL_OR_GLOBAL = false;
 
- 
+    OutputFile combodebug;
+    OutputFile errordebug;
 
     COLESS_Decompress(uint64_t num_kmers, int M, int C, string spss_boundary_fname, int max_run)
     {
@@ -346,6 +517,10 @@ public:
 
         dec_ess_color.init("dec_ess_color");
         spss_boundary_file.init(spss_boundary_fname);
+
+        if(DEBUG_MODE) combodebug.init("combodebug");
+        if(DEBUG_MODE) errordebug.init("errordebug");
+
     }
 
     void load_rrr_into_string(string rrr_filename, string &where_to_load){
@@ -358,7 +533,15 @@ public:
         // std::ofstream out("str_bv_mapping.txt");
         // out << rrr_map;
         // out.close();
+
+
         stringstream buffer;
+        // std::string result(50, '\0');
+        // if (!inss.read(&result[0], result.size()))
+        // throw std::runtime_error("Could not read enough characters.\n");
+
+
+
         buffer << rrr_bv;
         where_to_load = buffer.str();
     }
@@ -392,17 +575,16 @@ public:
         GenerateCodes(root, HuffCode(), huff_code_map); // huff_code_map is filled: uint32t colclassid-> vector bool
 		delete frequencies;
         for (HuffCodeMap::const_iterator it = huff_code_map.begin(); it != huff_code_map.end(); ++it)
-    {
-        if(DEBUG_MODE) huff_codes.fs << it->first << " ";
-        std::copy(it->second.begin(), it->second.end(),
-                  std::ostream_iterator<bool>(huff_codes.fs));
-        if(DEBUG_MODE) huff_codes.fs << std::endl;
-    }
+        {
+            if(DEBUG_MODE) huff_codes.fs << it->first << " ";
+            std::copy(it->second.begin(), it->second.end(),
+                    std::ostream_iterator<bool>(huff_codes.fs));
+            if(DEBUG_MODE) huff_codes.fs << std::endl;
+        }
 		//delete root;
 		time_end("Build huffman tree on" +to_string(M)+" values.");
         return root;
     }
-
 
     uint64_t convert_binary_string_to_uint(string &str, int start, int end, int block_sz2)
     { // convert_binary_string_to_uint
@@ -421,83 +603,37 @@ public:
         return res;
     }
 
-    char read_one_bit(string& str, uint64_t& b_it){ //convert_binary_string_to_uint
-        return str[b_it++];
-    }
 
-    int read_number_encoded_in_unary_zero(string& str, uint64_t& b_it){ //convert_binary_string_to_uint
-        int length = 0;
-        while(str[b_it++]=='0'){
-            length+=1;
-        }
-        return length;
-    }
-    int read_number_encoded_in_unary_one(string& str, uint64_t& b_it){ //convert_binary_string_to_uint
-        int length = 0;
-        while(str[b_it++]=='1'){
-            length+=1;
-        }
-        return length;
-    }
-
-    
-    string read_color_vector(string& str, uint64_t& b_it){
-        string col_vec = str.substr(b_it, C);
-        b_it+=C;
-        return col_vec;
-    }
-
-    void flip_bit(string& s, int pos){
-        if(s[C-pos-1] == '1')  {
-            s[C-pos-1]='0';
-        } else{
-            s[C-pos-1]='1';
-        }
-    }
-    uint64_t read_uint(string& str, uint64_t& b_it, int block_sz){ //convert_binary_string_to_uint
-        uint64_t res = 0;
-        //int block_sz = end - start + 1;
-        uint64_t end = block_sz + b_it - 1;
-// 		assert(block_sz==block_sz2);
-        uint64_t i = 0;
-        uint64_t j = end;
-
-        while(true){
-            if (str[j]=='1') {
-                res |= 1 << i;
-            }
-            i+=1;
-            if(j!=b_it){
-                j--;
-            }else{
-                break;
-            }
-        }
-        b_it += block_sz;
-        return res;
-    }
-
-    void read_local_hash_table_per_simplitig(string str_local, u_int64_t& b_it){
-        per_simplitig_bigD = read_uint(str_local, b_it, 2); //0, 1, 2
-        per_simplitig_use_local_id = read_one_bit(str_local, b_it);
-        cout<<"curr: " << per_simplitig_bigD<<" "<<per_simplitig_use_local_id<<" ";
-        
-        if(per_simplitig_use_local_id == '1'){
-            l_of_curr_simplitig = read_uint(str_local, b_it, lm);
-            //int ll = ceil(log2(l));
-            local_hash_table = read_l_huff_codes(l_of_curr_simplitig, str_local, b_it, huff_root); //0->(0,M-1), 1->(0,M-1) ... l*lm bits
-            cout<<l_of_curr_simplitig;
+    void read_local_hash_table_per_simplitig(BlockStream& bs_local){
+        per_simplitig_bigD = bs_local.read_uint(2); //0, 1, 2
+        singlecolor = '0';
+        if(SINGLE_COLOR_METABIT){
+            singlecolor = bs_local.read_one_bit();
+        } 
+        if(singlecolor=='1'){
+            local_hash_table = bs_local.read_l_huff_codes(huff_root, 1); //0->(0,M-1), 1->(0,M-1) ... l*lm bits
         }else{
-            
+            //if(DEBUG_MODE) combodebug.fs<<"curr: " << per_simplitig_bigD<<" "<<per_simplitig_use_local_id<<" ";
+            per_simplitig_use_local_id = bs_local.read_one_bit();
+            if(per_simplitig_use_local_id == '1'){
+                if(USE_MAX_UNIQ_CLASS_PER_SIMP){
+                    l_of_curr_simplitig = bs_local.read_uint(ceil(log2(MAX_UNIQ_CLASS_PER_SIMP)));
+                }else{
+                    l_of_curr_simplitig = bs_local.read_uint(lm);
+                } 
+                //int ll = ceil(log2(l));
+                local_hash_table = bs_local.read_l_huff_codes(huff_root, l_of_curr_simplitig); //0->(0,M-1), 1->(0,M-1) ... l*lm bits
+                if(DEBUG_MODE)  cout<<l_of_curr_simplitig;
+            }
+            //if(DEBUG_MODE)  combodebug.fs<<endl;
         }
-        cout<<endl;
     }
 
-    bool start_of_simplitig(int written_kmer_idx){
+    bool start_of_simplitig(uint64_t written_kmer_idx){
         return spss_boundary[written_kmer_idx] == '1';
     }
 
-    bool end_of_simplitig(int written_kmer_idx){
+    bool end_of_simplitig(uint64_t written_kmer_idx){
         return spss_boundary[(written_kmer_idx+1)%num_kmers] == '1';
     }
 
@@ -508,32 +644,94 @@ public:
             {
                 flip_bit(last_col_vector, d);
             }
-            dec_ess_color.fs << last_col_vector << endl;
+            if(!TESTING_SPEED) dec_ess_color.fs << last_col_vector << endl;
+            
+
             // if(start_of_simplitig(written_kmer)){ 
             //     read_local_hash_table_per_simplitig(str_local, b_it_local);
             // }
             written_kmer+=1;
-            
+            if(DEBUG_MODE) combodebug.fs<<"curr: " << per_simplitig_bigD<<" "<<per_simplitig_use_local_id<<endl;
+            if(DEBUG_MODE) errordebug.fs << "d"<<endl;
             differ_run.clear();
         }         
     }
 
+    // void test_run(){
+    //     rrr_vector<256> rrr_bv; 
+    //     time_start();     
+    //     load_from_file(rrr_bv, "rrr_main");  //sdsl namespace
+    //     b_it = 0;
+    //      for (int i = 0; i < M; i++)
+    //     {
+    //         read_color_vector_binary(rrr_bv, b_it);
+    //     }
+    //     time_end("binary read");
+    // }
+
+    void flip_bit(string& s, int pos){
+        if(s[C-pos-1] == '1')  {
+            s[C-pos-1]='0';
+        } else{
+            s[C-pos-1]='1';
+        }
+    }
+    
+    // void read_from_stream(std::fstream& fs, int block_sz, string& str, uint64_t& b_it){
+    //     //str is always a string of length bsz
+    //     // at the end, b_it marks the loc of str from where it should be read
+    //     if(b_it==0){
+    //         fs >> setw(block_sz) >> str;
+    //     }else{
+    //         string str1, str2;
+    //         if(remainder_str.length()-b_it >= block_sz){//remainder str is large enough
+    //            // read fully from remainder, update b_it, remainder_str
+    //            str = remainder_str.substr(b_it, block_sz);
+    //            remainder_str = remainder_str.substr(b_it+block_sz, remainder_str.length()-b_it-block_sz);
+    //            b_it += block_sz;
+               
+    //         }else{
+    //             //read first part from remainder
+    //             str1 = remainder_str.substr(b_it, remainder_str.length()-b_it);
+               
+    //             //read second part from fs 
+    //             fs >> setw(block_sz - remainder_str.length() + b_it ) >> str2;
+    //             str = str1+str2;
+    //             b_it=0;
+    //         }
+    //     }
+    // }
+
     void run()
     {   
+
+        BlockStream bs_main("bb_main");
+        time_start();
         huff_root = build_huff_tree();
-        load_bb_into_string("bb_map", str_map);
-        b_it = 0;
+
+        BlockStream bs_map("bb_map");
         DebugFile color_global("color_global"); //M color vectors //DEBUGFILE
         for (int i = 0; i < M; i++)
         {
-            string col_vector = read_color_vector(str_map, b_it);
-            if(DEBUG_MODE) color_global.fs << col_vector << endl;
-            global_table[i] = col_vector;
+            char* col_vector = new char[C+1];
+            col_vector[C] = '\0';
+            bs_map.read_string_of_length(col_vector, C);
+            if(DEBUG_MODE) {
+              color_global.fs << col_vector << endl;
+             //color_global.fs.write(reinterpret_cast<char*>(&col_vector), sizeof(col_vector));
+            
+            }
+            
+                
+            global_table[i] = string(col_vector);
+            delete col_vector;
         }
         color_global.fs.close();
-
+        cout<<"Globbal table done."<<endl;
+        //exit(0);
         int num_simplitig = 0;
         // Load SPSS boundary file
+        time_start();
         for (uint64_t i=0; i < num_kmers; i+=1){ //load spss_boundary vector in memory from disk
 			string spss_line;
 			getline (spss_boundary_file.fs,spss_line); 
@@ -542,58 +740,71 @@ public:
                 num_simplitig+=1;
             }
 		}
+        time_end("SPSS boundary read "+to_string(num_kmers)+" bits.");
 
         //read local table, 
-        load_bb_into_string("bb_local_table", str_local);
-        
+        BlockStream bs_local("bb_local_table");
+
         // time_start();
         // create_table(color_global.filename, M);
         // time_end("CMPH table create for "+to_string(M)+" keys.");
 
-        load_bb_into_string("bb_main", str_map);
-        b_it = 0;
+        
+
         vector<int> differ_run;
         string last_col_vector = "";
-        while (b_it < str_map.length())
+        while(written_kmer < num_kmers )
         {
-            char c = read_one_bit(str_map, b_it);
+            char c = bs_main.read_one_bit();
             if (c == '0')
             {
                 flush_skip_and_del(differ_run, last_col_vector,dec_ess_color);
                 if(start_of_simplitig(written_kmer)){ 
-                    read_local_hash_table_per_simplitig(str_local, b_it_local); //changes l_of_curr_simplitig
+                    read_local_hash_table_per_simplitig(bs_local); //changes l_of_curr_simplitig
                 }
-                if(per_simplitig_use_local_id == '1'){//using local table
+                if(singlecolor=='1'){
+                    do{
+                        int col_class = local_hash_table[0]; 
+                        last_col_vector = global_table[col_class];
+                        if(!TESTING_SPEED) dec_ess_color.fs << last_col_vector << endl;
+                        written_kmer+=1;
+                    }while(!end_of_simplitig(written_kmer-1));
+                }else if(per_simplitig_use_local_id == '1'){//using local table
                     int local_id = 0;
                     if(ceil(log2(l_of_curr_simplitig)) != 0){
-                        local_id = read_uint(str_map, b_it, ceil(log2(l_of_curr_simplitig)));
+                       local_id = bs_main.read_uint(ceil(log2(l_of_curr_simplitig)));
                     }
                      
                     int col_class = local_hash_table[local_id]; 
                     last_col_vector = global_table[col_class];
-                    dec_ess_color.fs << last_col_vector << endl;
+                    if(!TESTING_SPEED) dec_ess_color.fs << last_col_vector << endl;
                     written_kmer+=1;
+
+                    if(DEBUG_MODE) combodebug.fs<<"curr: " << per_simplitig_bigD<<" "<<per_simplitig_use_local_id<<endl;
+                    if(DEBUG_MODE) errordebug.fs << "l"<<endl;
                 }else{
                     if(USE_HUFFMAN==false){
-                        uint64_t col_class = read_uint(str_map, b_it, lm);
+                        uint64_t col_class = bs_main.read_uint(lm);
                         last_col_vector = global_table[col_class];
-                        dec_ess_color.fs << last_col_vector << endl;
+                        if(!TESTING_SPEED) dec_ess_color.fs << last_col_vector << endl;
                         written_kmer+=1;
                     }else{
                         //TODO -- untested
-                        uint64_t col_class = read_l_huff_codes(1, str_map, b_it, huff_root)[0];
+                        uint32_t col_class = bs_main.HuffDecode(huff_root);
                         last_col_vector = global_table[col_class];
-                        dec_ess_color.fs << last_col_vector << endl;
+                        if(!TESTING_SPEED) dec_ess_color.fs << last_col_vector << endl;
                         written_kmer+=1;
-                    }
+                        if(DEBUG_MODE) combodebug.fs<<"curr: " << per_simplitig_bigD<<" "<<per_simplitig_use_local_id<<endl;
 
+                        if(DEBUG_MODE) errordebug.fs << "m"<<endl;
+                    }
                 }
             }
             else if (c == '1')
             {
                 char c2 = '1';
                 if(per_simplitig_bigD != 0){
-                    c2 = read_one_bit(str_map, b_it);;
+                    c2 = bs_main.read_one_bit();
                 }
                 
                 if (c2 == '1')
@@ -601,14 +812,17 @@ public:
                     flush_skip_and_del(differ_run, last_col_vector,dec_ess_color);
 
                     {//paul method
-                        int q = read_number_encoded_in_unary_one(str_map, b_it);
-                        assert(read_one_bit(str_map, b_it) == '0');
-                        int rem = read_uint(str_map, b_it, lmaxrun);
+                        int q = bs_main.read_number_encoded_in_unary_one();
+                        char asst = bs_main.read_one_bit(); //should be  == '0');
+                        int rem = bs_main.read_uint(lmaxrun);
+
                         int skip = q * max_run + rem;
                         while (skip)
                         {
-                            dec_ess_color.fs << last_col_vector << endl;
+                            if(!TESTING_SPEED) dec_ess_color.fs << last_col_vector << endl;
                             written_kmer+=1;
+                            if(DEBUG_MODE) combodebug.fs<<"curr: " << per_simplitig_bigD<<" "<<per_simplitig_use_local_id<<endl;
+                            if(DEBUG_MODE) errordebug.fs << "r"<<endl;
                             skip--;
                         }
                     }
@@ -629,32 +843,32 @@ public:
                 { // lc 10
                     flush_skip_and_del(differ_run, last_col_vector,dec_ess_color);
                     if(per_simplitig_bigD == 1){
-                        int differing_bit = read_uint(str_map, b_it, lc);
+                        int differing_bit = bs_main.read_uint(lc);
                         differ_run.push_back(differing_bit);
                     }else if(per_simplitig_bigD == 2){
-                        char c3 = read_one_bit(str_map, b_it);;
+                        char c3 = bs_main.read_one_bit();;
                         if(c3 == '1'){ // 101 // read two
-                            int differing_bit = read_uint(str_map, b_it, lc);
+                            int differing_bit = bs_main.read_uint(lc);
                             differ_run.push_back(differing_bit);
-
-                            differing_bit = read_uint(str_map, b_it, lc);
+                            differing_bit = bs_main.read_uint(lc);
                             differ_run.push_back(differing_bit);
                         }else{//c3 = 0, 100 // read one
-                            int differing_bit = read_uint(str_map, b_it, lc);
+                            int differing_bit = bs_main.read_uint(lc);
                             differ_run.push_back(differing_bit);
                         }
-
                     }
-                    
                 }
             }
         } 
         flush_skip_and_del(differ_run, last_col_vector,dec_ess_color);
+        time_end("Total run of decompression");
     }
 };
 
 
 int main (int argc, char* argv[]){
+	cout<<"Version: "<<VERSION_NAME<<endl;
+
 	vector<string> args(argv + 1, argv + argc);
     string dedup_bitmatrix_fname, dup_bitmatrix_fname, spss_boundary_fname; //string tmp_dir;
     int M, C;
@@ -662,7 +876,7 @@ int main (int argc, char* argv[]){
 	uint64_t num_kmers=0;
     for (auto i = args.begin(); i != args.end(); ++i) {
         if (*i == "-h" || *i == "--help") {
-            cout << "Syntax: tool -i <DE-DUP-bitmatrix> -d <dup-bitmatrix> -c <num-colors> -m <M> -k <num-kmers> -s <spss-bound> -x <max-run>" << endl;
+            cout << "Syntax: tool -i <DE-DUP-bitmatrix> -d <dup-bitmatrix> -c <num-colors> -m <M> -k <num-kmers> -s <spss-bound> -x <max-run> -p <debug-mode>" << endl;
             return 0;
         } else if (*i == "-i") {
             dedup_bitmatrix_fname = *++i;
@@ -678,13 +892,18 @@ int main (int argc, char* argv[]){
             spss_boundary_fname = *++i;
 		}else if (*i == "-x") {
             max_run = std::stoi(*++i);
+		}else if (*i == "-p") {
+            DEBUG_MODE = true;
 		}
 		// else if (*i == "-t") {
         //     tmp_dir  = *++i;
 		// }
     }
 
-	COLESS_Decompress cdec(num_kmers, M, C,  spss_boundary_fname, max_run);
+    COLESS_Decompress cdec(num_kmers, M, C,  spss_boundary_fname, max_run);
+    
+    //cdec.test_run();
     cdec.run();
+    
 	return EXIT_SUCCESS;
 }
