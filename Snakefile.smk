@@ -300,13 +300,13 @@ rule megaessc_to_megaessd:
 
 rule stat_nkmer_ess:
     input:
-        "ess_kmer_id.txt"
+        "col_bitmatrix"
     output:
         "stat_nkmer_ess"
     benchmark:
         "benchmarks/stat_nkmer_ess.txt"
     shell:
-        "cat col_bitmatrix.txt | wc -l > stat_nkmer_ess"  
+        "cat col_bitmatrix | wc -l > stat_nkmer_ess"  
 
 if config['matrix_generator'] == 'jc':
     rule stat_nkmer_jc:
