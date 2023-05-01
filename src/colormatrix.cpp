@@ -139,9 +139,9 @@ void KmerMatrix::get_row(uint64_t row_idx, vector<uint64_t>& to_fill)
 }
 
 __uint128_t convert_uint64_to_uint128(uint64_t r) {
-	return ((__uint128_t)r << 64) | ((__uint128_t)r << 0); 
+	//return ((__uint128_t)r << 64) | ((__uint128_t)r << 0); 
 
-	//return ((__uint128_t)0 << 0) | ((__uint128_t)r << 64); ///works in mini, but not ec
+	return ((__uint128_t)0 << 0) | ((__uint128_t)r << 64); ///works in mini, but not ec
 
 	// return ((__uint128_t)0 <<  0) |
     //        ((__uint128_t)0 << 32) |
@@ -179,8 +179,8 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 	for (uint64_t kmer_idx(0) ; kmer_idx<this->kmers.size() ; kmer_idx++)
 	{
 		string thekmer=kmer2str(kmers[kmer_idx], this->k);
-		//auto answer = dict.lookup_advanced(thekmer.c_str());
-		auto answer = dict.lookup_advanced_uint(convert_uint64_to_uint128(kmers[kmer_idx]));
+		auto answer = dict.lookup_advanced(thekmer.c_str());
+		//auto answer = dict.lookup_advanced_uint(convert_uint64_to_uint128(kmers[kmer_idx])); //optimized version: amatur note: can't convert uint64 to uint128 correctly according to sshash
 		assert(answer.kmer_id != constants::invalid_uint64);
 		if(answer.kmer_id <0 || answer.kmer_id>=this->kmers.size()){
 			cout<<"Erroneus mphf."<<endl;
