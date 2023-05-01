@@ -146,7 +146,8 @@ __uint128_t convert_uint64_to_uint128(uint64_t r) {
 	// out<<64;
     // //return ((__uint128_t)0 << 0) | ((__uint128_t)r << 64);//works in mini, but not ec
 	//return (__uint128_t)r;
-	return ((__uint128_t)0 << 0) | ((__uint128_t)r << 64); //doesnt work in mini
+	//return ((__uint128_t)0 << 0) | ((__uint128_t)r << 64); ///works in mini, but not ec
+	return ((__uint128_t)0 << 64) | ((__uint128_t)r << 0); ///works in ec, but not mini
 }
 
 void KmerMatrix::to_color_string_file(const std::string& outfile)
