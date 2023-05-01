@@ -140,6 +140,9 @@ void parse_file(std::istream& is, parse_data& data, build_configuration const& b
 
         std::getline(is, sequence);  // DNA sequence
         if (sequence.size() < k) continue;
+        //amatur
+         //amaturuint64_t numkmer = sequence.length() - k + 1;
+         //amaturpos.push_back();
 
         if (++num_sequences % 100000 == 0) {
             std::cout << "read " << num_sequences << " sequences, " << num_bases << " bases, "
