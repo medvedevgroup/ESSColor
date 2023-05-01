@@ -173,8 +173,8 @@ void KmerMatrix::to_color_string_file(const std::string& outfile)
 	for (uint64_t kmer_idx(0) ; kmer_idx<this->kmers.size() ; kmer_idx++)
 	{
 		string thekmer=kmer2str(kmers[kmer_idx], this->k);
-		auto answer = dict.lookup_advanced(thekmer.c_str());
-		//auto answer = dict.lookup_advanced_uint(convert_uint64_to_uint128(kmers[kmer_idx]));
+		//auto answer = dict.lookup_advanced(thekmer.c_str());
+		auto answer = dict.lookup_advanced_uint(convert_uint64_to_uint128(kmers[kmer_idx]));
 		assert(answer.kmer_id != constants::invalid_uint64);
 		if(answer.kmer_id <0 || answer.kmer_id>=this->kmers.size()){
 			cout<<"Erroneus mphf."<<endl;
