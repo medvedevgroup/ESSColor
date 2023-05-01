@@ -30,16 +30,14 @@ if [ ! -d lib/cmph-2.0.2 ]; then
 	cp lib/CMakeLists_cmph.txt lib/cmph-2.0.2/src/CMakeLists.txt
 fi
 
-cd lib
+# cd lib
+# git clone --recursive https://github.com/medvedevgroup/ESSCompress.git
+# cd ../
+# cd lib/ESSCompress
+# ./INSTALL
+# cd ../../
+
 # git clone --recursive https://github.com/jermp/sshash.git
-#git clone --recursive https://github.com/medvedevgroup/ESSCompress.git
-
-cd ../
-
-cd lib/ESSCompress
-./INSTALL
-cd ../../
-
 # Compilation
 cmake . && make -j
 
