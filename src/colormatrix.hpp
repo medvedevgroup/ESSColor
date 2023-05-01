@@ -1,3 +1,5 @@
+#pragma once 
+
 #include <iostream>
 #include <string>
 #include <algorithm>
@@ -8,6 +10,17 @@
 #define DBIO_ERROR 10
 #define OUTPUT_ERROR 11
 
+#include "../external/pthash/external/cmd_line_parser/include/parser.hpp"
+#include "../include/dictionary.hpp"
+
+#include <vector>
+
+
+
+using namespace sshash;
+void load_dictionary_sshash(dictionary& dict, std::string const& index_filename, bool verbose);
+std::string kmer2str(uint64_t kmer, uint64_t k);
+
 
 class KmerMatrix
 {
@@ -16,10 +29,17 @@ public:
 	uint64_t k;
 	std::vector<uint64_t> kmers;
 	std::vector<uint64_t> colors;
+	std::string ess_order_file;
+	dictionary dict;
 
-	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k);
+	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, dictionary& dict);
+
+//	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, std::string ess_order_file);
 	KmerMatrix(KmerMatrix && other);
 	KmerMatrix& operator=(KmerMatrix&& other);
+
+	uint64_t mphf_get_kmer_id(uint64_t kmer);
+	int MPHFCompare(uint64_t kmer1, uint64_t kmer2);
 
 	/** Fill the to_fill vector with the uints from the row of row_idx idx.
 	 * @param row_idx Index of the matrix row of interest
@@ -67,15 +87,15 @@ void merge_colors(std::vector<uint64_t> & colors, size_t first_idx, std::vector<
  * @param k kmer size. This value is filled during the loading process.
  * @return Sorted list of kmers (lexicographic order)
  **/
-std::vector<uint64_t> load_from_file(const std::string db_path, uint64_t& k);
+std::vector<uint64_t> load_from_file(const std::string db_path, uint64_t& k, dictionary& dict);
 
 
-/** Translate a uint64_t kmer into a string
- * @param kmer the kmer integer version
- * @param k kmer size (in nucleotides)
- * @return string version of the kmer
- **/
-std::string kmer2str(uint64_t kmer, uint64_t k);
+// /** Translate a uint64_t kmer into a string
+//  * @param kmer the kmer integer version
+//  * @param k kmer size (in nucleotides)
+//  * @return string version of the kmer
+//  **/
+// std::string kmer2str(uint64_t kmer, uint64_t k);
 
 
 /** This class is made to amortize mergings. We do not want to merge each new dataset directly.

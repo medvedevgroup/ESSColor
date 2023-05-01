@@ -1,23 +1,79 @@
-# 3.16: Oldest CMake version present on Ubuntu LTS
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.5)
+project(SSHASH)
 
-# set the project name
-project(ESSColor)
-project(ESSColor VERSION 1.0)
+set(CMAKE_CXX_STANDARD 17)
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release")
+endif ()
 
-# specify the C++ standard
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+endif ()
 
-set(CMAKE_BUILD_TYPE Debug)
+MESSAGE(STATUS "CMAKE_BUILD_TYPE: " ${CMAKE_BUILD_TYPE})
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+MESSAGE(STATUS "Compiling for processor: " ${CMAKE_HOST_SYSTEM_PROCESSOR})
+
+if (UNIX AND (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64"))
+  MESSAGE(STATUS "Compiling with flags: -march=native -mbmi2 -msse4.2")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+  # Flags for PTHash:
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mbmi2 -msse4.2") # for hardware popcount and pdep
 endif()
 
-set(CMAKE_CXX_FLAGS "-Wall")
-set(CMAKE_CXX_FLAGS_DEBUG "-g -Ofast")
-set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
+if (UNIX)
+
+  MESSAGE(STATUS "Compiling with flags: -std=c++17 -O3 -ggdb -pthread -Wall -Wextra -Wno-missing-braces -Wno-unknown-attributes -Wno-unused-function")
+
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-missing-braces -Wno-unknown-attributes -Wno-unused-function")
+
+  # Flags for PTHash:
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread") # for multi-threading
+
+  if (SSHASH_USE_SANITIZERS)
+    MESSAGE(STATUS "Using sanitizers. Compiling with flags: -fsanitize=address -fno-omit-frame-pointer")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+  endif()
+
+endif()
+
+set(Z_LIB_SOURCES
+  include/gz/zip_stream.cpp
+)
+
+set(SSHASH_SOURCES
+  include/dictionary.cpp
+  include/info.cpp
+  include/dump.cpp
+  include/statistics.cpp
+  include/builder/build.cpp
+)
+
+# Create a static lib
+add_library(sshash_static STATIC
+  ${Z_LIB_SOURCES}
+  ${SSHASH_SOURCES}
+)
+
+# add_executable(sshash src/sshash.cpp)
+# target_link_libraries(sshash
+#   sshash_static
+#   z
+# )
+
+# add_executable(amatur src/amatur.cpp)
+# target_link_libraries(amatur
+#   sshash_static
+#   z
+# )
+
+
+
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
@@ -25,14 +81,22 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 add_subdirectory(lib)
 add_subdirectory(src)
 
-    
 # add the executable
-add_executable(kmerlist src/kmerlist.cpp)
-add_executable(compress src/compress.cpp)
-add_executable(decompress src/decompress.cpp)
+# add_executable(kmerlist src/kmerlist.cpp)
+add_executable(ess_color_compress src/compress.cpp)
+add_executable(ess_color_decompress src/decompress.cpp)
 add_executable(genmatrix src/genMatrix.cpp)
 
-# link libraries
-target_link_libraries(compress cmph_lib sdsl)
-target_link_libraries(decompress cmph_lib sdsl)
-target_link_libraries(genmatrix essc_lib cxxopts)
+target_link_libraries(ess_color_compress cmph_lib sdsl)
+target_link_libraries(ess_color_decompress cmph_lib sdsl)
+
+######
+# target_link_libraries(amatur sshash)
+# add_executable(sshash src/sshash.cpp)
+target_link_libraries(genmatrix
+essc_lib
+cxxopts
+  sshash_static
+  z
+)
+

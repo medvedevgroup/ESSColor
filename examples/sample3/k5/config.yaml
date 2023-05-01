@@ -1,0 +1,9 @@
+k: 5
+ab: 1
+mem: 100
+type: "m"
+option: ""
+matrix_generator: "genmatrix"
+
+SAMPLES: ["c1","c2","c3"]
+EXTENSION: ".fa"
