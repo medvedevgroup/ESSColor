@@ -275,7 +275,6 @@ if config['matrix_generator'] == 'genmatrix':
         output:
             "col_bitmatrix",
             "ess_boundary_bit.txt",
-            "stat_nkmer_ess"
         params:
             l=dump_list(SAMPLES, ".kmc", "list_kmc"),
             k=config["k"],
@@ -310,7 +309,7 @@ if config['matrix_generator'] == 'jc':
         benchmark:
             "benchmarks/stat_nkmer_ess.txt"
         shell:
-            "cat ess_kmer_id.txt | wc -l > stat_nkmer_ess"  
+            "cat ess_boundary_bit.txt | wc -l > stat_nkmer_ess"  
     rule stat_nkmer_jc:
         input:
             "jc_matrix.tsv"
@@ -332,6 +331,15 @@ if config['matrix_generator'] == 'jc':
             "bash ess_color_validate_kmer.sh stat_nkmer_ess stat_nkmer_jc"
 
 if config['matrix_generator'] == 'genmatrix':
+    rule stat_nkmer_ess:
+        input:
+            "ess_boundary_bit.txt"
+        output:
+            "stat_nkmer_ess"
+        benchmark:
+            "benchmarks/stat_nkmer_ess.txt"
+        shell:
+            "cat ess_boundary_bit.txt | wc -l > stat_nkmer_ess"  
     rule stat_nkmer_genmatrix:
         input:
             "col_bitmatrix"

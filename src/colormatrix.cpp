@@ -153,24 +153,6 @@ __uint128_t convert_uint64_to_uint128(uint64_t r) {
 
 void KmerMatrix::to_color_string_file(const std::string& outfile)
 {
-	//, std::string ess_order_file
-	// auto k = 5;
-    // auto m = 3;
-    // dictionary dict;
-
-    // build_configuration build_config;
-    // build_config.k = k;
-    // build_config.m = m;
-
-    // build_config.canonical_parsing = true;
-    // build_config.verbose = true;
-    // build_config.print();
-
-    // dict.build("/home/aur1111/s/proj4/minireal/k5/mega.essd", build_config);
-    // assert(dict.k() == k);
-    // std::cout<<"dict built complete";
-	// //dict.streaming_query_from_file("/home/aur1111/s/proj4/minireal/k5/mega.essd");
-
 	ofstream out(outfile);
 
 	const uint64_t num_uints_per_row = (this->num_datasets + 63) / 64;

@@ -35,7 +35,6 @@ cd lib
 git clone --recursive https://github.com/medvedevgroup/ESSCompress.git
 
 cd ../
-# git submodule add https://github.com/jermp/sshash.git lib/sshash
 
 cd lib/ESSCompress
 ./INSTALL
