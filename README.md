@@ -12,7 +12,6 @@ ESS-Color is a bioinformatics tool for constructing compressed representation of
 - Git
 - CMake 3.12+
 - [ESSCompress](https://github.com/medvedevgroup/ESSCompress)
-- [joinCounts](https://github.com/Transipedia/dekupl-joinCounts)
 - [KMC](https://github.com/refresh-bio/KMC)
 
 
@@ -24,14 +23,13 @@ First, install all the pre-requisites and make sure the executables are in your 
     cd ESSColor
     bash compile.sh
     
-You can move/copy ALL the executables in `ess-color/bin` to the bin directory that is already in your PATH. For instance, considering `/usr/bin` is already in PATH, you need to run the command `mv ess-color/bin/* /usr/bin` to move all executables for ESS-Color software. An alternative to moving/copying executables is adding the location of `ess-color/bin` to your PATH.
+You can move/copy ALL the executables in `ESSColor/bin` to the bin directory that is already in your PATH. For instance, considering `/usr/bin` is already in PATH, you need to run the command `mv ESSColor/bin/* /usr/bin` to move all executables for ESS-Color software. An alternative to moving/copying executables is adding the location of `ESSColor/bin` to your PATH.
 
+After compiling, set up the `config.yaml` to test compression. (Just follow the examples/sample3 folder structure) Change to the directory `examples/sample3/k5` and use [TODO: add details of config file]
 
-After compiling, set up the `config.yaml`. Change to the directory and use [TODO: add details of config file]
-
-    snakemake -s Snakefile.smk -j 8
+    snakemake -s pipeline_compress.smk -j 8
     
-
+[It generates a bunch of files, but if the pipeline finished successfully, compression worked.]
 
 
 ## Command lines
