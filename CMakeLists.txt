@@ -83,8 +83,8 @@ add_subdirectory(src)
 
 # add the executable
 # add_executable(kmerlist src/kmerlist.cpp)
-add_executable(ess_color_compress src/compress.cpp)
-add_executable(ess_color_decompress src/decompress.cpp)
+# add_executable(ess_color_compress src/compress.cpp)
+# add_executable(ess_color_decompress src/decompress.cpp)
 add_executable(genmatrix src/genMatrix.cpp)
 
 # target_link_libraries(compress cmph_lib sdsl)
