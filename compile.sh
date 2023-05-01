@@ -32,7 +32,7 @@ fi
 
 cd lib
 # git clone --recursive https://github.com/jermp/sshash.git
-git clone --recursive https://github.com/medvedevgroup/ESSCompress.git
+#git clone --recursive https://github.com/medvedevgroup/ESSCompress.git
 
 cd ../
 
