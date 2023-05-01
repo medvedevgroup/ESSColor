@@ -82,7 +82,7 @@ rule all:
         # "rrr_bv_mapping.sdsl",
         # "stat_size",
         "ess_boundary_bit.txt",
-        "validate1",
+        # "validate1",
         "col_bitmatrix",
         "uniq_ms.txt",
         "stat_m",
@@ -298,18 +298,17 @@ rule megaessc_to_megaessd:
 
 
 
-
+rule stat_nkmer_ess:
+    input:
+        "ess_kmer_id.txt"
+    output:
+        "stat_nkmer_ess"
+    benchmark:
+        "benchmarks/stat_nkmer_ess.txt"
+    shell:
+        "cat col_bitmatrix.txt | wc -l > stat_nkmer_ess"  
 
 if config['matrix_generator'] == 'jc':
-    rule stat_nkmer_ess:
-        input:
-            "ess_kmer_id.txt"
-        output:
-            "stat_nkmer_ess"
-        benchmark:
-            "benchmarks/stat_nkmer_ess.txt"
-        shell:
-            "cat ess_boundary_bit.txt | wc -l > stat_nkmer_ess"  
     rule stat_nkmer_jc:
         input:
             "jc_matrix.tsv"
@@ -321,25 +320,25 @@ if config['matrix_generator'] == 'jc':
             "cat jc_matrix.tsv | wc -l > stat_nkmer_jc"    
             #"cat jc_matrix.tsv | head -n -1 > jc_fixed ; mv jc_fixed jc_matrix.tsv; cat jc_matrix.tsv | wc -l > stat_nkmer_jc"    
 
-    rule validate_jc_kmers:
-        input:
-            "stat_nkmer_ess",
-            "stat_nkmer_jc"
-        output:
-            "validate1"
-        shell:
-            "bash ess_color_validate_kmer.sh stat_nkmer_ess stat_nkmer_jc"
+    # rule validate_jc_kmers:
+    #     input:
+    #         "stat_nkmer_ess",
+    #         "stat_nkmer_jc"
+    #     output:
+    #         "validate1"
+    #     shell:
+    #         "bash ess_color_validate_kmer.sh stat_nkmer_ess stat_nkmer_jc"
 
 if config['matrix_generator'] == 'genmatrix':
-    rule stat_nkmer_ess:
-        input:
-            "ess_boundary_bit.txt"
-        output:
-            "stat_nkmer_ess"
-        benchmark:
-            "benchmarks/stat_nkmer_ess.txt"
-        shell:
-            "cat ess_boundary_bit.txt | wc -l > stat_nkmer_ess"  
+    # rule stat_nkmer_ess:
+    #     input:
+    #         "ess_boundary_bit.txt"
+    #     output:
+    #         "stat_nkmer_ess"
+    #     benchmark:
+    #         "benchmarks/stat_nkmer_ess.txt"
+    #     shell:
+    #         "cat ess_boundary_bit.txt | wc -l > stat_nkmer_ess"  
     rule stat_nkmer_genmatrix:
         input:
             "col_bitmatrix"
@@ -350,19 +349,19 @@ if config['matrix_generator'] == 'genmatrix':
         shell:
             "cat col_bitmatrix | wc -l > stat_nkmer_genmatrix"    
        
-    rule validate_genmatrix_kmers:
-        input:
-            "stat_nkmer_ess",
-            "stat_nkmer_genmatrix"
-        output:
-            "validate1"
-        shell:
-            "cmp --silent stat_nkmer_ess stat_nkmer_genmatrix && echo '### SUCCESS: Files Are Identical! ###' > validate1 || echo \"files are different\""
+    # rule validate_genmatrix_kmers:
+    #     input:
+    #         "stat_nkmer_ess",
+    #         "stat_nkmer_genmatrix"
+    #     output:
+    #         "validate1"
+    #     shell:
+    #         "cmp --silent stat_nkmer_ess stat_nkmer_genmatrix && echo '### SUCCESS: Files Are Identical! ###' > validate1 || echo \"files are different\""
             
 
 rule stat_uniq_colclass:
     input:
-        "validate1",
+        # "validate1",
         "col_bitmatrix"
     output:
         "uniq_ms.txt",
@@ -375,7 +374,7 @@ rule stat_uniq_colclass:
 rule compress:
     input:
         "ess_boundary_bit.txt",
-        "validate1",
+        # "validate1",
         "col_bitmatrix",
         "uniq_ms.txt",
         "stat_m",
