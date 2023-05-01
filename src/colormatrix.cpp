@@ -139,7 +139,7 @@ void KmerMatrix::get_row(uint64_t row_idx, vector<uint64_t>& to_fill)
 }
 
 __uint128_t convert_uint64_to_uint128(uint64_t r) {
-	return ((__uint128_t)0 << 0) | ((__uint128_t)r << 0); ///works in mini, but not ec
+	return ((__uint128_t)r << 64) | ((__uint128_t)r << 0); 
 
 	//return ((__uint128_t)0 << 0) | ((__uint128_t)r << 64); ///works in mini, but not ec
 
