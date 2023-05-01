@@ -12,6 +12,53 @@ struct parse_data {
     weights::builder weights_builder;
 };
 
+
+/** Write bitvector to disk given positions: for optimization replace string version with binary
+ * @param b_it b_it indicates size of vector: if 8 length, then b_it = 8, bv 0 to 7 should have values
+ **/
+/*
+void write_binary_bv_from_pos_vector(vector<uint64_t>& positions, uint64_t &b_it, string filename){
+    ofstream fout(filename);
+    uint64_t total_num_blocks_req = ceil(b_it/8);
+    char* blocks = new char[total_num_blocks_req];
+    memset(blocks, 0, total_num_blocks_req*sizeof(blocks[0]));
+    for(uint64_t p : positions){
+        blocks[(int)floor(p/8)] |= (1<<(p%8)); //uint64_t block_id = floor(p/8); //uint8_t block_offset = p%8;
+    }
+
+    char char64_b_it[8];
+    serialise_64bit(char64_b_it, b_it);
+    fout.write((char *)char64_b_it, 8);
+
+    uint64_t i = 0;
+    while(i < total_num_blocks_req){
+        fout.write(&blocks[i++], 1);
+    }
+
+    delete[] blocks;
+    fout.close();
+}
+*/
+
+
+void write_string_bv_from_pos_vector(std::vector<uint64_t>& positions, uint64_t bv_size, std::string filename){
+    std::ofstream binarystring_file(filename);
+    //sort(positions.begin(), positions.end());
+    uint64_t bvi = 0;
+    for (uint64_t k = 0; k<bv_size; k++){
+        if(bvi < positions.size()){
+            if(positions[bvi]==k){
+                binarystring_file<<"1"<<std::endl;
+                bvi++;
+            }else{
+                binarystring_file<<"0"<<std::endl;
+            }
+        }else{
+            binarystring_file<<"0"<<std::endl;
+        }	
+    }
+}
+
 void parse_file(std::istream& is, parse_data& data, build_configuration const& build_config) {
     uint64_t k = build_config.k;
     uint64_t m = build_config.m;
@@ -134,15 +181,24 @@ void parse_file(std::istream& is, parse_data& data, build_configuration const& b
         }
     };
 
+
+
+    std::vector<uint64_t> ess_boundary_vector(1, 0);
+    uint64_t num_simplitig = 0;
+    uint64_t last_written_pos = 0;
     while (!is.eof()) {
         std::getline(is, sequence);  // header sequence
         if (build_config.weighted) parse_header();
 
         std::getline(is, sequence);  // DNA sequence
         if (sequence.size() < k) continue;
-        //amatur
-         //amaturuint64_t numkmer = sequence.length() - k + 1;
-         //amaturpos.push_back();
+
+
+        uint64_t numkmer_in_simplitig = sequence.length() - k + 1;
+        last_written_pos += numkmer_in_simplitig;
+        ess_boundary_vector.push_back(last_written_pos);
+        num_simplitig+=1;
+         
 
         if (++num_sequences % 100000 == 0) {
             std::cout << "read " << num_sequences << " sequences, " << num_bases << " bases, "
@@ -187,6 +243,8 @@ void parse_file(std::istream& is, parse_data& data, build_configuration const& b
 
         append_super_kmer();
     }
+    ess_boundary_vector.pop_back();
+    write_string_bv_from_pos_vector(ess_boundary_vector, num_simplitig, "ess_boundary_bit.txt");
 
     data.minimizers.finalize();
     builder.finalize();

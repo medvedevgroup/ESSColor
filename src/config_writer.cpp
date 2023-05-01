@@ -33,24 +33,27 @@ using namespace std;
 //       store_line(key, value);
 //   }
 // }
-void extension_remove(){
-    string filename = "C:\\MyDirectory\\MyFile.bat";
+string extension_remove(string pathname){
+    //string filename = "C:\\MyDirectory\\MyFile.bat";
 
-// Remove directory if present.
-// Do this before extension removal incase directory has a period character.
-const size_t last_slash_idx = filename.find_last_of("\\/");
-if (std::string::npos != last_slash_idx)
-{
-    filename.erase(0, last_slash_idx + 1);
+    // Remove directory if present.
+    // Do this before extension removal incase directory has a period character.
+    string filename = pathname;
+    const size_t last_slash_idx = filename.find_last_of("/");
+    if (std::string::npos != last_slash_idx)
+    {
+        filename.erase(0, last_slash_idx + 1);
+    }
+
+    // Remove extension if present.
+    const size_t period_idx = filename.rfind('.');
+    if (std::string::npos != period_idx)
+    {
+        filename.erase(period_idx);
+    }
+    return filename;
 }
 
-// Remove extension if present.
-const size_t period_idx = filename.rfind('.');
-if (std::string::npos != period_idx)
-{
-    filename.erase(period_idx);
-}
-}
 ofstream config;
 string enclose_listelem_with_brackets(string filewithlist){
     ifstream ifs(filewithlist);
@@ -108,7 +111,7 @@ int main(int argc, char **argv) {
     config.open("config.yaml");
     write_config("k", "31");
     write_config("SAMPLES", enclose_listelem_with_brackets(list_file));
-    EXTENSION: ".fa"
+    // EXTENSION: ".fa"
 
     return 0;
 }
