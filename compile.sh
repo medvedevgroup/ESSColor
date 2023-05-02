@@ -7,7 +7,7 @@ cd $BASEDIR
 
 # Submodule downloads
 git submodule init
-git submodule update
+git submodule update --recursive
 
 # Prepare SDSL for compilation
 cd lib/sdsl

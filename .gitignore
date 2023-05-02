@@ -7,6 +7,7 @@
 
 # lib related
 lib/cmph*
+sshash
 
 # Project related
 **/compress

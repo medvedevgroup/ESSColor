@@ -10,8 +10,8 @@
 #define DBIO_ERROR 10
 #define OUTPUT_ERROR 11
 
-#include "../external/pthash/external/cmd_line_parser/include/parser.hpp"
-#include "../include/dictionary.hpp"
+// #include "../external/pthash/external/cmd_line_parser/include/parser.hpp"
+#include "dictionary.hpp"
 
 #include <vector>
 

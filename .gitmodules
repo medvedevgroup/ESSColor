@@ -7,3 +7,6 @@
 [submodule "lib/cxxopts"]
 	path = lib/cxxopts
 	url = https://github.com/jarro2783/cxxopts.git
+[submodule "lib/sshash"]
+	path = lib/sshash
+	url = https://github.com/jermp/sshash.git
