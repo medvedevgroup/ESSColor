@@ -9,15 +9,6 @@
 
 using namespace std;
 
-// #include "common.hpp"
-// #include "bench_utils.hpp"
-// #include "check_utils.hpp"
-// // #include "lib/sshash/src/build.cpp"
-// // #include "lib/sshash/src/query.cpp"
-// #include "permute.cpp"
-
-// using namespace sshash;
-
 
 #define OPT_PARSING_ERROR 01
 #define DB_LIST_ERROR 02
@@ -182,7 +173,7 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 
 
 
-void build_mphf(int k, dictionary& dict, string spss_file) {
+void build_mphf(uint64_t k, dictionary& dict, string spss_file) {
 	//write_ess_boundary(spss_file, k);
 	auto m = (int) k/2;
 	if(m<10) m = k;
@@ -211,7 +202,7 @@ int main(int argc, char const *argv[])
 	vector<string> db_list = get_databases(args["count-list"].as<string>());
 
 	dictionary dict;
-	build_mphf(args["kmer-size"].as<int>(),dict, args["spss"].as<string>());
+	build_mphf(args["kmer-size"].as<uint64_t>(),dict, args["spss"].as<string>());
 
 	CascadingMergingMatrix cmm(0.9);
 	

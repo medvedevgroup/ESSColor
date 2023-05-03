@@ -18,7 +18,6 @@
 
 
 using namespace sshash;
-void load_dictionary_sshash(dictionary& dict, std::string const& index_filename, bool verbose);
 std::string kmer2str(uint64_t kmer, uint64_t k);
 
 
@@ -34,7 +33,6 @@ public:
 
 	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, dictionary& dict);
 
-//	KmerMatrix(std::vector<uint64_t> & dataset, uint64_t k, std::string ess_order_file);
 	KmerMatrix(KmerMatrix && other);
 	KmerMatrix& operator=(KmerMatrix&& other);
 

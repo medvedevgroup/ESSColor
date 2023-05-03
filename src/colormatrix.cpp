@@ -8,30 +8,7 @@
 #include "colormatrix.hpp"
 
 using namespace std;
-// #include "common.hpp"
-// #include "bench_utils.hpp"
-// #include "check_utils.hpp"
-// // #include "lib/sshash/src/build.cpp"
-// // #include "lib/sshash/src/query.cpp"
-// #include "permute.cpp"
 
-// using namespace sshash;
-// class MPHFComparatoror
-// {
-// 	public:
-// 	int k;
-// 	dictionary dict;
-
-// 	MPHFComparatoror() {
-// 	}
-
-dictionary global_dict;    
-	
-
-//     // bool operator()(uint64_t kmer1, uint64_t kmer2)
-//     // {
-//     //     return get_kmer_id(kmer1) < get_kmer_id(kmer2);
-//     // }
 
 int KmerMatrix::MPHFCompare(uint64_t kmer1, uint64_t kmer2)
 {
@@ -79,18 +56,15 @@ std::string kmer2str(uint64_t kmer, uint64_t k)
 	return s;
 };
 
-uint64_t KmerMatrix::mphf_get_kmer_id(uint64_t kmer1){
-		std::string kmer1_str=kmer2str(kmer1, k);
-		auto answer1 = dict.lookup_advanced(kmer1_str.c_str());
-		assert(answer1.kmer_id != constants::invalid_uint64);
-		return answer1.kmer_id;
-	}	
-uint64_t global_mphf_get_kmer_id(uint64_t kmer1){
-		std::string kmer1_str=kmer2str(kmer1, global_dict.k());
-		auto answer1 = global_dict.lookup_advanced(kmer1_str.c_str());
-		assert(answer1.kmer_id != constants::invalid_uint64);
-		return answer1.kmer_id;
-	}	
+
+uint64_t KmerMatrix::mphf_get_kmer_id(uint64_t kmer1)
+{
+	std::string kmer1_str=kmer2str(kmer1, k);
+	auto answer1 = dict.lookup_advanced(kmer1_str.c_str());
+	assert(answer1.kmer_id != constants::invalid_uint64);
+	return answer1.kmer_id;
+};
+
 
 KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k, dictionary& dict)  
 {
@@ -460,29 +434,8 @@ void merge_colors(vector<uint64_t> & colors, size_t first_idx, vector<uint64_t>:
 		to_merge++;
 	}
 };
-void load_dictionary_sshash(dictionary& dict, std::string const& index_filename, bool verbose) {
-    uint64_t num_bytes_read = essentials::load(dict, index_filename.c_str());
-    if (verbose) {
-        std::cout << "index size: " << essentials::convert(num_bytes_read, essentials::MB)
-                  << " [MB] (" << (num_bytes_read * 8.0) / dict.size() << " [bits/kmer])"
-                  << std::endl;
-        dict.print_info();
-    }
-}
 
 
-
-// bool fancy_comparison(uint64_t a, uint64_t b) {
-//   return mphf_get_kmer_id(a) <  mphf_get_kmer_id(b) ;
-// }
-// [] (uint64_t const& s1, uint64_t const& s2) -> bool 
-// {
-//        return global_mphf_get_kmer_id(a, dict) <  global_mphf_get_kmer_id(b, dict);
-// };
-auto sortRuleLambda = [] (uint64_t const& s1, uint64_t const& s2) -> bool
-    {
-       return global_mphf_get_kmer_id(s1) <  global_mphf_get_kmer_id(s2);
-    };
 
 /** Loads a kmer list from a KMC database and sort the kmers.
  * @param db_path path to kmer database
@@ -492,7 +445,6 @@ auto sortRuleLambda = [] (uint64_t const& s1, uint64_t const& s2) -> bool
 vector<uint64_t> load_from_file(const string db_path, uint64_t& k, dictionary& dict)
 {
 	vector<uint64_t> kmers;
-	global_dict = dict;
 
 	// Opening the database
 	CKMCFile db;
