@@ -15,121 +15,206 @@ using namespace sshash;
 #define DB_LIST_ERROR 02
 
 
-
-#include "dictionary.hpp"
-#include "../external/pthash/external/essentials/include/essentials.hpp"
-#include "util.hpp"
-
-/** build steps **/
-#include "builder/parse_file.hpp"
-#include "builder/build_index.hpp"
-#include "builder/build_skew_index.hpp"
-/*****************/
-
-#include <numeric>  // for std::accumulate
-
+#include "gz/zip_stream.hpp"
 
 namespace sshash {
 //@OVERRIDE
-void dictionary::build(std::string const& filename, build_configuration const& build_config) {
-	cout<<"override"<<endl;
-    /* Validate the build configuration. */
-    if (build_config.k == 0) throw std::runtime_error("k must be > 0");
-    if (build_config.k > constants::max_k) {
-        throw std::runtime_error("k must be less <= " + std::to_string(constants::max_k) +
-                                 " but got k = " + std::to_string(build_config.k));
-    }
-    if (build_config.m == 0) throw std::runtime_error("m must be > 0");
-    if (build_config.m > constants::max_m) {
-        throw std::runtime_error("m must be less <= " + std::to_string(constants::max_m) +
-                                 " but got m = " + std::to_string(build_config.m));
-    }
-    if (build_config.m > build_config.k) throw std::runtime_error("m must be < k");
-    if (build_config.l > constants::max_l) {
-        throw std::runtime_error("l must be <= " + std::to_string(constants::max_l));
+
+
+void parse_file(std::istream& is, parse_data& data, build_configuration const& build_config) {
+	cout<<"OVERRIDE"<<endl;
+    uint64_t k = build_config.k;
+    uint64_t m = build_config.m;
+    uint64_t seed = build_config.seed;
+    uint64_t max_num_kmers_in_super_kmer = k - m + 1;
+    uint64_t block_size = 2 * k - m;  // max_num_kmers_in_super_kmer + k - 1
+
+    if (max_num_kmers_in_super_kmer >= (1ULL << (sizeof(num_kmers_in_super_kmer_uint_type) * 8))) {
+        throw std::runtime_error(
+            "max_num_kmers_in_super_kmer " + std::to_string(max_num_kmers_in_super_kmer) +
+            " does not fit into " + std::to_string(sizeof(num_kmers_in_super_kmer_uint_type) * 8) +
+            " bits");
     }
 
-    m_k = build_config.k;
-    m_m = build_config.m;
-    m_seed = build_config.seed;
-    m_canonical_parsing = build_config.canonical_parsing;
-    m_skew_index.min_log2 = build_config.l;
+    /* fit into the wanted number of bits */
+    assert(max_num_kmers_in_super_kmer < (1ULL << (sizeof(num_kmers_in_super_kmer_uint_type) * 8)));
 
-    std::vector<double> timings;
-    timings.reserve(5);
-    essentials::timer_type timer;
+    compact_string_pool::builder builder(k);
 
-    /* step 1: parse the input file and build compact string pool ***/
-    timer.start();
-    parse_data data = parse_file(filename, build_config);
-    m_size = data.num_kmers;
-    timer.stop();
-    timings.push_back(timer.elapsed());
-    print_time(timings.back(), data.num_kmers, "step 1: 'parse_file'");
-    timer.reset();
-    /******/
+    std::string sequence;
+    uint64_t prev_minimizer = constants::invalid_uint64;
+
+    uint64_t begin = 0;  // begin of parsed super_kmer in sequence
+    uint64_t end = 0;    // end of parsed super_kmer in sequence
+    uint64_t num_sequences = 0;
+    uint64_t num_bases = 0;
+    bool glue = false;
+
+    auto append_super_kmer = [&]() {
+        if (sequence.empty() or prev_minimizer == constants::invalid_uint64 or begin == end) {
+            return;
+        }
+
+        assert(end > begin);
+        char const* super_kmer = sequence.data() + begin;
+        uint64_t size = (end - begin) + k - 1;
+        assert(util::is_valid(super_kmer, size));
+
+        /* if num_kmers_in_super_kmer > k - m + 1, then split the super_kmer into blocks */
+        uint64_t num_kmers_in_super_kmer = end - begin;
+        uint64_t num_blocks = num_kmers_in_super_kmer / max_num_kmers_in_super_kmer +
+                              (num_kmers_in_super_kmer % max_num_kmers_in_super_kmer != 0);
+        assert(num_blocks > 0);
+        for (uint64_t i = 0; i != num_blocks; ++i) {
+            uint64_t n = block_size;
+            if (i == num_blocks - 1) n = size;
+            uint64_t num_kmers_in_block = n - k + 1;
+            assert(num_kmers_in_block <= max_num_kmers_in_super_kmer);
+            data.minimizers.emplace_back(prev_minimizer, builder.offset, num_kmers_in_block);
+            builder.append(super_kmer + i * max_num_kmers_in_super_kmer, n, glue);
+            if (glue) {
+                assert(data.minimizers.back().offset > k - 1);
+                data.minimizers.back().offset -= k - 1;
+            }
+            size -= max_num_kmers_in_super_kmer;
+            glue = true;
+        }
+    };
+
+    uint64_t seq_len = 0;
+    uint64_t sum_of_weights = 0;
+    data.weights_builder.init();
+
+    /* intervals of weights */
+    uint64_t weight_value = constants::invalid_uint64;
+    uint64_t weight_length = 0;
+
+    auto parse_header = [&]() {
+        if (sequence.empty()) return;
+
+        /*
+            Heder format:
+            >[id] LN:i:[seq_len] ab:Z:[weight_seq]
+            where [weight_seq] is a space-separated sequence of integer counters (the weights),
+            whose length is equal to [seq_len]-k+1
+        */
+
+        // example header: '>12 LN:i:41 ab:Z:2 2 2 2 2 2 2 2 2 2 2'
+
+        expect(sequence[0], '>');
+        uint64_t i = 0;
+        i = sequence.find_first_of(' ', i);
+        if (i == std::string::npos) throw parse_runtime_error();
+
+        i += 1;
+        expect(sequence[i + 0], 'L');
+        expect(sequence[i + 1], 'N');
+        expect(sequence[i + 2], ':');
+        expect(sequence[i + 3], 'i');
+        expect(sequence[i + 4], ':');
+        i += 5;
+        uint64_t j = sequence.find_first_of(' ', i);
+        if (j == std::string::npos) throw parse_runtime_error();
+
+        seq_len = std::strtoull(sequence.data() + i, nullptr, 10);
+        i = j + 1;
+        expect(sequence[i + 0], 'a');
+        expect(sequence[i + 1], 'b');
+        expect(sequence[i + 2], ':');
+        expect(sequence[i + 3], 'Z');
+        expect(sequence[i + 4], ':');
+        i += 5;
+
+        for (uint64_t j = 0; j != seq_len - k + 1; ++j) {
+            uint64_t weight = std::strtoull(sequence.data() + i, nullptr, 10);
+            i = sequence.find_first_of(' ', i) + 1;
+
+            data.weights_builder.eat(weight);
+            sum_of_weights += weight;
+
+            if (weight == weight_value) {
+                weight_length += 1;
+            } else {
+                if (weight_value != constants::invalid_uint64) {
+                    data.weights_builder.push_weight_interval(weight_value, weight_length);
+                }
+                weight_value = weight;
+                weight_length = 1;
+            }
+        }
+    };
+
+    while (!is.eof()) {
+        std::getline(is, sequence);  // header sequence
+        if (build_config.weighted) parse_header();
+
+        std::getline(is, sequence);  // DNA sequence
+        if (sequence.size() < k) continue;
+
+        if (++num_sequences % 100000 == 0) {
+            std::cout << "read " << num_sequences << " sequences, " << num_bases << " bases, "
+                      << data.num_kmers << " kmers" << std::endl;
+        }
+
+        begin = 0;
+        end = 0;
+        glue = false;  // start a new piece
+        prev_minimizer = constants::invalid_uint64;
+        num_bases += sequence.size();
+
+        if (build_config.weighted and seq_len != sequence.size()) {
+            std::cout << "ERROR: expected a sequence of length " << seq_len
+                      << " but got one of length " << sequence.size() << std::endl;
+            throw std::runtime_error("file is malformed");
+        }
+
+        while (end != sequence.size() - k + 1) {
+            char const* kmer = sequence.data() + end;
+            assert(util::is_valid(kmer, k));
+            kmer_t uint_kmer = util::string_to_uint_kmer_no_reverse(kmer, k);
+            uint64_t minimizer = util::compute_minimizer(uint_kmer, k, m, seed);
+
+            if (build_config.canonical_parsing) {
+                kmer_t uint_kmer_rc = util::compute_reverse_complement(uint_kmer, k);
+                uint64_t minimizer_rc = util::compute_minimizer(uint_kmer_rc, k, m, seed);
+                minimizer = std::min<uint64_t>(minimizer, minimizer_rc);
+            }
+
+            if (prev_minimizer == constants::invalid_uint64) prev_minimizer = minimizer;
+            if (minimizer != prev_minimizer) {
+                append_super_kmer();
+                begin = end;
+                prev_minimizer = minimizer;
+                glue = true;
+            }
+
+            ++data.num_kmers;
+            ++end;
+        }
+
+        append_super_kmer();
+    }
+
+    data.minimizers.finalize();
+    builder.finalize();
+    builder.build(data.strings);
+
+    std::cout << "read " << num_sequences << " sequences, " << num_bases << " bases, "
+              << data.num_kmers << " kmers" << std::endl;
+    std::cout << "num_kmers " << data.num_kmers << std::endl;
+    std::cout << "num_super_kmers " << data.strings.num_super_kmers() << std::endl;
+    std::cout << "num_pieces " << data.strings.pieces.size() << " (+"
+              << (2.0 * data.strings.pieces.size() * (k - 1)) / data.num_kmers << " [bits/kmer])"
+              << std::endl;
+    assert(data.strings.pieces.size() == num_sequences + 1);
 
     if (build_config.weighted) {
-        /* step 1.1: compress weights ***/
-        timer.start();
-        data.weights_builder.build(m_weights);
-        timer.stop();
-        timings.push_back(timer.elapsed());
-        print_time(timings.back(), data.num_kmers, "step 1.1.: 'build_weights'");
-        timer.reset();
-        /******/
-        if (build_config.verbose) {
-            double entropy_weights = data.weights_builder.print_info(data.num_kmers);
-            double avg_bits_per_weight = static_cast<double>(m_weights.num_bits()) / data.num_kmers;
-            std::cout << "weights: " << avg_bits_per_weight << " [bits/kmer]" << std::endl;
-            std::cout << "  (" << entropy_weights / avg_bits_per_weight
-                      << "x smaller than the empirical entropy)" << std::endl;
-        }
+        std::cout << "sum_of_weights " << sum_of_weights << std::endl;
+        data.weights_builder.push_weight_interval(weight_value, weight_length);
+        data.weights_builder.finalize(data.num_kmers);
     }
-
-    /* step 2: merge minimizers and build MPHF ***/
-    timer.start();
-    data.minimizers.merge();
-    {
-        mm::file_source<minimizer_tuple> input(data.minimizers.get_minimizers_filename(),
-                                               mm::advice::sequential);
-        minimizers_tuples_iterator iterator(input.data(), input.data() + input.size());
-        m_minimizers.build(iterator, data.minimizers.num_minimizers(), build_config);
-        input.close();
-    }
-    timer.stop();
-    timings.push_back(timer.elapsed());
-    print_time(timings.back(), data.num_kmers, "step 2: 'build_minimizers'");
-    timer.reset();
-    /******/
-
-    /* step 3: build index ***/
-    timer.start();
-    auto buckets_stats = build_index(data, m_minimizers, m_buckets, build_config);
-    timer.stop();
-    timings.push_back(timer.elapsed());
-    print_time(timings.back(), data.num_kmers, "step 3: 'build_index'");
-    timer.reset();
-    /******/
-
-    /* step 4: build skew index ***/
-    timer.start();
-    build_skew_index(m_skew_index, data, m_buckets, build_config, buckets_stats);
-    timer.stop();
-    timings.push_back(timer.elapsed());
-    print_time(timings.back(), data.num_kmers, "step 4: 'build_skew_index'");
-    timer.reset();
-    /******/
-
-    double total_time = std::accumulate(timings.begin(), timings.end(), 0.0);
-    print_time(total_time, data.num_kmers, "total_time");
-
-    print_space_breakdown();
-
-    if (build_config.verbose) buckets_stats.print_less();
-
-    data.minimizers.remove_tmp_file();
 }
+
 
 }  // namespace sshash
 
