@@ -38,6 +38,8 @@ fi
 # cd ../../
 
 # git clone --recursive https://github.com/jermp/sshash.git
+
+cp lib/parse_file.hpp lib/sshash/include/builder/
 # Compilation
 cmake . && make -j
 
