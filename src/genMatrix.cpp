@@ -17,7 +17,7 @@ using namespace sshash;
 
 
 #include "dictionary.hpp"
-#include "external/essentials/include/essentials.hpp"
+#include "essentials.hpp"
 #include "util.hpp"
 
 /** build steps **/
