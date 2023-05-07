@@ -254,7 +254,7 @@ void parse_file(std::istream& is, parse_data& data, build_configuration const& b
               << data.num_kmers << " kmers" << std::endl;
     std::cout << "num_kmers " << data.num_kmers << std::endl;
     std::ofstream stat_nkmer_ess("stat_nkmer_ess");
-	stat_nkmer_ess<<data.num_kmers<<endl;
+	stat_nkmer_ess<<data.num_kmers<<std::endl;
 	stat_nkmer_ess.close();
     std::cout << "num_super_kmers " << data.strings.num_super_kmers() << std::endl;
     std::cout << "num_pieces " << data.strings.pieces.size() << " (+"
