@@ -21,9 +21,9 @@ using namespace sshash;
 #include "util.hpp"
 
 /** build steps **/
-#include "parse_file.hpp"
-#include "build_index.hpp"
-#include "build_skew_index.hpp"
+#include "builer/parse_file.hpp"
+#include "builder/build_index.hpp"
+#include "builder/build_skew_index.hpp"
 /*****************/
 
 #include <numeric>  // for std::accumulate
