@@ -21,7 +21,7 @@ using namespace sshash;
 #include "util.hpp"
 
 /** build steps **/
-#include "builer/parse_file.hpp"
+#include "builder/parse_file.hpp"
 #include "builder/build_index.hpp"
 #include "builder/build_skew_index.hpp"
 /*****************/
