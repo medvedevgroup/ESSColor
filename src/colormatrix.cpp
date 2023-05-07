@@ -76,7 +76,6 @@ void KmerMatrix::get_row(uint64_t row_idx, vector<uint64_t>& to_fill)
 void KmerMatrix::to_color_string_file(const std::string& outfile)
 {
 	ofstream out(outfile);
-
 	for (uint64_t row(0) ; row<this->num_kmers ; row++)
 	{
 		uint64_t subvector = 0;
