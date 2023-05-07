@@ -16,8 +16,8 @@ using namespace sshash;
 
 
 
-#include "../dictionary.hpp"
-#include "../../external/pthash/external/essentials/include/essentials.hpp"
+#include "dictionary.hpp"
+#include "external/essentials/include/essentials.hpp"
 #include "util.hpp"
 
 /** build steps **/
