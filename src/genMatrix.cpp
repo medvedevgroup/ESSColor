@@ -16,6 +16,19 @@ using namespace sshash;
 
 
 
+#include "../dictionary.hpp"
+#include "../../external/pthash/external/essentials/include/essentials.hpp"
+#include "util.hpp"
+
+/** build steps **/
+#include "parse_file.hpp"
+#include "build_index.hpp"
+#include "build_skew_index.hpp"
+/*****************/
+
+#include <numeric>  // for std::accumulate
+
+
 namespace sshash {
 //@OVERRIDE
 void dictionary::build(std::string const& filename, build_configuration const& build_config) {
