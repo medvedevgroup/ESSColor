@@ -57,6 +57,7 @@ void write_string_bv_from_pos_vector(std::vector<uint64_t>& positions, uint64_t 
             binarystring_file<<"0"<<std::endl;
         }	
     }
+    binarystring_file.close();
 }
 
 void parse_file(std::istream& is, parse_data& data, build_configuration const& build_config) {
@@ -194,7 +195,7 @@ void parse_file(std::istream& is, parse_data& data, build_configuration const& b
         if (sequence.size() < k) continue;
 
 
-        uint64_t numkmer_in_simplitig = sequence.length() - k + 1;
+        uint64_t numkmer_in_simplitig = sequence.size() - k + 1;
         last_written_pos += numkmer_in_simplitig;
         ess_boundary_vector.push_back(last_written_pos);
         num_simplitig+=1;
@@ -243,8 +244,9 @@ void parse_file(std::istream& is, parse_data& data, build_configuration const& b
 
         append_super_kmer();
     }
+    uint64_t boundary_num_kmer = ess_boundary_vector.back();
     ess_boundary_vector.pop_back();
-    write_string_bv_from_pos_vector(ess_boundary_vector, num_simplitig, "ess_boundary_bit.txt");
+    write_string_bv_from_pos_vector(ess_boundary_vector, boundary_num_kmer, "ess_boundary_bit.txt");
 
     data.minimizers.finalize();
     builder.finalize();
