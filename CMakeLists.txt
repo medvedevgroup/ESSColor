@@ -27,12 +27,23 @@ add_subdirectory(src)
 
     
 # add the executable
-add_executable(kmerlist src/kmerlist.cpp)
-add_executable(compress src/compress.cpp)
-add_executable(decompress src/decompress.cpp)
+add_executable(essColorAuxKmerlist src/kmerlist.cpp)
+add_executable(essColorAuxMatrixCompress src/compress_matrix.cpp)
+add_executable(essColorAuxMatrixDecompress src/decompress_matrix.cpp)
 add_executable(genmatrix src/genMatrix.cpp)
+add_executable(essColorAuxConfigWriter src/config_writer.cpp)
+
+add_executable(essColorAuxKmersDecompress src/essCompress/decoder.cpp)
+add_executable(essColorAuxKmersCompress src/essCompress/ess.cpp)
+
+
+
+ 
+
+
 
 # link libraries
 target_link_libraries(compress cmph_lib sdsl)
 target_link_libraries(decompress cmph_lib sdsl)
-target_link_libraries(genmatrix essc_lib cxxopts sshash_static)
+#target_link_libraries(genmatrix essc_lib cxxopts sshash_static)
+target_link_libraries(genmatrix cxxopts sshash_static)

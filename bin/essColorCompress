@@ -1,0 +1,52 @@
+
+#!/usr/bin/env bash
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+# dirname "$0":
+
+function abspath {
+    if [[ -d "$1" ]]
+    then
+        pushd "$1" >/dev/null
+        pwd
+        popd >/dev/null
+    elif [[ -e "$1" ]]
+    then
+        pushd "$(dirname "$1")" >/dev/null
+        echo "$(pwd)/$(basename "$1")"
+        popd >/dev/null
+    else
+        echo "$1" is an invalid filename! >&2
+        return 127
+    fi
+}
+
+SCRIPT_DIR="$(abspath $(dirname $0))/../"
+echo $SCRIPT_DIR
+
+nthreads=8
+while getopts ':j:h' opt; do
+  case "$opt" in
+    j)
+      echo "Processing option 'j'"
+      nthreads=${OPTARG}
+      ;;
+    o)
+      echo "Processing option 'j'"
+      outdir=${OPTARG}
+      cd $outdir
+      ;;
+    :)
+      echo -e "option requires an argument.\nUsage: $(basename $0) [-a] [-b] [-c arg]"
+      exit 1
+      ;;
+
+    ?)
+      echo -e "Invalid command option.\nUsage: $(basename $0) [-a] [-b] [-c arg]"
+      exit 1
+      ;;
+  esac
+done
+shift "$(($OPTIND -1))"
+
+$SCRIPT_DIR/essColorAuxConfigWriter $1
+snakemake -s $SCRIPT_DIR/pipeline_compress.smk -j $nthreads
