@@ -31,8 +31,7 @@ if [ ! -d lib/cmph-2.0.2 ]; then
 fi
 
 
-cd src/essCompress
-make -j 8
+
 # cd lib
 # git clone --recursive https://github.com/medvedevgroup/ESSCompress.git
 # cd ../
