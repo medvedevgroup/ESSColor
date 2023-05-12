@@ -22,7 +22,8 @@ while getopts ':i:k:o:j:h' opt; do
       ;;
     o)
       echo "Processing option 'o'"
-      outdir=${OPTARG}
+      outdir=$(realpath ${OPTARG})
+      cmd=$(echo $cmd" -o "$outdir)
       echo $outdir
       #cd $outdir
       ;;
@@ -52,7 +53,7 @@ shift "$(($OPTIND -1))"
 
 
 
-outdir=$(realpath $outdir)
+#outdir=$(realpath $outdir)
 echo $outdir
 cd $outdir
 

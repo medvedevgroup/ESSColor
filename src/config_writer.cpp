@@ -418,10 +418,10 @@ int main(int argc, char **argv) {
         cout<<"Error: min abundance should be at least 1."<<endl;
         exit(3);
     }
-    // if (chdir(OUT_DIR.c_str()) != 0){
-    //     cout<<("chdir() failed");
-    //     exit(3);
-    // }
+    if (chdir(OUT_DIR.c_str()) != 0){
+        cout<<("chdir() failed");
+        exit(3);
+    }
 
     //cout<<getFullExt("/Users/aur1111/projects/git-medvedevgroup/color-compression/a.b.fastq.gz")<<endl;
 
@@ -434,6 +434,7 @@ int main(int argc, char **argv) {
     write_config_str("ess", "notip");
     write_config_str("option", "");
     write_config_str("matrix_generator", "genmatrix");
+    write_config_str("list_file", list_file);
 
 
 
@@ -460,7 +461,7 @@ int main(int argc, char **argv) {
 
         }
         //cout<<inputname.c_str()<<" "<<(stripped_ext+"/"+basename).c_str()<<endl;
-        system (("ln -s "+inputname+" "+stripped_ext+"/"+basename).c_str());
+        system (("ln -s "+inputname+" "+ OUT_DIR+"/"+stripped_ext+"/"+basename).c_str());
        
         //cout<<ext<<endl;
         prev_ext = ext;
