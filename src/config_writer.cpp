@@ -432,6 +432,8 @@ int main(int argc, char **argv) {
     write_config("mem", to_string(100));
     write_config_str("unitig", "ggcat");
     write_config_str("ess", "notip");
+    write_config_str("option", "");
+
 
 
     // create symlink
