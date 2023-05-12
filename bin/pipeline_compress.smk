@@ -411,7 +411,7 @@ rule compress:
         "rrr_map_hd_boundary",
         "frequency_sorted"
     shell:
-        "/usr/bin/time  -f \"%M %e %U %S\" --output-file=kb_sec_colcompress ess_color_compress -i uniq_ms.txt -d col_bitmatrix -c {params.c} -m $(cat stat_m) -k $(cat stat_nkmer_ess) -s ess_boundary_bit.txt -x 16"
+        "/usr/bin/time  -f \"%M %e %U %S\" --output-file=kb_sec_colcompress essColorAuxMatrixCompress -i uniq_ms.txt -d col_bitmatrix -c {params.c} -m $(cat stat_m) -k $(cat stat_nkmer_ess) -s ess_boundary_bit.txt -x 16"
 
 rule zip_compress:
     input:
