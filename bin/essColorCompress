@@ -37,6 +37,7 @@ while getopts ':i:k:o:j:h' opt; do
     o)
       echo "Processing option 'o'"
       outdir=${OPTARG}
+      echo $outdir
       cd $outdir
       ;;
     i)
