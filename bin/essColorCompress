@@ -12,6 +12,8 @@ save_arg="${@:1}"
 echo $save_arg
 
 nthreads=8
+
+cmd=""
 while getopts ':i:k:o:j:h' opt; do
   case "$opt" in
     j)
@@ -26,9 +28,13 @@ while getopts ':i:k:o:j:h' opt; do
       ;;
     i)
       echo "Processing option 'i'"
+      infile=${OPTARG}
+      infile=$(realpath $infile)
+      cmd=$(echo $cmd" -i "$infile)
       ;;
     k)
       echo "Processing option 'k'"
+      cmd=$(echo $cmd" -k "${OPTARG})
       ;;
     :)
       echo -e "option requires an argument.\nUsage: $(basename $0) [-a] [-b] [-c arg]"
@@ -50,6 +56,6 @@ outdir=$(realpath $outdir)
 echo $outdir
 cd $outdir
 
-$SCRIPT_DIR/essColorAuxConfigWriter $save_arg
+$SCRIPT_DIR/essColorAuxConfigWriter $cmd
 
 snakemake -s $SCRIPT_DIR/pipeline_compress.smk -j $nthreads
