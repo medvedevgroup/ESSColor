@@ -989,7 +989,7 @@ int main (int argc, char* argv[]){
         // //     tmp_dir  = *++i;
 		// // }
     }
-    chdir(folder_name);
+    chdir(folder_name.c_str());
     //COLESS_Decompress cdec(num_kmers, M, C,  spss_boundary_fname, max_run);
     COLESS_Decompress cdec;
     
