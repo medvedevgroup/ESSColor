@@ -21,7 +21,7 @@ function abspath {
     fi
 }
 
-SCRIPT_DIR="$(abspath $(dirname $0))/../"
+#SCRIPT_DIR="$(abspath $(dirname $0))/../"
 echo $SCRIPT_DIR
 
 nthreads=8
