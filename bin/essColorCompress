@@ -25,16 +25,24 @@ function abspath {
 echo $SCRIPT_DIR
 
 nthreads=8
-while getopts ':ikoj:h' opt; do
+while getopts ':i:k:o:j:h' opt; do
   case "$opt" in
     j)
       echo "Processing option 'j'"
       nthreads=${OPTARG}
       ;;
     o)
-      echo "Processing option 'j'"
+      echo "Processing option 'o'"
       outdir=${OPTARG}
       cd $outdir
+      ;;
+    i)
+      echo "Processing option 'i'"
+      outdir=${OPTARG}
+      cd $outdir
+      ;;
+    k)
+      echo "Processing option 'k'"
       ;;
     :)
       echo -e "option requires an argument.\nUsage: $(basename $0) [-a] [-b] [-c arg]"
