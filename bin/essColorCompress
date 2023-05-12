@@ -24,6 +24,9 @@ function abspath {
 #SCRIPT_DIR="$(abspath $(dirname $0))/../"
 echo $SCRIPT_DIR
 
+$SCRIPT_DIR/essColorAuxConfigWriter "${@:1}"
+echo "${@:1}"
+
 nthreads=8
 while getopts ':i:k:o:j:h' opt; do
   case "$opt" in
@@ -38,8 +41,6 @@ while getopts ':i:k:o:j:h' opt; do
       ;;
     i)
       echo "Processing option 'i'"
-      outdir=${OPTARG}
-      cd $outdir
       ;;
     k)
       echo "Processing option 'k'"
@@ -57,6 +58,5 @@ while getopts ':i:k:o:j:h' opt; do
 done
 shift "$(($OPTIND -1))"
 
-$SCRIPT_DIR/essColorAuxConfigWriter "${@:1}"
-echo "${@:1}"
+
 snakemake -s $SCRIPT_DIR/pipeline_compress.smk -j $nthreads
