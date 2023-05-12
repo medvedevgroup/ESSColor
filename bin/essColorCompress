@@ -25,7 +25,7 @@ function abspath {
 echo $SCRIPT_DIR
 
 nthreads=8
-while getopts ':j:h' opt; do
+while getopts ':ikoj:h' opt; do
   case "$opt" in
     j)
       echo "Processing option 'j'"
