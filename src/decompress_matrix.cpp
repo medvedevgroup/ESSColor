@@ -835,7 +835,7 @@ public:
 		// }
         int kmer_size;
         read_meta("meta.txt", kmer_size, C);
-        get_ess_boundary_from_essd("mega.essd", num_simplitigs, kmer_size, num_kmers,spss_boundary);
+        get_ess_boundary_from_essd("mega.essd", num_simplitig, kmer_size, num_kmers,spss_boundary);
         time_end("SPSS boundary read "+to_string(num_kmers)+" bits.");
 
         //read local table, 
