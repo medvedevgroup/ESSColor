@@ -43,7 +43,7 @@ add_executable(essColorAuxKmersCompress src/essCompress/ess.cpp)
 
 
 # link libraries
-target_link_libraries(compress cmph_lib sdsl)
-target_link_libraries(decompress cmph_lib sdsl)
+target_link_libraries(essColorAuxMatrixCompress cmph_lib sdsl)
+target_link_libraries(essColorAuxMatrixDecompress cmph_lib sdsl)
 #target_link_libraries(genmatrix essc_lib cxxopts sshash_static)
 target_link_libraries(genmatrix cxxopts sshash_static)
