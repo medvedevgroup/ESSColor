@@ -613,7 +613,7 @@ public:
         for (uint64_t k = 0; k<bv_size; k++){
             if(bvi < positions.size()){
                 if(positions[bvi]==k){
-                    vec[k]='1'
+                    vec[k]='1';
                     bvi++;
                 }else{
                     vec[k]='0';
@@ -623,8 +623,9 @@ public:
             }	
         }
     }
-    void get_ess_boundary_from_essd(string megaessd, int num_simplitig, int kmer_size, uint64_t num_kmers, vector<char> ess_boundary_vector ){
+    vector<string> get_ess_boundary_from_essd(string megaessd, int num_simplitig, int kmer_size, uint64_t num_kmers ){
         ifstream is(megaessd);
+        vector<uint64_t> ess_boundary_vector;
         ess_boundary_vector.push_back(0);
         num_kmers = 0;
         num_simplitig=0;
@@ -644,6 +645,7 @@ public:
         ess_boundary_vector.pop_back();
         vector<char> vec(boundary_num_kmer);
         get_ess_boundary_vector_from_pos(ess_boundary_vector, boundary_num_kmer, vec);
+        return vec;
     }
     void read_meta(string file_meta, int& kmer_size, int& num_colors){
         ifstream is(file_meta);
@@ -835,7 +837,7 @@ public:
 		// }
         int kmer_size;
         read_meta("meta.txt", kmer_size, C);
-        get_ess_boundary_from_essd("mega.essd", num_simplitig, kmer_size, num_kmers,spss_boundary);
+        spss_boundary = get_ess_boundary_from_essd("mega.essd", num_simplitig, kmer_size, num_kmers);
         time_end("SPSS boundary read "+to_string(num_kmers)+" bits.");
 
         //read local table, 
