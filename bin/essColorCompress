@@ -58,4 +58,5 @@ done
 shift "$(($OPTIND -1))"
 
 $SCRIPT_DIR/essColorAuxConfigWriter "${@:1}"
+echo "${@:1}"
 snakemake -s $SCRIPT_DIR/pipeline_compress.smk -j $nthreads
