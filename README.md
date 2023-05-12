@@ -106,7 +106,7 @@ sample3.fa.gz
 
 If you wish to run`ESSColorCompress` on all 4 ".fa.gz" files, first make a list named `list_mini_k18c4m7` containing the path to all 4 files in each line.
 
-`$ ls mini_k18c4m7/*.fa > list_mini_k18c4m7`
+`$ ls $PWD/mini_k18c4m7/*.fa > list_mini_k18c4m7`
 
 #### Performing the compression given the input list
 
