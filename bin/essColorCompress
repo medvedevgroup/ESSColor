@@ -22,7 +22,7 @@ function abspath {
 }
 
 #SCRIPT_DIR="$(abspath $(dirname $0))/../"
-echo $SCRIPT_DIR
+#echo $SCRIPT_DIR
 
 save_arg="${@:1}"
 echo $save_arg
@@ -38,7 +38,7 @@ while getopts ':i:k:o:j:h' opt; do
       echo "Processing option 'o'"
       outdir=${OPTARG}
       echo $outdir
-      cd $outdir
+      #cd $outdir
       ;;
     i)
       echo "Processing option 'i'"
