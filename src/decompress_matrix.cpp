@@ -991,7 +991,7 @@ int main (int argc, char* argv[]){
     }
     chdir(folder_name);
     //COLESS_Decompress cdec(num_kmers, M, C,  spss_boundary_fname, max_run);
-    COLESS_Decompress cdec();
+    COLESS_Decompress cdec;
     
     //cdec.test_run();
     cdec.run();
