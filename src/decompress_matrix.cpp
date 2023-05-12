@@ -789,7 +789,7 @@ public:
             dump_rrr_into_bb("rrr_map_hd", "bb_map_hd");
             BlockStream bs_map_hd("bb_map_hd");
     
-            size_t ones = rrr_vector<256>::rank_1_type(&rrr_map_hd_boundary)(rrr_map_hd.size()); 
+            size_t ones = rrr_vector<256>::rank_1_type(&rrr_map_hd_boundary)(rrr_map_hd_boundary.size()); 
             rrr_vector<256>::select_1_type rrr_hd_sel(&rrr_map_hd_boundary);
             M = ones;
             global_table = new string[M];
