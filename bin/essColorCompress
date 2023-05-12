@@ -4,22 +4,6 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 echo $SCRIPT_DIR
 # dirname "$0":
 
-function abspath {
-    if [[ -d "$1" ]]
-    then
-        pushd "$1" >/dev/null
-        pwd
-        popd >/dev/null
-    elif [[ -e "$1" ]]
-    then
-        pushd "$(dirname "$1")" >/dev/null
-        echo "$(pwd)/$(basename "$1")"
-        popd >/dev/null
-    else
-        echo "$1" is an invalid filename! >&2
-        return 127
-    fi
-}
 
 #SCRIPT_DIR="$(abspath $(dirname $0))/../"
 #echo $SCRIPT_DIR
@@ -62,7 +46,8 @@ shift "$(($OPTIND -1))"
 
 
 
-outdir=$(abspath $outdir)
+outdir=$(realpath $outdir)
+echo $outdir
 cd $outdir
 
 $SCRIPT_DIR/essColorAuxConfigWriter $save_arg
