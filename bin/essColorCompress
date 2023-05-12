@@ -60,6 +60,6 @@ done
 shift "$(($OPTIND -1))"
 
 
-$SCRIPT_DIR/essColorAuxConfigWriter $savearg
+$SCRIPT_DIR/essColorAuxConfigWriter $save_arg
 
 snakemake -s $SCRIPT_DIR/pipeline_compress.smk -j $nthreads
