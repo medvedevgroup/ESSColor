@@ -431,6 +431,8 @@ int main(int argc, char **argv) {
     write_config("ab", to_string(ab));
     write_config("mem", to_string(100));
     write_config_str("unitig", "ggcat");
+    write_config_str("ess", "notip");
+
 
     // create symlink
     vector<string> inputnames = read_list(list_file);
