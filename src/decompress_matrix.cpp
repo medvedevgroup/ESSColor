@@ -623,7 +623,7 @@ public:
             }	
         }
     }
-    vector<string> get_ess_boundary_from_essd(string megaessd, int num_simplitig, int kmer_size, uint64_t num_kmers ){
+    vector<char> get_ess_boundary_from_essd(string megaessd, int num_simplitig, int kmer_size, uint64_t num_kmers ){
         ifstream is(megaessd);
         vector<uint64_t> ess_boundary_vector;
         ess_boundary_vector.push_back(0);
