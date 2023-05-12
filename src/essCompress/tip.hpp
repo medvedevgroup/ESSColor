@@ -2,7 +2,7 @@
 //  tip.cpp
 //  UST
 //
-//  Created by Amatur Rahman on 21/5/20.
+//  Created by Amatur Rahman on 05/05/23.
 //  Copyright © 2020 medvedevgroup. All rights reserved.
 //
 #include <assert.h>
@@ -36,7 +36,18 @@
 #include "decoder.hpp"
 
 #include "param.hpp"
-
+// #define NONDNA_START_TIP_SUF '('
+// #define NONDNA_END_TIP_SUF ')'
+// #define NONDNA_START_TIP_PRE '{'
+// #define NONDNA_END_TIP_PRE '}'
+#define NONDNA_START_TIP_SUF 'a'
+#define NONDNA_END_TIP_SUF 'c'
+#define NONDNA_START_TIP_PRE 'g'
+#define NONDNA_END_TIP_PRE 't'
+#define NONDNA_PLUS "+"
+#define NONDNA_MINUS "-"
+#define NONDNA_START "["
+#define NONDNA_END "]"
 
 using namespace std;
 
@@ -160,10 +171,14 @@ public:
             }
             
             
-            
-            if(prevwalk!=finalWalkId){
-                tipFile<<">\n";
+            if(prevwalk==-1){
+                tipFile<<">2.0_"<<K<<"_"<<"1"<<endl; //1 for tip
+            }else{
+                if(prevwalk!=finalWalkId){
+                    tipFile<<">\n";
+                }
             }
+            
             prevwalk = finalWalkId;
             
             //            if( MODE_ABSORPTION_TIP && isTip == 0){//
@@ -190,9 +205,9 @@ public:
                     //                    if(walkString.length()<K){
                     //                        cout<<"pos: "<<walkString.length()<<endl;
                     //                    }
-                    tipFile<<"(";
+                    tipFile<<NONDNA_START_TIP_SUF;
                     tipFile<<unitigString;
-                    tipFile<<")";
+                    tipFile<<NONDNA_END_TIP_SUF;
                     stat.C_esstip += unitigString.length() + 2;
                     stat.C_nondna_esstip += 2;
                 }
@@ -207,9 +222,9 @@ public:
                     //                    if(walkString.length()<K){
                     //                        cout<<"pos: "<<walkString.length()<<endl;
                     //                    }
-                    tipFile<<"{";
+                    tipFile<<NONDNA_START_TIP_PRE;
                     tipFile<<unitigString;
-                    tipFile<<"}";
+                    tipFile<<NONDNA_END_TIP_PRE;
                     stat.C_esstip += unitigString.length() + 2;
                     stat.C_nondna_esstip += 2;
                 }
@@ -770,6 +785,7 @@ public:
         char kmline[20];
         char edgesline[100000];
         bool doCont = false;
+        bool USE_GGCAT=true;
         
         int smallestK = 9999999;
         
@@ -811,14 +827,15 @@ public:
                             exit(2);
                         }
                         
-                    }else{
+                    }else if(USE_GGCAT){
                         edgesline[0] = '\0';
-                        sscanf(line.c_str(), "%*c %d %s  %s  %s %[^\n]s", &unitig_struct.serial, lnline, kcline, kmline, edgesline);
+//                        sscanf(line.c_str(), "%*c %d %s  %s  %s %[^\n]s", &unitig_struct.serial, lnline, kcline, kmline, edgesline);
+                        sscanf(line.c_str(), "%*c %d  %s %[^\n]s", &unitig_struct.serial, lnline, edgesline);
                         
-                        if(    line.find("KC") == string::npos){
-                            cout<<"Incorrect input format. Try using flag -a 1."<<endl;
-                            exit(3);
-                        }
+                        //if(    line.find("L:") == string::npos){
+                          //  cout<<"Incorrect input format. Try using flag -a 1."<<endl;
+                          //  exit(3);
+                       // }
                         
                         //>0 LN:i:13 KC:i:12 km:f:1.3  L:-:0:- L:-:2:-  L:+:0:+ L:+:1:-
                         sscanf(lnline, "%*5c %llu", &unitig_struct.ln);
@@ -831,6 +848,8 @@ public:
                             printf("Wrong k! Try again with correct k value. \n");
                             exit(2);
                         }
+                    }else if(!USE_GGCAT){
+
                     }
                     
                     char c1, c2;

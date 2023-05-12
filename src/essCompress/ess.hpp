@@ -29,10 +29,15 @@
 #include "spss.hpp" //misc.hpp included
 #include "decoder.hpp"
 
-#define NONDNA_PLUS "+"
-#define NONDNA_MINUS "-"
-#define NONDNA_START "["
-#define NONDNA_END "]"
+#define NONDNA_PLUS "a"
+#define NONDNA_MINUS "c"
+#define NONDNA_START 'g'
+#define NONDNA_END 't'
+
+// #define NONDNA_PLUS "+"
+// #define NONDNA_MINUS "-"
+// #define NONDNA_START '['
+// #define NONDNA_END ']'
 
 using namespace std;
 
@@ -121,6 +126,7 @@ void ESS::readUnitigFile(const string& unitigFileName, vector<unitig_struct_t>& 
     bool doCont = false;
     
     FLG_ABUNDANCE = false;
+    bool USE_GGCAT = true;
     int smallestK = 9999999;
     //                if(!abundanceFlgDetermine){
     //                    if(  line.find("KC") == string::npos){ //no ab exists
@@ -169,7 +175,28 @@ void ESS::readUnitigFile(const string& unitigFileName, vector<unitig_struct_t>& 
                         exit(2);
                     }
                     
-                }else{
+                }else if(USE_GGCAT){
+                        edgesline[0] = '\0';
+//                        sscanf(line.c_str(), "%*c %d %s  %s  %s %[^\n]s", &unitig_struct.serial, lnline, kcline, kmline, edgesline);
+                        sscanf(line.c_str(), "%*c %d  %s %[^\n]s", &unitig_struct.serial, lnline, edgesline);
+                        
+                        //if(    line.find("L:") == string::npos){
+                          //  cout<<"Incorrect input format. Try using flag -a 1."<<endl;
+                          //  exit(3);
+                       // }
+                        
+                        //>0 LN:i:13 KC:i:12 km:f:1.3  L:-:0:- L:-:2:-  L:+:0:+ L:+:1:-
+                        sscanf(lnline, "%*5c %llu", &unitig_struct.ln);
+                        
+                        
+                        if(unitig_struct.ln < smallestK){
+                            smallestK = unitig_struct.ln ;
+                        }
+                        if(unitig_struct.ln < K){
+                            printf("Wrong k! Try again with correct k value. \n");
+                            exit(2);
+                        }
+                    }else{
                     edgesline[0] = '\0';
                     sscanf(line.c_str(), "%*c %d %s  %s  %s %[^\n]s", &unitig_struct.serial, lnline, kcline, kmline, edgesline);
                     
@@ -1464,7 +1491,7 @@ void AbsorbGraph::iterSpellEfficient(unitig_t startWalkIndex2, vector<char>& col
                     if(color[currSorterIndex]=='w' && absorbed[finalWalkId]){
                         isThisAbsorbedWalk=true;
                         //tipFile<<"[";
-                        printFormattedPattern(-1, '[', tipNoStrFile);
+                        printFormattedPattern(-1, NONDNA_START, tipNoStrFile);
                     }
                     
                     
@@ -1496,11 +1523,11 @@ void AbsorbGraph::iterSpellEfficient(unitig_t startWalkIndex2, vector<char>& col
                         isThisAbsorbedWalk=true;
                         
                         //tipFile<<"[";
-                        printFormattedPattern(-1, '[', tipNoStrFile);
+                        printFormattedPattern(-1, NONDNA_START, tipNoStrFile);
                     }
                     
                     if(unitigs.at(uid).ln>=2*(K-1)){
-                        string sign = (absorbedCategory[uid]=='2' or absorbedCategory[uid]=='4')?"-":"+";
+                        string sign = (absorbedCategory[uid]=='2' or absorbedCategory[uid]=='4')?NONDNA_MINUS:NONDNA_PLUS;
                         if(absorbedCategory[uid]=='2' or absorbedCategory[uid]=='3'){
                             //string apart = cutSuf(unitigString, K);
                             if(color[currSorterIndex]=='w') {
@@ -1541,7 +1568,7 @@ void AbsorbGraph::iterSpellEfficient(unitig_t startWalkIndex2, vector<char>& col
                             
                         }
                     }else{
-                        string sign = (absorbedCategory[uid]=='2' or absorbedCategory[uid]=='4')?"-":"+";
+                        string sign = (absorbedCategory[uid]=='2' or absorbedCategory[uid]=='4')?NONDNA_MINUS:NONDNA_PLUS;
                         if(absorbedCategory[uid]=='2' or absorbedCategory[uid]=='3'){
                             if(color[currSorterIndex]=='w') {
                                 //tipFile<<cutSuf(unitigString, K);
@@ -1600,8 +1627,8 @@ void AbsorbGraph::iterSpellEfficient(unitig_t startWalkIndex2, vector<char>& col
                     if(color[currSorterIndex]=='w') {
                         if(absorbedCategory[uid]=='1' or absorbedCategory[uid]=='4' ){
                             string signs;
-                            if(absorbedCategory[uid]=='1') signs="+";
-                            else if(absorbedCategory[uid]=='4') signs="-";
+                            if(absorbedCategory[uid]=='1') signs=NONDNA_PLUS;
+                            else if(absorbedCategory[uid]=='4') signs=NONDNA_MINUS;
                             
                             printFormattedPattern(-1, 'r', tipNoStrFile);
                             printFormattedPattern(-1, signs[0], tipNoStrFile);
@@ -1610,8 +1637,8 @@ void AbsorbGraph::iterSpellEfficient(unitig_t startWalkIndex2, vector<char>& col
 
                         if(absorbedCategory[uid]=='2' or absorbedCategory[uid]=='3' ){
                             string signs;
-                            if(absorbedCategory[uid]=='3') signs="+";
-                            else if(absorbedCategory[uid]=='2') signs="-";
+                            if(absorbedCategory[uid]=='3') signs=NONDNA_PLUS;
+                            else if(absorbedCategory[uid]=='2') signs=NONDNA_MINUS;
                             
                             printFormattedPattern(-1, 'r', tipNoStrFile);
                             printFormattedPattern(uid, 'S', tipNoStrFile);
@@ -1634,7 +1661,7 @@ void AbsorbGraph::iterSpellEfficient(unitig_t startWalkIndex2, vector<char>& col
             if(currSorterIndex+1 == sorter.size() or get<1>(sorter[currSorterIndex+1]) != finalWalkId){
                 if(color[currSorterIndex]=='b' && absorbed[finalWalkId] == true) {
                     //tipFile<<"]";
-                    printFormattedPattern(-1,  ']', tipNoStrFile);
+                    printFormattedPattern(-1,  NONDNA_END, tipNoStrFile);
                 }
                 //isItAPrintedWalk[finalWalkId] = true;
                 if(color[currSorterIndex] == 'b') break;
@@ -1667,6 +1694,7 @@ void AbsorbGraph::tipAbsorbedOutputter(){
 //    for(int i = 0; i<countNewNode; i++){
 //        isItAPrintedWalk[i] = false;
 //    }
+    int header_count = 0;
 
     while(!orderOfUnitigs.empty()){
         unitig_t it = sorterIndexMap[orderOfUnitigs.front()];
@@ -1677,7 +1705,13 @@ void AbsorbGraph::tipAbsorbedOutputter(){
         orderOfUnitigs.pop();
 
         //tipFile<<">\n";
-        tipNoStrFile<<">\n";
+        if(header_count==0){
+            tipNoStrFile<<">2.0_"<<K<<"_"<<"0"<<endl; //1 for tip
+            header_count++;
+        }else{
+            tipNoStrFile<<">\n";
+        }
+        
         if(DDEBUG) debugFile<<">\n";
 
         //iterSpellTested(it, depth, K, color, 0);

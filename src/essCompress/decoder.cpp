@@ -80,6 +80,24 @@ void parseHeader(string pathname, int &K, int& MODE){
 
 int main(int argc, char** argv) {
     DDEBUG = 0;
+    bool HEADER_FIX=false;
+    vector<string> args(argv + 1, argv + argc);
+    std::string pathname;
+    // = argv[1];
+
+        for (auto i = args.begin(); i != args.end(); ++i) {
+            if (*i == "-h" || *i == "--help") {
+                cout << "Syntax: ./essAuxDecompress -i <ess-compressed-file> [-f]. -f flag indicates header should be a full line " << endl;
+                return 0;
+            } else if (*i == "-f") {
+                HEADER_FIX = true;
+            } else if (*i == "-i") {
+                pathname = *++i;
+            } 
+        }
+    cout<<pathname<<endl;
+    cout<<HEADER_FIX<<endl;
+
     //if(DDEBUG) cout<<"----------------RUNNING IN DEBUG MODE--------------------"<<endl;
     /*
     const char* nvalue = "" ;
@@ -136,7 +154,7 @@ int main(int argc, char** argv) {
      string pathname = string(nvalue);
      */
     
-    std::string pathname = argv[1];
+    
     
     if(!isFileExist(pathname)){
         cout<<"File \""<<pathname<<"\""<<"does not exist."<<endl;
@@ -154,11 +172,11 @@ int main(int argc, char** argv) {
     bool tip_mode = MODE;
     
     if(tip_mode){
-        decodeTip(K, pathname, outputFilename+"esstip.spss");
+        decodeTip(K, pathname, outputFilename+"esstip.spss", HEADER_FIX);
         //cout<<"ESS-Tip-Compress (core) decoding done!"<<endl;
         //cout<<"Output SPSS is in file \""<<outputFilename+"esstip.spss"<<"\""<<endl;
     }else{
-        decodeOneAbsorb(K, pathname, outputFilename+"ess.spss");
+        decodeOneAbsorb(K, pathname, outputFilename+"ess.spss", HEADER_FIX);
         //cout<<"ESS-Compress  (core)  decoding done!"<<endl;
         //cout<<"Output SPSS is in file \""<<outputFilename+"ess.spss"<<"\""<<endl;
     }

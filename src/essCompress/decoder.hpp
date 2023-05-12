@@ -1,10 +1,10 @@
-// VERSION 2.0
+// VERSION 3.0
 
 //
 //  decoder.hpp
 //
-//  Created by Amatur Rahman on 28/11/19.
-//  Copyright © 2019 psu. All rights reserved.
+//  Created by Amatur Rahman on 01/09/23.
+//  Copyright © 2023 psu. All rights reserved.
 //
 //
 
@@ -22,6 +22,7 @@
 
 #include "misc.hpp"
 
+int contig_count=0;
 
 using namespace std;
 
@@ -38,15 +39,18 @@ using namespace std;
 #   define ASSERT(condition, message) do { } while (false)
 #endif
 
-#define NONDNA_START_TIP_SUF '('
-#define NONDNA_END_TIP_SUF ')'
-#define NONDNA_START_TIP_PRE '{'
-#define NONDNA_END_TIP_PRE '}'
-#define NONDNA_PLUS "+"
-#define NONDNA_MINUS "-"
-#define NONDNA_START "["
-#define NONDNA_END "]"
-
+#define NONDNA_START_TIP_SUF 'a'
+#define NONDNA_END_TIP_SUF 'c'
+#define NONDNA_START_TIP_PRE 'g'
+#define NONDNA_END_TIP_PRE 't'
+// #define NONDNA_PLUS "+"
+// #define NONDNA_MINUS "-"
+// #define NONDNA_START "["
+// #define NONDNA_END "]"
+#define NONDNA_PLUS 'a'
+#define NONDNA_MINUS 'c'
+#define NONDNA_START 'g'
+#define NONDNA_END 't'
 //
 //string reverseComplement(string base)
 //{
@@ -69,7 +73,8 @@ using namespace std;
 //    return outString;
 //}
 
-int decodeTip(int K, string UNITIG_FILE="ust_ess_tip.txt", string OUT_FILE = "absorbDecompressed.fa" ){
+int decodeTip(int K, string UNITIG_FILE="ust_ess_tip.txt", string OUT_FILE = "absorbDecompressed.fa", bool HEADER_FIX = false ){
+    
     ifstream unitigFile;
     unitigFile.open(UNITIG_FILE);
 
@@ -86,6 +91,7 @@ int decodeTip(int K, string UNITIG_FILE="ust_ess_tip.txt", string OUT_FILE = "ab
     while (getline(unitigFile, line)) {
         //cout<<line<<endl;
         if (line.empty() || line.substr(0, 1).compare(">") == 0) {
+            
 
         } else {
             walkid++;
@@ -114,10 +120,16 @@ int decodeTip(int K, string UNITIG_FILE="ust_ess_tip.txt", string OUT_FILE = "ab
                             lastk = lastk.substr(1, K-2) + line[i];
                         }
                     }
-                }else if(line[i]=='(' || line[i]==')'){
+                }else if(line[i]==NONDNA_START_TIP_SUF || line[i]==NONDNA_END_TIP_SUF){
                     if(startPrefCut){ //already has one
                         startPrefCut = false;
-                        outFile<< ">" ;
+                        
+                        if(HEADER_FIX){
+                            outFile<< ">contig_" << contig_count ;
+                            contig_count++;
+                        }else{
+                            outFile<< ">" ;
+                        }
                         if(DDEBUG){
                             outFile<< walkid << " pref"; //for Debug
                         }
@@ -128,11 +140,16 @@ int decodeTip(int K, string UNITIG_FILE="ust_ess_tip.txt", string OUT_FILE = "ab
                         startPrefCut = true;
                         pref = lastk;
                     }
-                }else if(line[i]=='{' || line[i]=='}'){ //suffix is cut
+                }else if(line[i]==NONDNA_START_TIP_PRE || line[i]==NONDNA_END_TIP_PRE){ //suffix is cut
                     if(startSufCut){ //already has one
                         startSufCut = false;
                         
-                        outFile<< ">" ;
+                        if(HEADER_FIX){
+                            outFile<< ">contig_" << contig_count ;
+                            contig_count++;
+                        }else{
+                            outFile<< ">" ;
+                        }
                         if(DDEBUG){
                             outFile<< walkid << " suf"; //for Debug
                         }
@@ -148,7 +165,12 @@ int decodeTip(int K, string UNITIG_FILE="ust_ess_tip.txt", string OUT_FILE = "ab
             //print the tips before printing the contig
             //outFile<<">"<<walkid-1<<" : "<<"\n"; for Debug
             
-            outFile<< ">" ;
+            if(HEADER_FIX){
+                outFile<< ">contig_" << contig_count ;
+                contig_count++;
+            }else{
+                outFile<< ">" ;
+            }
             if(DDEBUG){
                 outFile<< walkid; //for Debug
             }
@@ -173,7 +195,7 @@ void updateCurrOverlap(char c, string& lastk1, int K){
     }
 }
 
-void decompressEnclosed(string& s, int& i, string overlapFromParent, int K, ofstream & FOUT, int stringID){
+void decompressEnclosed(string& s, int& i, string overlapFromParent, int K, ofstream & FOUT, int stringID,  bool HEADER_FIX = false ){
     //assert(overlapFromParent.length()==K-1);
     ASSERT(overlapFromParent.length()==K-1, "The +/- should be replace by a string of length " << K-1 << ", but we receive string of length " << overlapFromParent.length() << "\n");
 
@@ -184,16 +206,24 @@ void decompressEnclosed(string& s, int& i, string overlapFromParent, int K, ofst
 
     while(i < s.length()){
         char c = s[i++];
-        if(c=='['){
+        if(c==NONDNA_START){
             decstack.push(make_tuple(currOverlap, overlapFromParent, sOut));
             overlapFromParent=currOverlap;
             sOut="";
-        }else if(c==']'){
+        }else if(c==NONDNA_END){
             if(DDEBUG){
             FOUT<<">"<<stringID<<"\n"<<sOut<<endl;
                 
             }else{
-            FOUT<<">\n"<<sOut<<endl;
+                if(HEADER_FIX){
+                    FOUT<<">contig_"<<contig_count<<"\n"<<sOut<<endl;
+                    contig_count++;
+
+                }else{
+                    FOUT<<">\n"<<sOut<<endl;
+
+                }
+                
 
             }
             if(!decstack.empty()){
@@ -204,13 +234,13 @@ void decompressEnclosed(string& s, int& i, string overlapFromParent, int K, ofst
             }else{
                 return;
             }
-        }else if(c=='+'){
+        }else if(c==NONDNA_PLUS){
             sOut += overlapFromParent;
             //update currOverlap
             currOverlap = overlapFromParent;
             //at this point overlapFromParent is useless
             
-        }else if(c=='-'){
+        }else if(c==NONDNA_MINUS){
             sOut += reverseComplement(overlapFromParent);
             //update currOverlap
             currOverlap = reverseComplement(overlapFromParent);
@@ -257,15 +287,15 @@ void decompressEnclosed(string& s, int& i, string overlapFromParent, int K, ofst
 //    return S;
 //}
 
-void decompress(string& s, int K, ofstream & FOUT, int stringID){
+void decompress(string& s, int K, ofstream & FOUT, int stringID,  bool HEADER_FIX = false ){
     vector<string> S;
     string sOut;
     string currOverlap;
     int i = 0;
     while(i < s.length()){
         char c = s[i++];
-           if(c=='['){
-               decompressEnclosed(s, i,currOverlap, K, FOUT, stringID);
+           if(c==NONDNA_START){
+               decompressEnclosed(s, i,currOverlap, K, FOUT, stringID, HEADER_FIX);
            }else{
                sOut += c;
                updateCurrOverlap(c, currOverlap, K);  //update currOverlap
@@ -276,11 +306,17 @@ void decompress(string& s, int K, ofstream & FOUT, int stringID){
     if(DDEBUG){
         FOUT<<">"<<stringID<<"\n"<<sOut<<endl;  
     }else{
-        FOUT<<">\n"<<sOut<<endl;
+        if(HEADER_FIX){
+            FOUT<<">contig_"<<contig_count<<"\n"<<sOut<<endl;
+            contig_count++;
+        }else{
+            FOUT<<">\n"<<sOut<<endl;
+        }
+        
     }
     
 }
-void decodeOneAbsorb(int K, string ENCODED_FILE= "ust_ess_abs.txt", string OUT_FA_FILE="absorbDecompressed.fa"){
+void decodeOneAbsorb(int K, string ENCODED_FILE= "ust_ess_abs.txt", string OUT_FA_FILE="absorbDecompressed.fa", bool HEADER_FIX=false){
     ifstream encodedFile;
     encodedFile.open(ENCODED_FILE);
 
@@ -294,7 +330,7 @@ void decodeOneAbsorb(int K, string ENCODED_FILE= "ust_ess_abs.txt", string OUT_F
 
         } else {
             nWalks++;
-            decompress(line, K, outFile, nWalks);
+            decompress(line, K, outFile, nWalks, HEADER_FIX);
         }
     }
     encodedFile.close();
