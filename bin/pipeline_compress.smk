@@ -79,8 +79,6 @@ if config['ess'] == 'tip':
             "uniq_ms.txt",
             "stat_m",
             "stat_nkmer_ess",
-            "bb_main",
-            "bb_local_table",
             #"bb_map",
             "esscolor.tar.gz",
             "size_esscolor_mb_tip"
@@ -202,7 +200,7 @@ if (config['option'] == 'from_essc' or config['option'] == 'create_essc' or conf
         benchmark:
             "benchmarks/mega.essc.txt"
         output:
-            "mega.essc"
+            temp("mega.essc")
         shell:
             "echo \"{params.l}\"> mega;essCompress -i mega -k{params.k}"
 else:
@@ -293,9 +291,9 @@ if config['matrix_generator'] == 'genmatrix':
             expand("{sample}.kmc.kmc_suf", sample=SAMPLES),
             "mega.essd",
         output:
-            "col_bitmatrix",
-            "ess_boundary_bit.txt",
-            "stat_nkmer_ess"
+            temp("col_bitmatrix"),
+            temp("ess_boundary_bit.txt"),
+            temp("stat_nkmer_ess")
         params:
             l=dump_list(SAMPLES, ".kmc", "list_kmc"),
             l2=dump_list(SAMPLES, EXTENSION, "meta.txt"),
@@ -359,7 +357,7 @@ if config['matrix_generator'] == 'genmatrix':
         input:
             "col_bitmatrix"
         output:
-            "stat_nkmer_genmatrix"
+            temp("stat_nkmer_genmatrix")
         benchmark:
             "benchmarks/stat_nkmer_genmatrix.txt"
         shell:
@@ -380,8 +378,8 @@ rule stat_uniq_colclass:
         "validate1",
         "col_bitmatrix"
     output:
-        "uniq_ms.txt",
-        "stat_m"
+        temp("uniq_ms.txt"),
+        temp("stat_m")
     benchmark:
         "benchmarks/stat_uniq_colclass.txt"
     shell:
@@ -401,11 +399,11 @@ rule compress:
         "benchmarks/compress.txt"
     output:
         #"bb_map",
-        "rrr_main",
-        "rrr_local_table",
-        "rrr_map_hd",
-        "rrr_map_hd_boundary",
-        "frequency_sorted"
+        temp("rrr_main"),
+        temp("rrr_local_table"),
+        temp("rrr_map_hd"),
+        temp("rrr_map_hd_boundary"),
+        temp("frequency_sorted")
     shell:
         "/usr/bin/time  -f \"%M %e %U %S\" --output-file=kb_sec_colcompress essColorAuxMatrixCompress -i uniq_ms.txt -d col_bitmatrix -c {params.c} -m $(cat stat_m) -k $(cat stat_nkmer_ess) -s ess_boundary_bit.txt -x 16"
 
@@ -486,7 +484,7 @@ if config['unitig'] == 'ggcat':
         benchmark:
             "benchmarks/f_to_ggcatess.txt"
         output:
-            "gg_unitigs.fa"
+            temp("gg_unitigs.fa")
         shell:
             "/usr/bin/time  -f \"%M %e %U %S\" --output-file=kb_sec_ggcat_build ggcat build -k {params.k} -j 8 -l list_fa -o gg_unitigs.fa -s{params.ab} -p -e"
 
@@ -501,8 +499,8 @@ if config['ess'] == 'tip':
         benchmark:
             "benchmarks/ggcat_unitig_to_ess_tip.txt"
         output:
-            "mega.essc",
-            "mega.essd"
+            temp("mega.essc"),
+            temp("mega.essd")
         shell:
             "/usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxc_tip  essColorAuxKmersCompress -k {params.k} -i {input} -t 1; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxd_tip  essColorAuxKmersDecompress -i kmers.esstip 1; mv kmers.esstip.spss mega.essd; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_mfc_ess_tip   essAuxMFCompressC kmers.esstip; mv kmers.esstip.mfc mega.essc"
 
@@ -516,7 +514,7 @@ else:
         benchmark:
             "benchmarks/ggcat_unitig_to_ess.txt"
         output:
-            "mega.essc",
-            "mega.essd"
+            temp("mega.essc"),
+            temp("mega.essd")
         shell:
             "/usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxc  essColorAuxKmersCompress -k {params.k} -i {input} -t 0; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxd  essColorAuxKmersDecompress -i kmers.ess 1; mv kmers.ess.spss mega.essd; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_mfc_ess   essAuxMFCompressC kmers.ess; mv kmers.ess.mfc mega.essc"
