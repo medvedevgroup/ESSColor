@@ -79,11 +79,11 @@ optional arguments:
 
 The decompressed folder contains 3 files. 
 
-* mega.essd
-    * a set of simplitigs correspoinding the union ESS.
-* meta.txt.gz   
-    * Contains a gzipped text file with a header indicating value of k, followed by C rows each indicating name of the samples. 
-* dec\_ess\_color  
+* simplitigs.fa
+    * a FASTA file with set of simplitigs correspoinding to the union ESS.
+* meta.txt   
+    * Contains a text file with a header indicating value of k-mer size, followed by C rows each indicating name of the samples. 
+* matrix.txt 
    * ordered color matrix in plaintext  
 
 
@@ -104,7 +104,7 @@ sample2.fa.gz
 sample3.fa.gz
 ```
 
-If you wish to run`ESSColorCompress` on all 4 ".fa.gz" files, first make a list named `list_mini_k18c4m7` containing the path to all 4 files in each line.
+If you wish to run`ESSColorCompress` on all 4 ".fa.gz" files, first make a list named `list_mini_k18c4m7` containing the absolute path to all 4 files in each line.
 
 `$ ls $PWD/mini_k18c4m7/*.fa > list_mini_k18c4m7`
 
@@ -122,19 +122,19 @@ Upon successful completion, the output directory will contain a file called `ess
 #### Generating text output 
 Run `$ essColorDecompress -i esscolor.tar.gz`
 
-Output `dec_ess_color` contains the non-labeled color matrix (ESS order). Output `mega.essd` contains gzipped simplitigs in a FASTA file.
+Output `simplitigs.fa` contains the non-labeled color matrix (ESS order). Output `simplitigs.fa` contain simplitigs in a FASTA file.
 
 Let's look at the first simplitig 
-`$ cat mega.essd | head -n 2`
+`$ cat simplitigs.fa | head -n 2`
 
 The first simplitig looks like this:
-```
+```   
 >
 AAAAACAAAAAAAAAAAATTT
-```
+```   
 
 Let's look at the first 4 rows of the non-labeled color matrix
-`$ head -n 4 colmatrix.txt`
+`$ head -n 4 matrix.txt`
 
 The first 4 rows of the non-labeled color matrix looks like this:
 ```

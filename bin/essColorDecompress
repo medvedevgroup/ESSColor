@@ -6,7 +6,7 @@ echo $SCRIPT_DIR
 nthreads=8
 
 cmd=""
-while getopts ':i:j:h' opt; do
+while getopts ':i:h' opt; do
   case "$opt" in
     i)
       echo "Processing option 'i'"
@@ -14,10 +14,6 @@ while getopts ':i:j:h' opt; do
       infile=$(realpath $infile)
       outdir = $(dirname $infile)
       cmd=$(echo $cmd" -i "$outdir"/esscolor/")
-      ;;
-    j)
-      echo "Processing option 'j'"
-      nthreads=${OPTARG}
       ;;
     :)
       echo -e "option requires an argument.\nUsage: $(basename $0) [-a] [-b] [-c arg]"
