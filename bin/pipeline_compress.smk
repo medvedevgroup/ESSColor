@@ -435,12 +435,14 @@ rule zip_compress:
         "frequency_sorted",
         "mega.essc",
         "meta.txt"
+    params:
+        p=OUTPREFIX
     output:
-        "{OUTPREFIX}.tar.gz"
+        "{params.p}.tar.gz"
     benchmark:
         "benchmarks/final_gzip.txt"
     shell: 
-        "mkdir -p {OUTPREFIX}; gzip -v9 meta.txt; gzip -v9 frequency_sorted; mv frequency_sorted.gz rrr_main rrr_local_table rrr_map_hd rrr_map_hd_boundary mega.essc meta.txt.gz {OUTPREFIX}/; tar cf {OUTPREFIX}.tar {OUTPREFIX}/;  gzip -v9 {OUTPREFIX}.tar; rm -rf {OUTPREFIX}/"
+        "mkdir -p {params.p}; gzip -v9 meta.txt; gzip -v9 frequency_sorted; mv frequency_sorted.gz rrr_main rrr_local_table rrr_map_hd rrr_map_hd_boundary mega.essc meta.txt.gz {params.p}/; tar cf {params.p}.tar {params.p}/;  gzip -v9 {params.p}.tar; rm -rf {params.p}/"
 
     
 if config['ess'] == 'tip':
