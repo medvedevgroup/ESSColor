@@ -395,10 +395,11 @@ int main(int argc, char **argv) {
     //default value provided
     int ab=1;
     string OUT_DIR = ".";
+    string outprefix = "esscolor";
 
     for (auto i = args.begin(); i != args.end(); ++i) {
         if (*i == "-h" || *i == "--help") {
-            cout << "Syntax: ./essColor -k <kmer-size> -a <min-abundance> -j <num-threads> -i <Path to input file: list of samples> -o <output directory>" << endl;
+            cout << "Syntax: ./essColor -p <outprefix> -k <kmer-size> -a <min-abundance> -j <num-threads> -i <Path to input file: list of samples> -o <output directory>" << endl;
             return 0;
         } else if (*i == "-k") {
             k = std::stoi(*++i);
@@ -406,6 +407,8 @@ int main(int argc, char **argv) {
             list_file = *++i;
         } else if (*i == "-o") {
             OUT_DIR = *++i;
+        } else if (*i == "-p") {
+            outprefix = *++i;
         } 
     }
 
@@ -477,6 +480,8 @@ int main(int argc, char **argv) {
     }else if(ext==".fna" || ext==".fna.gz" || ext==".fa"  || ext==".fa.gz" || ext==".fasta" || ext==".fasta.gz" ){
         write_config_str("src", "m");
     }
+    write_config_str("OUTPREFIX", outprefix);  // EXTENSION: ".fa"
+    
 
     //system("snakemake -s ");
     return 0;

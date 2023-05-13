@@ -2,6 +2,7 @@ configfile: "config.yaml"
 KMER_SIZE = config["k"]
 SAMPLES = config["SAMPLES"]
 EXTENSION=config["EXTENSION"]
+OUTPREFIX=config["OUTPREFIX"]
 
 import os
 
@@ -96,7 +97,7 @@ if config['ess'] == 'tip':
             "stat_m",
             "stat_nkmer_ess",
             #"bb_map",
-            "esscolor.tar.gz",
+            "{OUTPREFIX}.tar.gz",
             "size_esscolor_mb_tip"
 else:
     rule all:
@@ -119,7 +120,7 @@ else:
             "stat_m",
             "stat_nkmer_ess",
             #"bb_map",
-            "esscolor.tar.gz",
+            "{OUTPREFIX}.tar.gz",
             "size_esscolor_mb"
 
 
@@ -435,31 +436,31 @@ rule zip_compress:
         "mega.essc",
         "meta.txt"
     output:
-        "esscolor.tar.gz"
+        "{OUTPREFIX}.tar.gz"
     benchmark:
         "benchmarks/final_gzip.txt"
     shell: 
-        "mkdir -p esscolor; gzip -v9 meta.txt; gzip -v9 frequency_sorted; mv frequency_sorted.gz rrr_main rrr_local_table rrr_map_hd rrr_map_hd_boundary mega.essc meta.txt.gz esscolor/; tar cf esscolor.tar esscolor/;  gzip -v9 esscolor.tar; rm -rf esscolor/"
+        "mkdir -p {OUTPREFIX}; gzip -v9 meta.txt; gzip -v9 frequency_sorted; mv frequency_sorted.gz rrr_main rrr_local_table rrr_map_hd rrr_map_hd_boundary mega.essc meta.txt.gz {OUTPREFIX}/; tar cf {OUTPREFIX}.tar {OUTPREFIX}/;  gzip -v9 {OUTPREFIX}.tar; rm -rf {OUTPREFIX}/"
 
     
 if config['ess'] == 'tip':
     rule zip_compress_size_tip_and_cleanup:
         input: 
-            "esscolor.tar.gz"
+            "{OUTPREFIX}.tar.gz"
         output:
             "size_esscolor_mb_tip"
         shell:
-            "ls -l | grep esscolor.tar.gz | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb_tip;"
+            "ls -l | grep {OUTPREFIX}.tar.gz | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb_tip;"
 else:
     rule zip_compress_size_and_cleanup:
         input: 
-            "esscolor.tar.gz"
+            "{OUTPREFIX}.tar.gz"
         output:
             "size_esscolor_mb"
         params:
             fol=get_ext_folder_level(EXTENSION)+"/",
         shell:
-            "ls -l | grep esscolor.tar.gz | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb; rm -rf {params.fol}; rm list_kmc; rm list_fa"
+            "ls -l | grep {OUTPREFIX}.tar.gz | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb; rm -rf {params.fol}; rm list_kmc; rm list_fa"
             #" nkmer=$(cat stat_nkmer_ess); ls -l | grep ess_color.tar.gz | awk -v nk=$nkmer '{{print $5*8.0/$nk}}' > size_esscolor_bitskmer"  
 # rule all_stat:
 #     input: 

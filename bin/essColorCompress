@@ -12,7 +12,7 @@ save_arg="${@:1}"
 echo $save_arg
 
 nthreads=8
-
+outprefix="esscolor"
 cmd=""
 while getopts ':a:i:k:o:j:h' opt; do
   case "$opt" in
@@ -24,6 +24,11 @@ while getopts ':a:i:k:o:j:h' opt; do
     j)
       echo "Processing option 'j'"
       nthreads=${OPTARG}
+      ;;
+    p)
+      echo "Processing option 'p'"
+      outprefix=${OPTARG}
+      cmd=$(echo $cmd" -p "$outprefix)
       ;;
     o)
       echo "Processing option 'o'"
