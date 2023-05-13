@@ -14,7 +14,7 @@ echo $save_arg
 nthreads=8
 outprefix="esscolor"
 cmd=""
-while getopts ':a:i:k:o:j:h' opt; do
+while getopts ':a:i:k:o:j:p:h' opt; do
   case "$opt" in
     a)
       echo "Processing option 'a'"
