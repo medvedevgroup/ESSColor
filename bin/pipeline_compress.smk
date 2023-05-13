@@ -90,8 +90,8 @@ else:
             # "ggout.stats.log.gz"
             # #expand("esscs/{sample}"+EXTENSION+".essd",sample=SAMPLES),
             # # expand("{sample}.kmers.gz",sample=SAMPLES),
-            "mega.essc",
-            "mega.essd",
+            temp("mega.essc"),
+            temp("mega.essd"),
             # # "rrrbv_1_delta.sdsl",
             # # "rrrbv_1.sdsl",
             # # "rrrbv_1_skip.sdsl",
@@ -520,7 +520,7 @@ else:
         benchmark:
             "benchmarks/ggcat_unitig_to_ess.txt"
         output:
-            "mega.essc",
+            temp("mega.essc"),
             temp("mega.essd"),
             temp("kb_sec_essauxc"),
             temp("kb_sec_essauxd"),
