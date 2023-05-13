@@ -98,7 +98,6 @@ else:
             # # "rrr_bv_mapping.sdsl",
             # # "stat_size",
             "ess_boundary_bit.txt",
-            "validate1",
             "col_bitmatrix",
             "uniq_ms.txt",
             "stat_m",
@@ -294,7 +293,8 @@ if config['matrix_generator'] == 'genmatrix':
             temp("col_bitmatrix"),
             temp("ess_boundary_bit.txt"),
             temp("stat_nkmer_ess"),
-            temp("kb_sec_genmatrix")
+            temp("kb_sec_genmatrix"),
+            temp("list_kmc")
 
         params:
             l=dump_list(SAMPLES, ".kmc", "list_kmc"),
@@ -370,7 +370,7 @@ if config['matrix_generator'] == 'genmatrix':
             "stat_nkmer_ess",
             "stat_nkmer_genmatrix"
         output:
-            "validate1"
+            temp("validate1")
         shell:
             "cmp --silent stat_nkmer_ess stat_nkmer_genmatrix && echo '### SUCCESS: Files Are Identical! ###' > validate1 || echo \"files are different\""
             
@@ -405,7 +405,8 @@ rule compress:
         temp("rrr_local_table"),
         temp("rrr_map_hd"),
         temp("rrr_map_hd_boundary"),
-        temp("frequency_sorted")
+        temp("frequency_sorted"),
+        temp("kb_sec_colcompress")
     shell:
         "/usr/bin/time  -f \"%M %e %U %S\" --output-file=kb_sec_colcompress essColorAuxMatrixCompress -i uniq_ms.txt -d col_bitmatrix -c {params.c} -m $(cat stat_m) -k $(cat stat_nkmer_ess) -s ess_boundary_bit.txt -x 16"
 
@@ -427,7 +428,7 @@ rule zip_compress:
 
     
 if config['ess'] == 'tip':
-    rule zip_compress_size_tip:
+    rule zip_compress_size_tip_and_cleanup:
         input: 
             "esscolor.tar.gz"
         output:
@@ -435,13 +436,15 @@ if config['ess'] == 'tip':
         shell:
             "ls -l | grep esscolor.tar.gz | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb_tip;"
 else:
-    rule zip_compress_size:
+    rule zip_compress_size_and_cleanup:
         input: 
             "esscolor.tar.gz"
         output:
             "size_esscolor_mb"
+        params:
+            fol=get_ext_folder_level0(EXTENSION)+"/",
         shell:
-            "ls -l | grep esscolor.tar.gz | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb;"
+            "ls -l | grep esscolor.tar.gz | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb; rm -rf {params.fol}"
             #" nkmer=$(cat stat_nkmer_ess); ls -l | grep ess_color.tar.gz | awk -v nk=$nkmer '{{print $5*8.0/$nk}}' > size_esscolor_bitskmer"  
 # rule all_stat:
 #     input: 
@@ -503,6 +506,7 @@ if config['ess'] == 'tip':
             "benchmarks/ggcat_unitig_to_ess_tip.txt"
         output:
             "mega.essc",
+            temp("stat_ess_tip.txt"),
             temp("mega.essd"),
             temp("kb_sec_essauxc_tip"),
             temp("kb_sec_essauxd_tip"),
@@ -522,6 +526,7 @@ else:
         output:
             temp("mega.essc"),
             temp("mega.essd"),
+            temp("stat_ess.txt"),
             temp("kb_sec_essauxc"),
             temp("kb_sec_essauxd"),
             temp("kb_sec_mfc_ess")

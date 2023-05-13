@@ -923,7 +923,7 @@ public:
 		
 		if(DEBUG_MODE) skipper.init("skipper");
 		if(DEBUG_MODE) debug_combo.init("combo");
-		
+
 		time_start();
 		create_table(dedup_bitmatrix_file.filename, M );
 		time_end("CMPH constructed perfect hash for "+to_string(M)+" keys.");
@@ -1007,7 +1007,8 @@ public:
 		time_end("Written global table for "+to_string(M)+" values.");
 
 		string bv_line;
-		DebugFile optout("optout");
+		DebugFile optout;
+		if(DEBUG_MODE) optout.init("optout");
 
 		vector<uint32_t> optimal_ht;
 		lmaxrun = ceil(log2(max_run));
