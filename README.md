@@ -27,6 +27,8 @@ You can move/copy ALL the executables in `ESSColor/bin` to the bin directory tha
 
 ####Rust and ggcat Installation
 
+ESS-Color uses a modified implemntation of ESS-Compress. We replace the unitig construction step in ESS-Compress by GGCAT for its optimized implementation. To install ggcat, first install rust.
+
 To install rust:   
 
 ```
@@ -59,8 +61,9 @@ mandatory arguments:
 optional arguments:
 -a [int]          Default=1. Sets a threshold X, such that k-mers that appear less than X times in the input dataset are filtered out. 
 -j [int]          Default=1. Number of threads.   
+-p [output-prefix]   Default="esscolor". Prefix of output compressed cdbg.
 ```
-Upon successful completion, the output directory will contain the compressed colored dbGfile `esscolor.tar.gz`
+Upon successful completion, the output directory will contain the compressed colored dbGfile `<output-prefix>.tar.gz`. 
 
 
 ### ESSColorDecompress: decompression of ESSColor representation
@@ -104,7 +107,7 @@ sample2.fa.gz
 sample3.fa.gz
 ```
 
-If you wish to run`ESSColorCompress` on all 4 ".fa.gz" files, first make a list named `list_mini_k18c4m7` containing the absolute path to all 4 files in each line.
+If you wish to run`essColorCompress` on all 4 ".fa.gz" files, first make a list named `list_mini_k18c4m7` containing the absolute path to all 4 files in each line.
 
 `$ ls $PWD/mini_k18c4m7/*.fa > list_mini_k18c4m7`
 
@@ -159,22 +162,24 @@ If you are only interested to obtain the color matrix from a KMC database list, 
     -c, --count-list arg  [Mandatory] Path to KMC database files. One line per database
     -d, --debug-verif     Debug flag to verify if the output coresponds to the input (Time consuming).
     -o, --outmatrix arg   [Mandatory] Path to the output color matrix
-    -l, --kmer-list arg   [Mandatory] Path to the output ordered kmer list file
-    -s, --strout          String output
+    -l, --spss arg   [Mandatory] Path to the corresponding union SPSS    
+        -s, --strout          String output
 
 
 Command example for a 100 ecoli matrix:
+`$ genmatrix -c db_list.txt -o matrix.bin -l kmers.bin`
+    
+To generate matrix in plain text        
+`$ genmatrix -c db_list.txt -l simplitigs.fa -o matrix.txt -s`
+    
+To generate matrix in binary       
+`$ genmatrix -c db_list.txt -l simplitigs.fa -o matrix.bin`
 
-    $ genmatrix -c db_list.txt -o matrix.bin -l kmers.bin
-
-The file db_list.txt must contain the paths to the 100 KMC databases (one by ecoli).
-The path can be absolute or relative to the exec directory.
-The software is expecting one path per line.
+The file db_list.txt must contain the paths to the KMC databases. The file simplitigs.fa must have the same k-mers in fasta format in de-duplicated manner. The path can be absolute or relative to the exec directory. The software is expecting one path per line.
 
 The file matrix.bin contains the color matrix.
-The matrix has one row per kmer and 100 column (1 per sample).
-The columns have the same order than the databases in the db_list.txt file.
-In string format rows are separated using '\n' chars.
+The matrix has one row per kmer and C column (1 per sample).
+The columns have the same order than the databases in the db_list.txt file. In string format rows are separated using '\n' chars.
 Each row is composed of 100 chars that are 0 or 1 depending on the presence/absence of the row kmer in the column sample.   
 
 In binary format, a row is a large enough multiple of 64 bits.

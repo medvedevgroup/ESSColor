@@ -378,10 +378,10 @@ int main(int argc, char **argv) {
 
     cout<<"Checking if all dependencies are installed... "<<endl;
     check_if_program_exist("sort");
-    // check_if_program_exist("ggcat");
+    check_if_program_exist("ggcat");
     // check_if_program_exist("essCompress");
-    // check_if_program_exist("kmc");
-    // check_if_program_exist("snakemake");
+    check_if_program_exist("kmc");
+    check_if_program_exist("snakemake");
 
     vector<string> args(argv + 1, argv + argc);
    
