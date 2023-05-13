@@ -561,7 +561,7 @@ public:
 
 	int lm = 0;
 	int lc = 0;
-	string* global_table;
+	//string* global_table;
 
 
 	int* per_simplitig_l;
@@ -783,6 +783,90 @@ public:
 		}
 	}
 
+	void store_NONMST_global(){
+		ifstream uniq_ms(dedup_bitmatrix_file.filename);
+		string hd_line;
+		
+		vector<uint64_t> positions;
+		uint64_t b_it = 0;
+
+		vector<uint64_t> positions_hd;
+		uint64_t b_it_hd = 0;
+
+		uint64_t zero_64bit = 0;
+		uint64_t prev_lo = 0;
+		uint64_t prev_hi = 0;
+
+		//global_table = new string[M];
+		int hdsum = 0;
+		for(int i = 0 ; i< M; i++){
+			string uniq_ms_line;
+			getline(uniq_ms, uniq_ms_line);
+
+			////
+			////
+			//unsigned int idx = lookup(uniq_ms_line);		// returns an if in range (0 to M-1) 
+			//assert(idx < M);
+			//global_table[idx] = uniq_ms_line;
+			//assert(x==idx);
+			////
+			////
+			uint64_t lo = std::stoull(uniq_ms_line.substr(0,std::min(64,int(C))), nullptr, 2) ; 
+			// if(i==0){
+			//     write_number_at_loc(positions_hd, lo, min(64, C), b_it_hd ); 
+			// }
+
+			uint64_t hi = 0;
+			if(C > 64){
+				string ss = uniq_ms_line.substr(64,(C-64));
+				hi  = std::stoull(ss, nullptr, 2);
+				// if(i==0){
+				//     write_number_at_loc(positions_hd, hi, C-64, b_it_hd ); 
+				// }
+			}
+
+			//int hd = hammingDistance(hi, zero_64bit) + hammingDistance(lo, zero_64bit);
+			//g.addEdge(i, M, hd); //M th entry is all zero, 0 to M-1 entry is non zero
+			if(true){ //i!=0
+				int hd_prev = hammingDistance(hi, prev_hi) + hammingDistance(lo, prev_lo);
+				hdsum += hd_prev;
+				int lc = ceil(log2(C));
+				for (int i_bit = 0; i_bit < 64 && i_bit < C; i_bit += 1)
+				{
+					if (((prev_lo >> i_bit) & 1) != ((lo >> i_bit) & 1))
+					{       
+						write_number_at_loc(positions_hd, i_bit, lc, b_it_hd); // i_bit is the different bit loc
+					}
+				}
+				for (int i_bit = 64; i_bit < C; i_bit += 1)
+				{
+					int actual_i_bit = i_bit - 64;
+					if (((prev_hi >> actual_i_bit) & 1) != ((hi >> actual_i_bit) & 1))
+					{
+						write_number_at_loc(positions_hd, i_bit, lc, b_it_hd); // i_bit is the different bit loc
+					}
+				}
+				// for(int ii = 0; ii< (hd_prev*lc)-1; ii++){
+				//     write_zero(positions, b_it); // i_bit is the different bit loc
+				// }
+				// write_one(positions, b_it); // i_bit is the different bit loc
+				if(hd_prev!=0){
+					b_it+=hd_prev*lc-1;
+					write_one(positions, b_it);
+				}
+				//if(i!=0) g.addEdge(i, i-1, hd_prev);
+			}
+			prev_lo=lo;
+			prev_hi=hi;
+		}
+		uniq_ms.close();
+
+		store_as_sdsl(positions_hd, b_it_hd, "rrr_map_hd" );	
+		//write_binary_bv_from_pos_vector( positions_hd, b_it_hd, "rrr_map_hd" );
+		store_as_sdsl(positions, b_it, "rrr_map_hd_boundary" );	
+
+	}
+
 	void store_global_color_class_table(){
 		vector<uint64_t> positions;  //wasteful
 		uint64_t b_it = 0;
@@ -793,13 +877,13 @@ public:
 		//LogFile log_num_color_in_class;
 		//log_num_color_in_class.init("log_num_color_in_class"); 
 		dedup_bitmatrix_file.rewind();
-		global_table = new string[M];
+		//global_table = new string[M];
 		for(int x=0; x<M; x++){
 			string bv_line;
 			getline(dedup_bitmatrix_file.fs, bv_line);
 			unsigned int idx = lookup(bv_line);		// returns an if in range (0 to M-1) 
 			assert(idx < M);
-			global_table[idx] = bv_line;
+			//global_table[idx] = bv_line;
 			assert(x==idx);
 
 			array_lo[idx] = std::stoull(bv_line.substr(0,std::min(64,int(C))), nullptr, 2) ; 
@@ -819,7 +903,7 @@ public:
 		}
 		dedup_bitmatrix_file.fs.close();
 
-		store_as_binarystring(positions, b_it, "bb_map" );
+		//store_as_binarystring(positions, b_it, "bb_map" );
 		store_as_sdsl(positions, b_it, "rrr_map" );
 
 		cout << "expected_MB_bv_mapping="<<(C*M)/8.0/1024.0/1024.0 << endl;
@@ -917,7 +1001,8 @@ public:
 		time_end("Build huffman tree on " +to_string(M)+" values.");
 
 		time_start();
-		store_global_color_class_table();
+		store_NONMST_global();
+		//store_global_color_class_table();
 		time_end("Written global table for "+to_string(M)+" values.");
 
 		string bv_line;
@@ -1229,7 +1314,7 @@ public:
 				break;
 		}
 		cout << "b_it_local_table_size: " << b_it_local_table << endl;
-		store_as_binarystring(positions_local_table, b_it_local_table, "bb_local_table");
+		//store_as_binarystring(positions_local_table, b_it_local_table, "bb_local_table");
 		store_as_sdsl(positions_local_table, b_it_local_table, "rrr_local_table");
 		debug_combo.fs<<combo_string;
 
@@ -1489,7 +1574,7 @@ public:
 
 		cout << "b_it_size: " << b_it << endl;
 		store_as_sdsl(positions, b_it, "rrr_main");
-		store_as_binarystring(positions, b_it, "bb_main");
+		//store_as_binarystring(positions, b_it, "bb_main");
 	}
 };
 
