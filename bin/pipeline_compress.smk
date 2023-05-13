@@ -200,7 +200,7 @@ if (config['option'] == 'from_essc' or config['option'] == 'create_essc' or conf
         benchmark:
             "benchmarks/mega.essc.txt"
         output:
-            temp("mega.essc")
+            "mega.essc"
         shell:
             "echo \"{params.l}\"> mega;essCompress -i mega -k{params.k}"
 else:
@@ -293,7 +293,9 @@ if config['matrix_generator'] == 'genmatrix':
         output:
             temp("col_bitmatrix"),
             temp("ess_boundary_bit.txt"),
-            temp("stat_nkmer_ess")
+            temp("stat_nkmer_ess"),
+            temp("kb_sec_genmatrix")
+
         params:
             l=dump_list(SAMPLES, ".kmc", "list_kmc"),
             l2=dump_list(SAMPLES, EXTENSION, "meta.txt"),
@@ -301,7 +303,7 @@ if config['matrix_generator'] == 'genmatrix':
         benchmark:
             "benchmarks/genmatrix.txt"
         shell:
-            "/usr/bin/time  -f \"%M %e %U %S\" --output-file=kb_sec_genmatrix ~/s/proj4/git/ESSColor/bin/genmatrix  -c list_kmc -o {output} -s -l mega.essd -k {params.k}"
+            "/usr/bin/time  -f \"%M %e %U %S\" --output-file=kb_sec_genmatrix genmatrix  -c list_kmc -o {output} -s -l mega.essd -k {params.k}"
 
 
 
@@ -417,12 +419,11 @@ rule zip_compress:
         "mega.essc",
         "meta.txt"
     output:
-        temp(directory("esscolor")),
         "esscolor.tar.gz"
     benchmark:
         "benchmarks/final_gzip.txt"
     shell: 
-        "mkdir -p esscolor; gzip -v9 meta.txt; gzip -v9 frequency_sorted; mv frequency_sorted.gz rrr_main rrr_local_table rrr_map_hd rrr_map_hd_boundary mega.essc meta.txt.gz esscolor/; tar cf esscolor.tar esscolor/;  gzip -v9 esscolor.tar; "
+        "mkdir -p esscolor; gzip -v9 meta.txt; gzip -v9 frequency_sorted; mv frequency_sorted.gz rrr_main rrr_local_table rrr_map_hd rrr_map_hd_boundary mega.essc meta.txt.gz esscolor/; tar cf esscolor.tar esscolor/;  gzip -v9 esscolor.tar; rm -rf esscolor/"
 
     
 if config['ess'] == 'tip':
@@ -501,7 +502,7 @@ if config['ess'] == 'tip':
         benchmark:
             "benchmarks/ggcat_unitig_to_ess_tip.txt"
         output:
-            temp("mega.essc"),
+            "mega.essc",
             temp("mega.essd"),
             temp("kb_sec_essauxc_tip"),
             temp("kb_sec_essauxd_tip"),
@@ -519,10 +520,10 @@ else:
         benchmark:
             "benchmarks/ggcat_unitig_to_ess.txt"
         output:
-            temp("mega.essc"),
+            "mega.essc",
             temp("mega.essd"),
             temp("kb_sec_essauxc"),
             temp("kb_sec_essauxd"),
             temp("kb_sec_mfc_ess")
         shell:
-            "/usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxc  essColorAuxKmersCompress -k {params.k} -i {input} -t 0; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxd  essColorAuxKmersDecompress -i kmers.ess 1; mv kmers.ess.spss mega.essd; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_mfc_ess   essAuxMFCompressC kmers.ess; mv kmers.ess.mfc mega.essc"
+            "/usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxc  essColorAuxKmersCompress -k {params.k} -i {input} -t 0; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxd  essColorAuxKmersDecompress -i kmers.ess 1; mv kmers.ess.spss mega.essd; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_mfc_ess   essAuxMFCompressC kmers.ess; mv kmers.ess.mfc mega.essc, rm  kmers.ess"
