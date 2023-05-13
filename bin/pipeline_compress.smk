@@ -293,8 +293,7 @@ if config['matrix_generator'] == 'genmatrix':
             temp("col_bitmatrix"),
             temp("ess_boundary_bit.txt"),
             temp("stat_nkmer_ess"),
-            temp("kb_sec_genmatrix"),
-            temp("list_kmc")
+            temp("kb_sec_genmatrix")
 
         params:
             l=dump_list(SAMPLES, ".kmc", "list_kmc"),
@@ -444,7 +443,7 @@ else:
         params:
             fol=get_ext_folder_level0(EXTENSION)+"/",
         shell:
-            "ls -l | grep esscolor.tar.gz | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb; rm -rf {params.fol}"
+            "ls -l | grep esscolor.tar.gz | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb; rm -rf {params.fol}; rm list_kmc"
             #" nkmer=$(cat stat_nkmer_ess); ls -l | grep ess_color.tar.gz | awk -v nk=$nkmer '{{print $5*8.0/$nk}}' > size_esscolor_bitskmer"  
 # rule all_stat:
 #     input: 
