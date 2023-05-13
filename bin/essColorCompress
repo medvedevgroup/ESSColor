@@ -48,12 +48,12 @@ while getopts ':a:i:k:o:j:p:h' opt; do
       cmd=$(echo $cmd" -k "${OPTARG})
       ;;
     :)
-      echo -e "option requires an argument.\nUsage: $(basename $0) [-a] [-b] [-c arg]"
+      echo -e "option requires an argument.\nUsage: $(basename $0) [-i] [-h] [-k] [-o] [-j] [-p] [-a]"
       exit 1
       ;;
 
     ?)
-      echo -e "Invalid command option.\nUsage: $(basename $0) [-a] [-b] [-c arg]"
+      echo -e "Invalid command option.\nUsage: $(basename $0) [-i] [-h] [-k] [-o] [-j] [-p] [-a]"
       exit 1
       ;;
   esac

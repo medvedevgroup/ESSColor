@@ -6,6 +6,7 @@ echo $SCRIPT_DIR
 nthreads=8
 
 cmd=""
+bz="esscolor"
 while getopts ':i:h' opt; do
   case "$opt" in
     i)
@@ -13,15 +14,16 @@ while getopts ':i:h' opt; do
       infile=${OPTARG}
       infile=$(realpath $infile)
       outdir = $(dirname $infile)
-      cmd=$(echo $cmd" -i "$outdir"/esscolor/")
+      bz=$(basename $infile .tar.gz)
+      cmd=$(echo $cmd" -i "$outdir"/"$bz"/")
       ;;
     :)
-      echo -e "option requires an argument.\nUsage: $(basename $0) [-a] [-b] [-c arg]"
+      echo -e "option requires an argument.\nUsage: $(basename $0) [-i arg] [-h]"
       exit 1
       ;;
 
     ?)
-      echo -e "Invalid command option.\nUsage: $(basename $0) [-a] [-b] [-c arg]"
+      echo -e "Invalid command option.\nUsage: $(basename $0) [-i arg] [-h]"
       exit 1
       ;;
   esac
@@ -33,8 +35,8 @@ shift "$(($OPTIND -1))"
 echo "out dir is: "$outdir
 cd $outdir
 
-tar -xf esscolor.tar.gz; cd esscolor; gunzip meta.txt.gz; gunzip frequency_sorted.gz; cd ../
-cd esscolor; essAuxMFCompressD mega.essc; essColorAuxKmersDecompress -i mega.essc.d 1; mv kmers.ess mega.essd; cd ../
+tar -xf $bz.tar.gz; cd $bz; gunzip meta.txt.gz; gunzip frequency_sorted.gz; cd ../
+cd  $bz; essAuxMFCompressD mega.essc; essColorAuxKmersDecompress -i mega.essc.d 1; mv kmers.ess mega.essd; cd ../
 $SCRIPT_DIR/essColorAuxMatrixDecompress $cmd
-cd esscolor; mv dec_ess_color ../matrix.txt; mv mega.essd ../simplitigs.fa; cd ../ "
-rm -rf esscolor
+cd  $bz; mv dec_ess_color ../matrix.txt; mv mega.essd ../simplitigs.fa; cd ../ "
+rm -rf  $bz
