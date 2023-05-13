@@ -438,7 +438,7 @@ rule zip_compress:
     params:
         p=OUTPREFIX
     output:
-        "{params.p}.tar.gz"
+        OUTPREFIX+".tar.gz"
     benchmark:
         "benchmarks/final_gzip.txt"
     shell: 
