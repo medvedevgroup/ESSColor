@@ -417,11 +417,12 @@ rule zip_compress:
         "mega.essc",
         "meta.txt"
     output:
+        temp("esscolor"),
         "esscolor.tar.gz"
     benchmark:
         "benchmarks/final_gzip.txt"
     shell: 
-        "mkdir -p esscolor; gzip -v9 meta.txt; gzip -v9 frequency_sorted; cp frequency_sorted.gz rrr_main rrr_local_table rrr_map_hd rrr_map_hd_boundary mega.essc meta.txt.gz esscolor/; tar cf esscolor.tar esscolor/;  gzip -v9 esscolor.tar; "
+        "mkdir -p esscolor; gzip -v9 meta.txt; gzip -v9 frequency_sorted; mv frequency_sorted.gz rrr_main rrr_local_table rrr_map_hd rrr_map_hd_boundary mega.essc meta.txt.gz esscolor/; tar cf esscolor.tar esscolor/;  gzip -v9 esscolor.tar; "
 
     
 if config['ess'] == 'tip':
@@ -484,10 +485,10 @@ if config['unitig'] == 'ggcat':
         benchmark:
             "benchmarks/f_to_ggcatess.txt"
         output:
-            temp("gg_unitigs.fa")
+            temp("gg_unitigs.fa"),
+            temp("gg_unitigs.stats.log")
         shell:
             "/usr/bin/time  -f \"%M %e %U %S\" --output-file=kb_sec_ggcat_build ggcat build -k {params.k} -j 8 -l list_fa -o gg_unitigs.fa -s{params.ab} -p -e"
-
     
 if config['ess'] == 'tip':
     rule ggcat_unitig_to_ess_tip:
@@ -500,7 +501,10 @@ if config['ess'] == 'tip':
             "benchmarks/ggcat_unitig_to_ess_tip.txt"
         output:
             temp("mega.essc"),
-            temp("mega.essd")
+            temp("mega.essd"),
+            temp("kb_sec_essauxc_tip"),
+            temp("kb_sec_essauxd_tip"),
+            temp("kb_sec_mfc_ess_tip")
         shell:
             "/usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxc_tip  essColorAuxKmersCompress -k {params.k} -i {input} -t 1; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxd_tip  essColorAuxKmersDecompress -i kmers.esstip 1; mv kmers.esstip.spss mega.essd; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_mfc_ess_tip   essAuxMFCompressC kmers.esstip; mv kmers.esstip.mfc mega.essc"
 
@@ -515,6 +519,9 @@ else:
             "benchmarks/ggcat_unitig_to_ess.txt"
         output:
             temp("mega.essc"),
-            temp("mega.essd")
+            temp("mega.essd"),
+            temp("kb_sec_essauxc"),
+            temp("kb_sec_essauxd"),
+            temp("kb_sec_mfc_ess")
         shell:
             "/usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxc  essColorAuxKmersCompress -k {params.k} -i {input} -t 0; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxd  essColorAuxKmersDecompress -i kmers.ess 1; mv kmers.ess.spss mega.essd; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_mfc_ess   essAuxMFCompressC kmers.ess; mv kmers.ess.mfc mega.essc"

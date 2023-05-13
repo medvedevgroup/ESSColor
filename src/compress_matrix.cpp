@@ -537,9 +537,7 @@ using namespace Huffman;
 class COLESS{
 public:
 	InputFile dedup_bitmatrix_file, spss_boundary_file, dup_bitmatrix_file;
-	
-	
-	DebugFile logfile_main;
+
 	DebugFile debug1;
 	DebugFile debug2;
 	DebugFile all_ls;
@@ -597,11 +595,10 @@ public:
 		this->lc = ceil(log2(C));
 
 		num_simplitig = 0;
-		logfile_main.init("log_coless");
-		debug1.init("debug1");
-		debug2.init("debug2");
+		if(DEBUG_MODE) debug1.init("debug1");
+		if(DEBUG_MODE) debug2.init("debug2");
 
-		all_ls.init("all_ls");
+		if(DEBUG_MODE) all_ls.init("all_ls");
 		
 
 	}
@@ -921,8 +918,12 @@ public:
 		string combo_string = "";
 		//DebugFile cases_smc("cases_smc");
 		//DebugFile debuglll("lll");
-		DebugFile skipper("skipper");
-		DebugFile debug_combo("combo");
+		DebugFile skipper;("skipper");
+		DebugFile debug_combo;
+		
+		if(DEBUG_MODE) skipper.init("skipper");
+		if(DEBUG_MODE) debug_combo.init("combo");
+		
 		time_start();
 		create_table(dedup_bitmatrix_file.filename, M );
 		time_end("CMPH constructed perfect hash for "+to_string(M)+" keys.");
