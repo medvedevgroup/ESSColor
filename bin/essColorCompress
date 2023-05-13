@@ -1,0 +1,72 @@
+
+#!/usr/bin/env bash
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+echo $SCRIPT_DIR
+# dirname "$0":
+
+
+#SCRIPT_DIR="$(abspath $(dirname $0))/../"
+#echo $SCRIPT_DIR
+
+save_arg="${@:1}"
+echo $save_arg
+
+nthreads=8
+outprefix="esscolor"
+cmd=""
+while getopts ':a:i:k:o:j:p:h' opt; do
+  case "$opt" in
+    a)
+      echo "Processing option 'a'"
+      ab=${OPTARG}
+      cmd=$(echo $cmd" -a "$ab)
+      ;;
+    j)
+      echo "Processing option 'j'"
+      nthreads=${OPTARG}
+      ;;
+    p)
+      echo "Processing option 'p'"
+      outprefix=${OPTARG}
+      cmd=$(echo $cmd" -p "$outprefix)
+      ;;
+    o)
+      echo "Processing option 'o'"
+      outdir=$(realpath ${OPTARG})
+      cmd=$(echo $cmd" -o "$outdir)
+      echo $outdir
+      #cd $outdir
+      ;;
+    i)
+      echo "Processing option 'i'"
+      infile=${OPTARG}
+      infile=$(realpath $infile)
+      cmd=$(echo $cmd" -i "$infile)
+      ;;
+    k)
+      echo "Processing option 'k'"
+      cmd=$(echo $cmd" -k "${OPTARG})
+      ;;
+    :)
+      echo -e "option requires an argument.\nUsage: $(basename $0) [-i] [-h] [-k] [-o] [-j] [-p] [-a]"
+      exit 1
+      ;;
+
+    ?)
+      echo -e "Invalid command option.\nUsage: $(basename $0) [-i] [-h] [-k] [-o] [-j] [-p] [-a]"
+      exit 1
+      ;;
+  esac
+done
+shift "$(($OPTIND -1))"
+
+
+
+
+#outdir=$(realpath $outdir)
+echo $outdir
+cd $outdir
+
+$SCRIPT_DIR/essColorAuxConfigWriter $cmd
+
+snakemake -s $SCRIPT_DIR/pipeline_compress.smk -j $nthreads

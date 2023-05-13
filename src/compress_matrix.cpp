@@ -1,6 +1,6 @@
 //version: mar 1: trying to fix gut
 
-#define VERSION_NAME "APR21,LIMITBITS_FOR_LOCAL_PLUS_SINGLE"
+#define VERSION_NAME "APR4, k=23"
 #include <cmph.h> 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,9 +36,6 @@ const bool USE_TEST_METHOD = false;
 bool NEW_DEBUG_MODE = false;
 bool DEBUG_MODE = false;
 
-const int MAX_UNIQ_CLASS_PER_SIMP=8; //force not taking
-const bool SINGLE_COLOR_METABIT = false; //if persimplitig_L == 1, force bigD=1, skip=0
-const bool USE_MAX_UNIQ_CLASS_PER_SIMP = false;
 
 // namespace BinaryIO
 // {
@@ -540,9 +537,7 @@ using namespace Huffman;
 class COLESS{
 public:
 	InputFile dedup_bitmatrix_file, spss_boundary_file, dup_bitmatrix_file;
-	
-	
-	DebugFile logfile_main;
+
 	DebugFile debug1;
 	DebugFile debug2;
 	DebugFile all_ls;
@@ -564,7 +559,7 @@ public:
 
 	int lm = 0;
 	int lc = 0;
-	string* global_table;
+	//string* global_table;
 
 
 	int* per_simplitig_l;
@@ -600,11 +595,10 @@ public:
 		this->lc = ceil(log2(C));
 
 		num_simplitig = 0;
-		logfile_main.init("log_coless");
-		debug1.init("debug1");
-		debug2.init("debug2");
+		if(DEBUG_MODE) debug1.init("debug1");
+		if(DEBUG_MODE) debug2.init("debug2");
 
-		all_ls.init("all_ls");
+		if(DEBUG_MODE) all_ls.init("all_ls");
 		
 
 	}
@@ -786,6 +780,90 @@ public:
 		}
 	}
 
+	void store_NONMST_global(){
+		ifstream uniq_ms(dedup_bitmatrix_file.filename);
+		string hd_line;
+		
+		vector<uint64_t> positions;
+		uint64_t b_it = 0;
+
+		vector<uint64_t> positions_hd;
+		uint64_t b_it_hd = 0;
+
+		uint64_t zero_64bit = 0;
+		uint64_t prev_lo = 0;
+		uint64_t prev_hi = 0;
+
+		//global_table = new string[M];
+		int hdsum = 0;
+		for(int i = 0 ; i< M; i++){
+			string uniq_ms_line;
+			getline(uniq_ms, uniq_ms_line);
+
+			////
+			////
+			//unsigned int idx = lookup(uniq_ms_line);		// returns an if in range (0 to M-1) 
+			//assert(idx < M);
+			//global_table[idx] = uniq_ms_line;
+			//assert(x==idx);
+			////
+			////
+			uint64_t lo = std::stoull(uniq_ms_line.substr(0,std::min(64,int(C))), nullptr, 2) ; 
+			// if(i==0){
+			//     write_number_at_loc(positions_hd, lo, min(64, C), b_it_hd ); 
+			// }
+
+			uint64_t hi = 0;
+			if(C > 64){
+				string ss = uniq_ms_line.substr(64,(C-64));
+				hi  = std::stoull(ss, nullptr, 2);
+				// if(i==0){
+				//     write_number_at_loc(positions_hd, hi, C-64, b_it_hd ); 
+				// }
+			}
+
+			//int hd = hammingDistance(hi, zero_64bit) + hammingDistance(lo, zero_64bit);
+			//g.addEdge(i, M, hd); //M th entry is all zero, 0 to M-1 entry is non zero
+			if(true){ //i!=0
+				int hd_prev = hammingDistance(hi, prev_hi) + hammingDistance(lo, prev_lo);
+				hdsum += hd_prev;
+				int lc = ceil(log2(C));
+				for (int i_bit = 0; i_bit < 64 && i_bit < C; i_bit += 1)
+				{
+					if (((prev_lo >> i_bit) & 1) != ((lo >> i_bit) & 1))
+					{       
+						write_number_at_loc(positions_hd, i_bit, lc, b_it_hd); // i_bit is the different bit loc
+					}
+				}
+				for (int i_bit = 64; i_bit < C; i_bit += 1)
+				{
+					int actual_i_bit = i_bit - 64;
+					if (((prev_hi >> actual_i_bit) & 1) != ((hi >> actual_i_bit) & 1))
+					{
+						write_number_at_loc(positions_hd, i_bit, lc, b_it_hd); // i_bit is the different bit loc
+					}
+				}
+				// for(int ii = 0; ii< (hd_prev*lc)-1; ii++){
+				//     write_zero(positions, b_it); // i_bit is the different bit loc
+				// }
+				// write_one(positions, b_it); // i_bit is the different bit loc
+				if(hd_prev!=0){
+					b_it+=hd_prev*lc-1;
+					write_one(positions, b_it);
+				}
+				//if(i!=0) g.addEdge(i, i-1, hd_prev);
+			}
+			prev_lo=lo;
+			prev_hi=hi;
+		}
+		uniq_ms.close();
+
+		store_as_sdsl(positions_hd, b_it_hd, "rrr_map_hd" );	
+		//write_binary_bv_from_pos_vector( positions_hd, b_it_hd, "rrr_map_hd" );
+		store_as_sdsl(positions, b_it, "rrr_map_hd_boundary" );	
+
+	}
+
 	void store_global_color_class_table(){
 		vector<uint64_t> positions;  //wasteful
 		uint64_t b_it = 0;
@@ -796,13 +874,13 @@ public:
 		//LogFile log_num_color_in_class;
 		//log_num_color_in_class.init("log_num_color_in_class"); 
 		dedup_bitmatrix_file.rewind();
-		global_table = new string[M];
+		//global_table = new string[M];
 		for(int x=0; x<M; x++){
 			string bv_line;
 			getline(dedup_bitmatrix_file.fs, bv_line);
 			unsigned int idx = lookup(bv_line);		// returns an if in range (0 to M-1) 
 			assert(idx < M);
-			global_table[idx] = bv_line;
+			//global_table[idx] = bv_line;
 			assert(x==idx);
 
 			array_lo[idx] = std::stoull(bv_line.substr(0,std::min(64,int(C))), nullptr, 2) ; 
@@ -822,7 +900,7 @@ public:
 		}
 		dedup_bitmatrix_file.fs.close();
 
-		store_as_binarystring(positions, b_it, "bb_map" );
+		//store_as_binarystring(positions, b_it, "bb_map" );
 		store_as_sdsl(positions, b_it, "rrr_map" );
 
 		cout << "expected_MB_bv_mapping="<<(C*M)/8.0/1024.0/1024.0 << endl;
@@ -840,8 +918,12 @@ public:
 		string combo_string = "";
 		//DebugFile cases_smc("cases_smc");
 		//DebugFile debuglll("lll");
-		DebugFile skipper("skipper");
-		DebugFile debug_combo("combo");
+		DebugFile skipper;("skipper");
+		DebugFile debug_combo;
+		
+		if(DEBUG_MODE) skipper.init("skipper");
+		if(DEBUG_MODE) debug_combo.init("combo");
+
 		time_start();
 		create_table(dedup_bitmatrix_file.filename, M );
 		time_end("CMPH constructed perfect hash for "+to_string(M)+" keys.");
@@ -920,11 +1002,13 @@ public:
 		time_end("Build huffman tree on " +to_string(M)+" values.");
 
 		time_start();
-		store_global_color_class_table();
+		store_NONMST_global();
+		//store_global_color_class_table();
 		time_end("Written global table for "+to_string(M)+" values.");
 
 		string bv_line;
-		DebugFile optout("optout");
+		DebugFile optout;
+		if(DEBUG_MODE) optout.init("optout");
 
 		vector<uint32_t> optimal_ht;
 		lmaxrun = ceil(log2(max_run));
@@ -1152,24 +1236,12 @@ public:
 				}
 				skip = 0;
 
-				int per_simplitig_space_needed;
-				if(USE_MAX_UNIQ_CLASS_PER_SIMP){
-				 	per_simplitig_space_needed= useLocal * (2 + 1 + ceil(log2(MAX_UNIQ_CLASS_PER_SIMP)) + sum_length_huff_uniq_nonrun + (ll+1) * case_lm + sum_dlc_space  + sum_skip_space) + (1 - useLocal) * (2 + 1 + sum_length_huff_nonrun + sum_dlc_space + case_lm + sum_skip_space);
-				}else{
-					per_simplitig_space_needed = useLocal * (2 + 1 + lm + sum_length_huff_uniq_nonrun + (ll+1) * case_lm + sum_dlc_space  + sum_skip_space) + (1 - useLocal) * (2 + 1 + sum_length_huff_nonrun + sum_dlc_space + case_lm + sum_skip_space);
-				}
-
-				if(l >= MAX_UNIQ_CLASS_PER_SIMP && useLocal==1){
-					per_simplitig_space_needed=9999999;
-				}
-				if(SINGLE_COLOR_METABIT && useLocal == 1 && bigD ==0 && l == 1){
-					per_simplitig_space_needed=0;
-				}
-
+				int per_simplitig_space_needed = useLocal * (2 + 1 + lm + sum_length_huff_uniq_nonrun + (ll+1) * case_lm + sum_dlc_space  + sum_skip_space) + (1 - useLocal) * (2 + 1 + sum_length_huff_nonrun + sum_dlc_space + case_lm + sum_skip_space);
+				
 				if(DEBUG_MODE)
 					optout.fs << "every: simp:"<<simplitig_it<<"bigD:"<< bigD<<" ul:"<<useLocal<<" space:"<<per_simplitig_space_needed<<" optbigD:"<< per_simplitig_optimal_bigD[simplitig_it] << " optLocal:" << per_simplitig_optimal_useLocal[simplitig_it] << " opspace:" << per_simplitig_optimal_space[simplitig_it] <<" sum_huff:"<<sum_length_huff_uniq_nonrun<<" sum_dlc: "<<sum_dlc_space<<"sum_skip_space: "<<sum_skip_space << endl;
 
-				
+
 				//if(per_simplitig_optimal_space[simplitig_it] == big_d_local_combo)//random
 				if (per_simplitig_space_needed < per_simplitig_optimal_space[simplitig_it])
 				{
@@ -1203,34 +1275,12 @@ public:
 					//it_kmer++;
 					combo_string+=to_string(simplitig_it)+" "+to_string(per_simplitig_optimal_bigD[simplitig_it])+" "+to_string(per_simplitig_optimal_useLocal[simplitig_it])+"\n";
 					write_number_at_loc(positions_local_table, per_simplitig_optimal_bigD[simplitig_it], 2, b_it_local_table);
-					
-					if(SINGLE_COLOR_METABIT){
-						if(per_simplitig_optimal_useLocal[simplitig_it] == 1 && per_simplitig_l[simplitig_it] == 1){
-							write_one(positions_local_table, b_it_local_table);
-						}else{
-							write_zero(positions_local_table, b_it_local_table);
-						}
-					}
-					
 					if (per_simplitig_optimal_useLocal[simplitig_it] == 1)
 					{
-						if(SINGLE_COLOR_METABIT){
-							if(per_simplitig_l[simplitig_it] == 1){ //single color: empty content
-							}else{ //not single color: non empty content
-								write_one(positions_local_table, b_it_local_table);
-								if(USE_MAX_UNIQ_CLASS_PER_SIMP)
-									write_number_at_loc(positions_local_table, optimal_ht.size(), ceil(log2(MAX_UNIQ_CLASS_PER_SIMP)), b_it_local_table);
-								else
-									write_number_at_loc(positions_local_table, optimal_ht.size(), lm, b_it_local_table);
-							}
-						}else{
-							write_one(positions_local_table, b_it_local_table);
-							if(USE_MAX_UNIQ_CLASS_PER_SIMP)
-								write_number_at_loc(positions_local_table, optimal_ht.size(), ceil(log2(MAX_UNIQ_CLASS_PER_SIMP)), b_it_local_table);
-							else
-								write_number_at_loc(positions_local_table, optimal_ht.size(), lm, b_it_local_table);
-						}
-
+						write_one(positions_local_table, b_it_local_table);
+						//
+						write_number_at_loc(positions_local_table, optimal_ht.size(), lm, b_it_local_table);
+						
 						for (uint32_t ii = 0; ii < optimal_ht.size(); ii++)
 						{
 							uint32_t uniq_col_class_id = optimal_ht[ii];
@@ -1240,10 +1290,11 @@ public:
 					}
 					else
 					{
-						write_zero(positions_local_table, b_it_local_table); //no local table, just 0 bit indicates that useLocalId=false
+						write_zero(positions_local_table, b_it_local_table);
 					}
 
-				
+					
+
 					// if(DEBUG_MODE)
 					// 	optout.fs << "curr: simp:"<<simplitig_it<<"bigD:"<< bigD<<" ul:"<<useLocal<< " optbigD:"<< per_simplitig_optimal_bigD[simplitig_it] << " optLocal:" << per_simplitig_optimal_useLocal[simplitig_it] << " opspace:" << per_simplitig_optimal_space[simplitig_it] << endl;
 
@@ -1255,7 +1306,9 @@ public:
 
 					if (it_kmer != num_kmers)
 						big_d_local_combo = 0;
+
 				}
+				
 			}
 
 			it_kmer++;			
@@ -1263,9 +1316,10 @@ public:
 				break;
 		}
 		cout << "b_it_local_table_size: " << b_it_local_table << endl;
-		store_as_binarystring(positions_local_table, b_it_local_table, "bb_local_table");
+		//store_as_binarystring(positions_local_table, b_it_local_table, "bb_local_table");
 		store_as_sdsl(positions_local_table, b_it_local_table, "rrr_local_table");
 		debug_combo.fs<<combo_string;
+
 	}
 
 	void method1_pass2()
@@ -1298,16 +1352,6 @@ public:
 			l = per_simplitig_l[simplitig_it];
 			ll = ceil(log2(l));
 
-			bool singlecolor = false;
-			if(SINGLE_COLOR_METABIT){
-				if( l==1 && useLocal==1 && bigD==0){
-					//write_one(positions, b_it);
-					singlecolor=true;
-				}else{
-					//write_zero(positions, b_it);
-				}
-			}
-			
 			// if(DEBUG_MODE)
 			// 	all_ls.fs<<bigD<<" "<<useLocal<<" "<<l<<" "<<ll<<endl;
 			if (useLocal == 1)
@@ -1364,20 +1408,17 @@ public:
 									max_run = 256;
 								}
 								lmaxrun = ceil(log2(max_run));
-								if(!singlecolor) write_number_at_loc(positions, (uint64_t)max_run_choice, (uint64_t)2, b_it);
+								write_number_at_loc(positions, (uint64_t)max_run_choice, (uint64_t)2, b_it);
 
 							}
 							int q, rem;
 							q = floor(skip / max_run);
 							rem = skip % max_run;
 							assert(skip == q * max_run + rem); // skip = q*max_run + rem
-							if(!singlecolor) {
-								write_category(positions, b_it, CATEGORY_RUN, bigD, 0);
-								write_unary_one_at_loc(positions, (uint64_t)q, b_it);
-								write_zero(positions, b_it);
-								write_number_at_loc(positions, (uint64_t)rem, (uint64_t)lmaxrun, b_it);
-							}
-							
+							write_category(positions, b_it, CATEGORY_RUN, bigD, 0);
+							write_unary_one_at_loc(positions, (uint64_t)q, b_it);
+							write_zero(positions, b_it);
+							write_number_at_loc(positions, (uint64_t)rem, (uint64_t)lmaxrun, b_it);
 							
 						}
 
@@ -1400,19 +1441,13 @@ public:
 						//category colvec = 100, 101 //cAT COLVEC = 10 HD = 1 
 						//write_number_at_loc(positions, CATEGORY_COLVEC, 2, b_it);
 
-						if(!singlecolor) write_category(positions, b_it, CATEGORY_COLVEC, bigD, hd);
+						write_category(positions, b_it, CATEGORY_COLVEC, bigD, hd);
 						for (int i_bit = 0; i_bit < 64 && i_bit < C; i_bit += 1)
 						{
 							if (((prev_bv_lo >> i_bit) & 1) != ((curr_bv_lo >> i_bit) & 1))
 							{
-
-								if(C<64){
-									if(!singlecolor) write_number_at_loc(positions, i_bit, lc, b_it); // i_bit is the different bit loc
-
-								}else{
-									if(!singlecolor) write_number_at_loc(positions, C-64+i_bit, lc, b_it); // i_bit is the different bit loc
-
-								}
+								
+								write_number_at_loc(positions, i_bit, lc, b_it); // i_bit is the different bit loc
 							}
 						}
 						for (int i_bit = 64; i_bit < C; i_bit += 1)
@@ -1420,14 +1455,14 @@ public:
 							int actual_i_bit = i_bit - 64;
 							if (((prev_bv_hi >> actual_i_bit) & 1) != ((curr_bv_hi >> actual_i_bit) & 1))
 							{
-								if(!singlecolor) write_number_at_loc(positions, actual_i_bit, lc, b_it); // i_bit is the different bit loc
+								write_number_at_loc(positions, i_bit, lc, b_it); // i_bit is the different bit loc
 							}
 						}
 					}
 					else
 					{ // CATEGORY=LM
 						
-						if(!singlecolor) write_category(positions, b_it, CATEGORY_COLCLASS, bigD, hd);
+						write_category(positions, b_it, CATEGORY_COLCLASS, bigD, hd);
 						if (useLocal==1)
 						{
 							// if(DEBUG_MODE) cases_smc.fs << "l" << endl;
@@ -1436,18 +1471,18 @@ public:
 							{
 								cout << "trouble" << endl;
 							}
-							if(!singlecolor) write_number_at_loc(positions, localid, ll, b_it);
+							write_number_at_loc(positions, localid, ll, b_it);
 						}
 						else
 						{
 							// if(DEBUG_MODE) cases_smc.fs << "m" << endl;
 							if (USE_HUFFMAN)
 							{
-								if(!singlecolor) write_binary_vector_at_loc(positions, huff_code_map[curr_kmer_cc_id], b_it);
+								write_binary_vector_at_loc(positions, huff_code_map[curr_kmer_cc_id], b_it);
 							}
 							else
 							{
-								if(!singlecolor) write_number_at_loc(positions, curr_kmer_cc_id, lm, b_it);
+								write_number_at_loc(positions, curr_kmer_cc_id, lm, b_it);
 							}
 						}
 					}
@@ -1460,11 +1495,9 @@ public:
 				lm_or_ll = ll;
 
 				// case_lm+=1;
-				if(SINGLE_COLOR_METABIT && singlecolor){
-					write_zero(positions, b_it);
-				}
+
 				//write_number_at_loc(positions, CATEGORY_COLCLASS, 1, b_it);
-				if(!singlecolor) write_category(positions, b_it, CATEGORY_COLCLASS, bigD, 0);
+				write_category(positions, b_it, CATEGORY_COLCLASS, bigD, 0);
 				if (useLocal == 1)
 				{
 					// if(DEBUG_MODE) cases_smc.fs << "l" << endl;
@@ -1473,15 +1506,15 @@ public:
 					{
 						assert(localid == 0);
 					}
-					if(!singlecolor) write_number_at_loc(positions, localid, ll, b_it);
+					write_number_at_loc(positions, localid, ll, b_it);
 				}
 				else
 				{
 					// if(DEBUG_MODE) cases_smc.fs << "m" << endl;
 					if (USE_HUFFMAN==true){
-						if(!singlecolor) write_binary_vector_at_loc(positions, huff_code_map[curr_kmer_cc_id], b_it);
+						write_binary_vector_at_loc(positions, huff_code_map[curr_kmer_cc_id], b_it);
 					}else{
-						if(!singlecolor) write_number_at_loc(positions, curr_kmer_cc_id, lm, b_it);
+						write_number_at_loc(positions, curr_kmer_cc_id, lm, b_it);
 					}	
 					// assert(curr_kmer_cc_id<M && curr_kmer_cc_id>0);
 				}
@@ -1514,7 +1547,7 @@ public:
 							max_run = 256;
 						}
 						lmaxrun = ceil(log2(max_run));
-						if(!singlecolor) write_number_at_loc(positions, (uint64_t)max_run_choice, (uint64_t)1, b_it);
+						write_number_at_loc(positions, (uint64_t)max_run_choice, (uint64_t)1, b_it);
 
 					}
 					int q, rem;
@@ -1522,13 +1555,10 @@ public:
 					rem = skip % max_run;
 					assert(skip == q * max_run + rem); // skip = q*max_run + rem
 					// paul method
-
-					if(!singlecolor) {
-						write_category(positions, b_it, CATEGORY_RUN, bigD, 0);
-						write_unary_one_at_loc(positions, (uint64_t)q, b_it);
-						write_zero(positions, b_it);
-						write_number_at_loc(positions, (uint64_t)rem, (uint64_t)lmaxrun, b_it);
-					}
+					write_category(positions, b_it, CATEGORY_RUN, bigD, 0);
+					write_unary_one_at_loc(positions, (uint64_t)q, b_it);
+					write_zero(positions, b_it);
+					write_number_at_loc(positions, (uint64_t)rem, (uint64_t)lmaxrun, b_it);
 					// my method //100001
 				}
 				skip = 0;
@@ -1537,9 +1567,16 @@ public:
 			prev_bv_lo = curr_bv_lo;
 		}
 
+		// DebugFile positions_out("positions_out");
+		// for (uint64_t tt : positions)
+		// {
+		// 	if(DEBUG_MODE) positions_out.fs << tt << endl;
+		// }
+
+
 		cout << "b_it_size: " << b_it << endl;
 		store_as_sdsl(positions, b_it, "rrr_main");
-		store_as_binarystring(positions, b_it, "bb_main");
+		//store_as_binarystring(positions, b_it, "bb_main");
 	}
 };
 
@@ -1557,7 +1594,7 @@ int main (int argc, char* argv[]){
 	
     for (auto i = args.begin(); i != args.end(); ++i) {
         if (*i == "-h" || *i == "--help") {
-            cout << "Syntax: tool -p debug -i <DE-DUP-bitmatrix> -d <dup-bitmatrix> -c <num-colors> -m <M> -k <num-kmers> -s <spss-bound> -x <max-run>" << endl;
+            cout << "Syntax: tool -g debug -i <DE-DUP-bitmatrix> -d <dup-bitmatrix> -c <num-colors> -m <M> -k <num-kmers> -s <spss-bound> -x <max-run>" << endl;
             return 0;
         } else if (*i == "-i") {
             dedup_bitmatrix_fname = *++i;
@@ -1573,13 +1610,14 @@ int main (int argc, char* argv[]){
             spss_boundary_fname = *++i;
 		}else if (*i == "-x") {
             max_run = std::stoi(*++i);
-		}else if (*i == "-p") {
+		}else if (*i == "-g") {
             NEW_DEBUG_MODE = true;
 		}
 		// else if (*i == "-t") {
         //     tmp_dir  = *++i;
 		// }
     }
+	max_run = 16;
 
 	COLESS coless(num_kmers, M, C, dedup_bitmatrix_fname, dup_bitmatrix_fname, spss_boundary_fname, max_run);
 	
@@ -1592,6 +1630,6 @@ int main (int argc, char* argv[]){
 		coless.method1_pass2();
 		time_end("pass2.");
 	}
-	//COLESS_Decompress cdec(num_kmers, M, C);
+
 	return EXIT_SUCCESS;
 }

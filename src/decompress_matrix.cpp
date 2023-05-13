@@ -1,5 +1,5 @@
 //version: mar 1: trying to fix gut
-#define VERSION_NAME "APR21,LIMITBITS_FOR_LOCAL_PLUS_SINGLE"
+#define VERSION_NAME "APR11,FIXING_GUT DECOM; stream read"
 #include<cmph.h> //#include "BooPHF.h"
 #include<csignal>
 #include <stdio.h>
@@ -23,13 +23,12 @@
 #include <iostream>
 #include<sstream>
 
+#include<unistd.h>
+
 using namespace std;
 using namespace sdsl;
 
 const int MAX_BUFFER_STRING=2048;
-
-
-
 uint64_t written_kmer = 0;
 #include <unordered_map>
 
@@ -42,9 +41,6 @@ uint64_t CATEGORY_COLVEC_TWO = (uint64_t) 5; //101
 
 bool TESTING_SPEED=false;
 bool DEBUG_MODE = false;
-const bool SINGLE_COLOR_METABIT = false; //if persimplitig_L == 1, force bigD=1, skip=0
-const bool USE_MAX_UNIQ_CLASS_PER_SIMP = false;
-const int MAX_UNIQ_CLASS_PER_SIMP=8;
 
 namespace TimeMeasure
 {
@@ -492,17 +488,15 @@ public:
     int l_of_curr_simplitig;
     char per_simplitig_use_local_id;
     uint64_t per_simplitig_bigD;
-    char singlecolor;
-
     
     bool USE_LOCAL_TABLE = true;
     bool USE_HUFFMAN = true;
     bool ALWAYS_LOCAL_OR_GLOBAL = false;
 
-    OutputFile combodebug;
-    OutputFile errordebug;
+ 
 
     COLESS_Decompress(uint64_t num_kmers, int M, int C, string spss_boundary_fname, int max_run)
+    
     {
         this->num_kmers = num_kmers;
         this->C = C;
@@ -513,14 +507,23 @@ public:
         lm = ceil(log2(M));
         lc = ceil(log2(C));
 
-        global_table = new string[M];
+        //global_table = new string[M];
 
         dec_ess_color.init("dec_ess_color");
         spss_boundary_file.init(spss_boundary_fname);
-
-        if(DEBUG_MODE) combodebug.init("combodebug");
-        if(DEBUG_MODE) errordebug.init("errordebug");
-
+    }
+    COLESS_Decompress()
+    
+    {
+        max_run = 16;
+        dec_ess_color.init("dec_ess_color");
+    }
+    void dump_rrr_into_bb(string rrr_filename, string bb_file){
+        rrr_vector<256> rrr_bv;      
+        load_from_file(rrr_bv, rrr_filename);  //sdsl namespace
+        std::ofstream out(bb_file);
+        out << rrr_bv;
+        out.close();
     }
 
     void load_rrr_into_string(string rrr_filename, string &where_to_load){
@@ -604,29 +607,74 @@ public:
     }
 
 
-    void read_local_hash_table_per_simplitig(BlockStream& bs_local){
-        per_simplitig_bigD = bs_local.read_uint(2); //0, 1, 2
-        singlecolor = '0';
-        if(SINGLE_COLOR_METABIT){
-            singlecolor = bs_local.read_one_bit();
-        } 
-        if(singlecolor=='1'){
-            local_hash_table = bs_local.read_l_huff_codes(huff_root, 1); //0->(0,M-1), 1->(0,M-1) ... l*lm bits
-        }else{
-            //if(DEBUG_MODE) combodebug.fs<<"curr: " << per_simplitig_bigD<<" "<<per_simplitig_use_local_id<<" ";
-            per_simplitig_use_local_id = bs_local.read_one_bit();
-            if(per_simplitig_use_local_id == '1'){
-                if(USE_MAX_UNIQ_CLASS_PER_SIMP){
-                    l_of_curr_simplitig = bs_local.read_uint(ceil(log2(MAX_UNIQ_CLASS_PER_SIMP)));
+    void get_ess_boundary_vector_from_pos(std::vector<uint64_t>& positions, uint64_t bv_size, vector<char> &vec){
+        //sort(positions.begin(), positions.end());
+        uint64_t bvi = 0;
+        for (uint64_t k = 0; k<bv_size; k++){
+            if(bvi < positions.size()){
+                if(positions[bvi]==k){
+                    vec[k]='1';
+                    bvi++;
                 }else{
-                    l_of_curr_simplitig = bs_local.read_uint(lm);
-                } 
-                //int ll = ceil(log2(l));
-                local_hash_table = bs_local.read_l_huff_codes(huff_root, l_of_curr_simplitig); //0->(0,M-1), 1->(0,M-1) ... l*lm bits
-                if(DEBUG_MODE)  cout<<l_of_curr_simplitig;
-            }
-            //if(DEBUG_MODE)  combodebug.fs<<endl;
+                    vec[k]='0';
+                }
+            }else{
+                vec[k]='0';
+            }	
         }
+    }
+    vector<char> get_ess_boundary_from_essd(string megaessd, int num_simplitig, int kmer_size, uint64_t num_kmers ){
+        ifstream is(megaessd);
+        vector<uint64_t> ess_boundary_vector;
+        ess_boundary_vector.push_back(0);
+        num_kmers = 0;
+        num_simplitig=0;
+        
+        uint64_t last_written_pos = 0;
+        string sequence;
+        while (!is.eof()) {
+            std::getline(is, sequence);  // header sequence
+            std::getline(is, sequence);  // DNA sequence
+            uint64_t numkmer_in_simplitig = sequence.size() - kmer_size + 1;
+            last_written_pos += numkmer_in_simplitig;
+            ess_boundary_vector.push_back(last_written_pos);
+            num_simplitig+=1;
+        }
+        uint64_t boundary_num_kmer = ess_boundary_vector.back();
+        num_kmers = boundary_num_kmer;
+        ess_boundary_vector.pop_back();
+        vector<char> vec(boundary_num_kmer);
+        get_ess_boundary_vector_from_pos(ess_boundary_vector, boundary_num_kmer, vec);
+        return vec;
+    }
+    void read_meta(string file_meta, int& kmer_size, int& num_colors){
+        ifstream is(file_meta);
+        string line;
+        getline(is, line);
+        kmer_size = stoi(line);
+        num_colors = 0;
+        while(getline(is, line)){
+            num_colors++;
+        }
+        is.close();
+    }
+
+
+    void read_local_hash_table_per_simplitig(BlockStream& bs_local){
+        per_simplitig_bigD = bs_local.read_uint(2); //0, 1, 2 
+        per_simplitig_use_local_id = bs_local.read_one_bit();
+        
+        if(DEBUG_MODE) cout<<"curr: " << per_simplitig_bigD<<" "<<per_simplitig_use_local_id<<" ";
+        
+        if(per_simplitig_use_local_id == '1'){
+            l_of_curr_simplitig = bs_local.read_uint(lm);
+            //int ll = ceil(log2(l));
+            local_hash_table = bs_local.read_l_huff_codes(huff_root, l_of_curr_simplitig); //0->(0,M-1), 1->(0,M-1) ... l*lm bits
+            if(DEBUG_MODE)  cout<<l_of_curr_simplitig;
+        }else{
+            
+        }
+        if(DEBUG_MODE)  cout<<endl;
     }
 
     bool start_of_simplitig(uint64_t written_kmer_idx){
@@ -651,8 +699,7 @@ public:
             //     read_local_hash_table_per_simplitig(str_local, b_it_local);
             // }
             written_kmer+=1;
-            if(DEBUG_MODE) combodebug.fs<<"curr: " << per_simplitig_bigD<<" "<<per_simplitig_use_local_id<<endl;
-            if(DEBUG_MODE) errordebug.fs << "d"<<endl;
+            
             differ_run.clear();
         }         
     }
@@ -704,42 +751,93 @@ public:
 
     void run()
     {   
+        dump_rrr_into_bb("rrr_main", "bb_main");
+        dump_rrr_into_bb("rrr_map", "bb_map");
+        dump_rrr_into_bb("rrr_local_table", "bb_local_table");
+       
 
         BlockStream bs_main("bb_main");
         time_start();
         huff_root = build_huff_tree();
-
-        BlockStream bs_map("bb_map");
         DebugFile color_global("color_global"); //M color vectors //DEBUGFILE
-        for (int i = 0; i < M; i++)
-        {
-            char* col_vector = new char[C+1];
-            col_vector[C] = '\0';
-            bs_map.read_string_of_length(col_vector, C);
-            if(DEBUG_MODE) {
-              color_global.fs << col_vector << endl;
-             //color_global.fs.write(reinterpret_cast<char*>(&col_vector), sizeof(col_vector));
-            
+        
+        bool USING_NONMST=true;
+        if(!USING_NONMST){
+
+            BlockStream bs_map("bb_map");
+            global_table = new string[M];
+            for (int i = 0; i < M; i++)
+            {
+                char* col_vector = new char[C+1];
+                col_vector[C] = '\0';
+                bs_map.read_string_of_length(col_vector, C);
+                if(DEBUG_MODE) {
+                    color_global.fs << col_vector << endl;
+                    //color_global.fs.write(reinterpret_cast<char*>(&col_vector), sizeof(col_vector));
+                }
+                global_table[i] = string(col_vector);
+                delete col_vector;
             }
-            
-                
-            global_table[i] = string(col_vector);
-            delete col_vector;
+            color_global.fs.close();
+            cout<<"Global table done."<<endl;
         }
-        color_global.fs.close();
-        cout<<"Globbal table done."<<endl;
+        if(USING_NONMST){
+            int lc =ceil(log2(C));
+            rrr_vector<256> rrr_map_hd_boundary;      
+            load_from_file(rrr_map_hd_boundary, "rrr_map_hd_boundary");  //sdsl namespace
+    
+            string last_colvector(C, '0');
+            //dump_rrr_into_bb("rrr_map_hd_boundary", "bb_map_hd_boundary");
+            dump_rrr_into_bb("rrr_map_hd", "bb_map_hd");
+            BlockStream bs_map_hd("bb_map_hd");
+    
+            size_t ones = rrr_vector<256>::rank_1_type(&rrr_map_hd_boundary)(rrr_map_hd_boundary.size()); 
+            rrr_vector<256>::select_1_type rrr_hd_sel(&rrr_map_hd_boundary);
+            M = ones;
+            global_table = new string[M];
+            lm = ceil(log2(M));
+            lc = ceil(log2(C));
+            
+            size_t prev_begin = 0;
+            for (size_t i=1; i <= M; ++i){
+                size_t prev_end = rrr_hd_sel(i);
+                size_t block_len = prev_end - prev_begin + 1;
+                size_t numblocks = (block_len / lc);
+                //howmanydelta = (pos+1)/lc;
+                vector<int> flip_loc;
+                while(numblocks){
+                    uint64_t fliploc = bs_map_hd.read_uint(lc);
+                    if(last_colvector[fliploc]=='1'){
+                        last_colvector[fliploc] = '0';
+                    }else{
+                        last_colvector[fliploc] = '1';
+                    }
+                    numblocks--;
+                }
+                global_table[i] = last_colvector;
+                if(DEBUG_MODE) {
+                    color_global.fs << last_colvector << endl;
+                }
+                prev_begin = prev_end+1;
+            }
+            cout<<"Global table done (NONMST)."<<endl;
+
+        }
         //exit(0);
         int num_simplitig = 0;
         // Load SPSS boundary file
         time_start();
-        for (uint64_t i=0; i < num_kmers; i+=1){ //load spss_boundary vector in memory from disk
-			string spss_line;
-			getline (spss_boundary_file.fs,spss_line); 
-			spss_boundary.push_back(spss_line[0]); //this kmer starts a simplitig
-            if(spss_line[0]=='1'){
-                num_simplitig+=1;
-            }
-		}
+        // for (uint64_t i=0; i < num_kmers; i+=1){ //load spss_boundary vector in memory from disk
+		// 	string spss_line;
+		// 	getline (spss_boundary_file.fs,spss_line); 
+		// 	spss_boundary.push_back(spss_line[0]); //this kmer starts a simplitig
+        //     if(spss_line[0]=='1'){
+        //         num_simplitig+=1;
+        //     }
+		// }
+        int kmer_size;
+        read_meta("meta.txt", kmer_size, C);
+        spss_boundary = get_ess_boundary_from_essd("mega.essd", num_simplitig, kmer_size, num_kmers);
         time_end("SPSS boundary read "+to_string(num_kmers)+" bits.");
 
         //read local table, 
@@ -748,8 +846,6 @@ public:
         // time_start();
         // create_table(color_global.filename, M);
         // time_end("CMPH table create for "+to_string(M)+" keys.");
-
-        
 
         vector<int> differ_run;
         string last_col_vector = "";
@@ -762,14 +858,7 @@ public:
                 if(start_of_simplitig(written_kmer)){ 
                     read_local_hash_table_per_simplitig(bs_local); //changes l_of_curr_simplitig
                 }
-                if(singlecolor=='1'){
-                    do{
-                        int col_class = local_hash_table[0]; 
-                        last_col_vector = global_table[col_class];
-                        if(!TESTING_SPEED) dec_ess_color.fs << last_col_vector << endl;
-                        written_kmer+=1;
-                    }while(!end_of_simplitig(written_kmer-1));
-                }else if(per_simplitig_use_local_id == '1'){//using local table
+                if(per_simplitig_use_local_id == '1'){//using local table
                     int local_id = 0;
                     if(ceil(log2(l_of_curr_simplitig)) != 0){
                        local_id = bs_main.read_uint(ceil(log2(l_of_curr_simplitig)));
@@ -779,9 +868,6 @@ public:
                     last_col_vector = global_table[col_class];
                     if(!TESTING_SPEED) dec_ess_color.fs << last_col_vector << endl;
                     written_kmer+=1;
-
-                    if(DEBUG_MODE) combodebug.fs<<"curr: " << per_simplitig_bigD<<" "<<per_simplitig_use_local_id<<endl;
-                    if(DEBUG_MODE) errordebug.fs << "l"<<endl;
                 }else{
                     if(USE_HUFFMAN==false){
                         uint64_t col_class = bs_main.read_uint(lm);
@@ -794,9 +880,6 @@ public:
                         last_col_vector = global_table[col_class];
                         if(!TESTING_SPEED) dec_ess_color.fs << last_col_vector << endl;
                         written_kmer+=1;
-                        if(DEBUG_MODE) combodebug.fs<<"curr: " << per_simplitig_bigD<<" "<<per_simplitig_use_local_id<<endl;
-
-                        if(DEBUG_MODE) errordebug.fs << "m"<<endl;
                     }
                 }
             }
@@ -821,8 +904,6 @@ public:
                         {
                             if(!TESTING_SPEED) dec_ess_color.fs << last_col_vector << endl;
                             written_kmer+=1;
-                            if(DEBUG_MODE) combodebug.fs<<"curr: " << per_simplitig_bigD<<" "<<per_simplitig_use_local_id<<endl;
-                            if(DEBUG_MODE) errordebug.fs << "r"<<endl;
                             skip--;
                         }
                     }
@@ -870,37 +951,49 @@ int main (int argc, char* argv[]){
 	cout<<"Version: "<<VERSION_NAME<<endl;
 
 	vector<string> args(argv + 1, argv + argc);
-    string dedup_bitmatrix_fname, dup_bitmatrix_fname, spss_boundary_fname; //string tmp_dir;
+    //string dedup_bitmatrix_fname, dup_bitmatrix_fname, spss_boundary_fname; //string tmp_dir;
+    string folder_name;
     int M, C;
     int max_run = 16;
 	uint64_t num_kmers=0;
     for (auto i = args.begin(); i != args.end(); ++i) {
         if (*i == "-h" || *i == "--help") {
-            cout << "Syntax: tool -i <DE-DUP-bitmatrix> -d <dup-bitmatrix> -c <num-colors> -m <M> -k <num-kmers> -s <spss-bound> -x <max-run> -p <debug-mode>" << endl;
+            cout << "Syntax: decompress -i <folder with mega.essd, meta.txt>" << endl;
+            //meta gives kmer_size, colors, max_run
+            //cout << "Syntax: tool -i <DE-DUP-bitmatrix> -d <dup-bitmatrix> -c <num-colors> -m <M> -k <num-kmers> -s <spss-bound> -x <max-run> -p <debug-mode>" << endl;
             return 0;
         } else if (*i == "-i") {
-            dedup_bitmatrix_fname = *++i;
-        } else if (*i == "-d") {
-            dup_bitmatrix_fname = *++i;
-        }else if (*i == "-c") {
-            C = std::stoi(*++i);
-        }else if (*i == "-m") {
-            M = std::stoi(*++i);
-        }else if (*i == "-k") {
-            num_kmers = std::stol(*++i);
-        }else if (*i == "-s") {
-            spss_boundary_fname = *++i;
-		}else if (*i == "-x") {
-            max_run = std::stoi(*++i);
-		}else if (*i == "-p") {
-            DEBUG_MODE = true;
-		}
-		// else if (*i == "-t") {
-        //     tmp_dir  = *++i;
+            folder_name = *++i;
+        } 
+        // if (*i == "-h" || *i == "--help") {
+        //     cout << "Syntax: decompress -i <folder>" << endl;
+        //     //meta gives kmer_size, colors, max_run
+        //     cout << "Syntax: tool -i <DE-DUP-bitmatrix> -d <dup-bitmatrix> -c <num-colors> -m <M> -k <num-kmers> -s <spss-bound> -x <max-run> -p <debug-mode>" << endl;
+        //     return 0;
+        // } else if (*i == "-i") {
+        //     dedup_bitmatrix_fname = *++i;
+        // } else if (*i == "-d") {
+        //     dup_bitmatrix_fname = *++i;
+        // }else if (*i == "-c") {
+        //     C = std::stoi(*++i);
+        // }else if (*i == "-m") {
+        //     M = std::stoi(*++i);
+        // }else if (*i == "-k") {
+        //     num_kmers = std::stol(*++i);
+        // }else if (*i == "-s") {
+        //     spss_boundary_fname = *++i;
+		// }else if (*i == "-x") {
+        //     max_run = std::stoi(*++i);
+		// }else if (*i == "-p") {
+        //     DEBUG_MODE = true;
 		// }
+		// // else if (*i == "-t") {
+        // //     tmp_dir  = *++i;
+		// // }
     }
-
-    COLESS_Decompress cdec(num_kmers, M, C,  spss_boundary_fname, max_run);
+    chdir(folder_name.c_str());
+    //COLESS_Decompress cdec(num_kmers, M, C,  spss_boundary_fname, max_run);
+    COLESS_Decompress cdec;
     
     //cdec.test_run();
     cdec.run();
