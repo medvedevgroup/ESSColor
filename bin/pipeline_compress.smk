@@ -486,7 +486,8 @@ if config['unitig'] == 'ggcat':
             "benchmarks/f_to_ggcatess.txt"
         output:
             temp("gg_unitigs.fa"),
-            temp("gg_unitigs.stats.log")
+            temp("gg_unitigs.stats.log"),
+            temp("kb_sec_ggcat_build")
         shell:
             "/usr/bin/time  -f \"%M %e %U %S\" --output-file=kb_sec_ggcat_build ggcat build -k {params.k} -j 8 -l list_fa -o gg_unitigs.fa -s{params.ab} -p -e"
     
