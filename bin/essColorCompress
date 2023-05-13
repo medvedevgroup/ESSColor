@@ -14,8 +14,13 @@ echo $save_arg
 nthreads=8
 
 cmd=""
-while getopts ':i:k:o:j:h' opt; do
+while getopts ':a:i:k:o:j:h' opt; do
   case "$opt" in
+    a)
+      echo "Processing option 'a'"
+      ab=${OPTARG}
+      cmd=$(echo $cmd" -a "$ab)
+      ;;
     j)
       echo "Processing option 'j'"
       nthreads=${OPTARG}

@@ -1,8 +1,16 @@
 configfile: "config.yaml"
+KMER_SIZE = config["k"]
 SAMPLES = config["SAMPLES"]
 EXTENSION=config["EXTENSION"]
 
 import os
+
+
+def dump_meta(lst, ext, filename="meta.txt"):
+    with open(filename, 'w') as f:
+        f.write(f"{KMER_SIZE}\n")
+        for line in lst:
+            f.write(f"{line}{ext}\n")
 
 def dump_list(lst, ext, filename):
     with open(filename, 'w') as f:
@@ -263,7 +271,7 @@ if config['matrix_generator'] == 'jc':
             "jc_matrix.tsv"
         params:
             l=concat_list_kmers(SAMPLES),
-            l2=dump_list(SAMPLES, EXTENSION, "meta.txt"),
+            l2=dump_meta(SAMPLES, EXTENSION, "meta.txt"),
         benchmark:
             "benchmarks/joincounts.txt"
         shell:
@@ -305,7 +313,7 @@ if config['matrix_generator'] == 'genmatrix':
 
         params:
             l=dump_list(SAMPLES, ".kmc", "list_kmc"),
-            l2=dump_list(SAMPLES, EXTENSION, "meta.txt"),
+            l2=dump_meta(SAMPLES, EXTENSION, "meta.txt"),
             k=config["k"],
         benchmark:
             "benchmarks/genmatrix.txt"
