@@ -14,4 +14,4 @@ target_include_directories(essc_lib
     PUBLIC
     ./
 )
-target_link_libraries(essc_lib kmcapi)
+target_link_libraries(essc_lib kmcapi sshash_static z)

@@ -1,5 +1,7 @@
-//version: feb 6:pausing the combo
-#include<cmph.h> //#include "BooPHF.h"
+//version: mar 1: trying to fix gut
+
+#define VERSION_NAME "APR4, k=23"
+#include <cmph.h> 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -30,7 +32,81 @@ using namespace sdsl;
 
 #include <unordered_map>
 
-const bool DEBUG_MODE = false;
+const bool USE_TEST_METHOD = false;
+bool NEW_DEBUG_MODE = false;
+bool DEBUG_MODE = false;
+
+
+// namespace BinaryIO
+// {
+// 	if constexpr (std::endian::native == std::endian::big)
+// 	{
+// 		// Big-endian system
+// 	}
+// 	else if constexpr (std::endian::native == std::endian::little)
+// 	{
+// 		// Little-endian system
+// 	}
+// 	else
+// 	{
+// 		// Something else
+// 	}
+
+// 	void write_binary_from_pos(uint8_t* bitvector, vector<uint64_t>& positions, uint64_t &b_it);
+// 		int num_blocks_req = ceil(b_it/8);
+
+// 		//little endian (lo=0,hi=num_blocks_req-1)
+// 		for(int i = 0; i<num_blocks_req; i++){
+// 			bitvector[i] = 0x00;
+// 		}
+// 	}
+	
+
+// 	void to_kmer_binary_file(const std::string& outfile, vector<uint64_t> his, vector<uint64_t> los)
+// 	{
+// 		ofstream out(outfile, ios::out | ios::binary);
+
+// 		uint8_t array[8];
+
+// 		// k value
+// 		array[0] =  this->k        & 0xFF;
+// 		array[1] = (this->k >>  8) & 0xFF;
+// 		array[2] = (this->k >> 16) & 0xFF;
+// 		array[3] = (this->k >> 24) & 0xFF;
+// 		array[4] = (this->k >> 32) & 0xFF;
+// 		array[5] = (this->k >> 40) & 0xFF;
+// 		array[6] = (this->k >> 48) & 0xFF;
+// 		array[7] = (this->k >> 56) & 0xFF;
+// 		out.write((char *)array, 8);
+
+// 		// number of kmers
+// 		array[0] =  this->kmers.size()        & 0xFF;
+// 		array[1] = (this->kmers.size() >>  8) & 0xFF;
+// 		array[2] = (this->kmers.size() >> 16) & 0xFF;
+// 		array[3] = (this->kmers.size() >> 24) & 0xFF;
+// 		array[4] = (this->kmers.size() >> 32) & 0xFF;
+// 		array[5] = (this->kmers.size() >> 40) & 0xFF;
+// 		array[6] = (this->kmers.size() >> 48) & 0xFF;
+// 		array[7] = (this->kmers.size() >> 56) & 0xFF;
+// 		out.write((char *)array, 8);
+
+// 		for (const uint64_t kmer : this->kmers)
+// 		{
+// 			array[0] =  kmer        & 0xFF;
+// 			array[1] = (kmer >>  8) & 0xFF;
+// 			array[2] = (kmer >> 16) & 0xFF;
+// 			array[3] = (kmer >> 24) & 0xFF;
+// 			array[4] = (kmer >> 32) & 0xFF;
+// 			array[5] = (kmer >> 40) & 0xFF;
+// 			array[6] = (kmer >> 48) & 0xFF;
+// 			array[7] = (kmer >> 56) & 0xFF;
+// 			out.write((char *)array, 8);
+// 		}
+
+// 		out.close();
+// 	}
+	
+// } using namespace BinaryIO;
 
 namespace TimeMeasure
 {
@@ -235,6 +311,73 @@ namespace CMPH{
 using namespace CMPH;
 
 
+// namespace BPHF{
+
+//     typedef boomphf::SingleHashFunctor<uint64_t>  hasher_t;
+//     typedef boomphf::mphf<  uint64_t, hasher_t  > boophf_t;
+// 		 boophf_t * bphf; 
+//     // void construct_bphf_table( int *& data, int nelem, boophf_t * &bphf ){
+//     //     int nthreads = 8;
+//     //     double t_begin,t_end; struct timeval timet;
+//     //     printf("Construct a BooPHF with  %lli elements  \n",nelem);
+//     //     gettimeofday(&timet, NULL); t_begin = timet.tv_sec +(timet.tv_usec/1000000.0);
+//     //     auto data_iterator = boomphf::range(static_cast<const int*>(data), static_cast<const int*>(data+nelem));
+//     //     double gammaFactor = 7.0; // lowest bit/elem is achieved with gamma=1, higher values lead to larger mphf but faster construction/query
+//     //     bphf = new boomphf::mphf<int,hasher_t>(nelem,data_iterator,nthreads,gammaFactor);
+//     //     gettimeofday(&timet, NULL); t_end = timet.tv_sec +(timet.tv_usec/1000000.0);	
+//     //     printf("BooPHF constructed perfect hash for %llu keys in %.2fs\n", nelem,t_end - t_begin);
+//     // }
+
+// 	void create_table(string filename, int nelem ){
+// 		InputFile infile(filename);
+// 		uint64_t* data = (uint64_t * ) calloc(nelem,sizeof(uint64_t));
+// 		string bv_line;
+// 		int i = 0;
+// 		while (getline(infile.fs,bv_line )){
+// 			data[i++] = std::stoull(bv_line, nullptr, 2) ;
+// 		}
+// 		int nthreads = 8;
+//         //double t_begin,t_end; struct timeval timet;
+//         printf("Construct a BooPHF with  %lli elements  \n",nelem);
+//         //gettimeofday(&timet, NULL); t_begin = timet.tv_sec +(timet.tv_usec/1000000.0);
+//         auto data_iterator = boomphf::range(static_cast<const uint64_t*>(data), static_cast<const uint64_t*>(data+nelem));
+//         double gammaFactor = 7.0; // lowest bit/elem is achieved with gamma=1, higher values lead to larger mphf but faster construction/query
+//         bphf = new boomphf::mphf<uint64_t,hasher_t>(nelem,data_iterator,nthreads,gammaFactor);
+        
+// 		//gettimeofday(&timet, NULL); t_end = timet.tv_sec +(timet.tv_usec/1000000.0);	
+//         //printf("BooPHF constructed perfect hash for %llu keys in %.2fs\n", nelem,t_end - t_begin);
+// 	}
+
+// 	unsigned int lookup(string str){	
+// 		return bphf->lookup(std::stoull(str, nullptr, 2));
+// 	}
+
+// 	void mphf_destroy(){
+// 		delete bphf;
+// 	}
+// }   
+//using namespace BPHF; 
+
+//sort -T=~/s/tmp/ export TMPDIR=/tmp
+//position uint64_t
+
+
+	// uint64_t write_block(int block_sz, uint8_t category, int value, vector<int>& positions){
+	// 	uint64_t b_it = 0;
+	// 	write_number_at_loc(positions, num, block_size, b_it);
+
+	// 	//write category
+	// 	if(category==0){ //either log M or log U
+	// 		write_number_at_loc(positions, category, 1, b_it);
+	// 	}else if(category==1){ //log C 
+	// 		write_number_at_loc(positions, category, 2, b_it);
+	// 	}if(category==2){ // RUN of 1
+	// 		write_number_at_loc(positions, category, 2, b_it);
+			
+	// 	}
+	// 	return b_it; // at the end b_it equals size of vector
+	// }
+
 typedef std::vector<bool> HuffCode;
 typedef std::map<u_int32_t, HuffCode> HuffCodeMap;
 
@@ -394,9 +537,7 @@ using namespace Huffman;
 class COLESS{
 public:
 	InputFile dedup_bitmatrix_file, spss_boundary_file, dup_bitmatrix_file;
-	
-	
-	DebugFile logfile_main;
+
 	DebugFile debug1;
 	DebugFile debug2;
 	DebugFile all_ls;
@@ -405,6 +546,8 @@ public:
 	int M;
 	int C;
 	int max_run = 16;
+	int lmaxrun;
+	int max_run_choice = 1;
 	vector<uint64_t> positions;
 	HuffCodeMap huff_code_map;
 	uint64_t CATEGORY_RUN=(uint64_t) 3;
@@ -416,7 +559,7 @@ public:
 
 	int lm = 0;
 	int lc = 0;
-	string* global_table;
+	//string* global_table;
 
 
 	int* per_simplitig_l;
@@ -427,9 +570,6 @@ public:
 
 	//bool* per_simplitig_use_local;
 	//int* per_simplitig_bigD;
-
-	unsigned int* cc_ids;
-	int* hds;
 
 	
 	//per_simplitig_d
@@ -455,11 +595,10 @@ public:
 		this->lc = ceil(log2(C));
 
 		num_simplitig = 0;
-		logfile_main.init("log_coless");
-		debug1.init("debug1");
-		debug2.init("debug2");
+		if(DEBUG_MODE) debug1.init("debug1");
+		if(DEBUG_MODE) debug2.init("debug2");
 
-		all_ls.init("all_ls");
+		if(DEBUG_MODE) all_ls.init("all_ls");
 		
 
 	}
@@ -473,8 +612,6 @@ public:
 		delete per_simplitig_optimal_useLocal;
 		delete per_simplitig_optimal_space;
 		//delete global_table;
-		delete cc_ids;
-		delete hds;
 	}
 
 	// template <typename T> void dump_to_disk(T& vec, uint64_t last_written_pos, fstream fs)
@@ -532,7 +669,7 @@ public:
 			qpositions.pop();
 		}
 
-		if(DEBUG_MODE) debug1.fs<<-j<<" "<<block_sz<<endl;
+		// if(DEBUG_MODE) debug1.fs<<-j<<" "<<block_sz<<endl;
 		if (j > block_sz){
 			cout<<"error in block"<<endl;
 		}
@@ -616,7 +753,7 @@ public:
 			bv[p] = 1;
 		}
 		if(filename=="rrr_main"){
-			if(DEBUG_MODE) debug2.fs<<bv;
+			//if(DEBUG_MODE) debug2.fs<<bv;
 		}
 		rrr_vector<256> rrr_bv(bv);
 		//cout << "rrr_MB_bv_mapping="<<size_in_bytes(rrr_bv_mapping)/1024.0/1024.0 << endl;
@@ -643,6 +780,90 @@ public:
 		}
 	}
 
+	void store_NONMST_global(){
+		ifstream uniq_ms(dedup_bitmatrix_file.filename);
+		string hd_line;
+		
+		vector<uint64_t> positions;
+		uint64_t b_it = 0;
+
+		vector<uint64_t> positions_hd;
+		uint64_t b_it_hd = 0;
+
+		uint64_t zero_64bit = 0;
+		uint64_t prev_lo = 0;
+		uint64_t prev_hi = 0;
+
+		//global_table = new string[M];
+		int hdsum = 0;
+		for(int i = 0 ; i< M; i++){
+			string uniq_ms_line;
+			getline(uniq_ms, uniq_ms_line);
+
+			////
+			////
+			//unsigned int idx = lookup(uniq_ms_line);		// returns an if in range (0 to M-1) 
+			//assert(idx < M);
+			//global_table[idx] = uniq_ms_line;
+			//assert(x==idx);
+			////
+			////
+			uint64_t lo = std::stoull(uniq_ms_line.substr(0,std::min(64,int(C))), nullptr, 2) ; 
+			// if(i==0){
+			//     write_number_at_loc(positions_hd, lo, min(64, C), b_it_hd ); 
+			// }
+
+			uint64_t hi = 0;
+			if(C > 64){
+				string ss = uniq_ms_line.substr(64,(C-64));
+				hi  = std::stoull(ss, nullptr, 2);
+				// if(i==0){
+				//     write_number_at_loc(positions_hd, hi, C-64, b_it_hd ); 
+				// }
+			}
+
+			//int hd = hammingDistance(hi, zero_64bit) + hammingDistance(lo, zero_64bit);
+			//g.addEdge(i, M, hd); //M th entry is all zero, 0 to M-1 entry is non zero
+			if(true){ //i!=0
+				int hd_prev = hammingDistance(hi, prev_hi) + hammingDistance(lo, prev_lo);
+				hdsum += hd_prev;
+				int lc = ceil(log2(C));
+				for (int i_bit = 0; i_bit < 64 && i_bit < C; i_bit += 1)
+				{
+					if (((prev_lo >> i_bit) & 1) != ((lo >> i_bit) & 1))
+					{       
+						write_number_at_loc(positions_hd, i_bit, lc, b_it_hd); // i_bit is the different bit loc
+					}
+				}
+				for (int i_bit = 64; i_bit < C; i_bit += 1)
+				{
+					int actual_i_bit = i_bit - 64;
+					if (((prev_hi >> actual_i_bit) & 1) != ((hi >> actual_i_bit) & 1))
+					{
+						write_number_at_loc(positions_hd, i_bit, lc, b_it_hd); // i_bit is the different bit loc
+					}
+				}
+				// for(int ii = 0; ii< (hd_prev*lc)-1; ii++){
+				//     write_zero(positions, b_it); // i_bit is the different bit loc
+				// }
+				// write_one(positions, b_it); // i_bit is the different bit loc
+				if(hd_prev!=0){
+					b_it+=hd_prev*lc-1;
+					write_one(positions, b_it);
+				}
+				//if(i!=0) g.addEdge(i, i-1, hd_prev);
+			}
+			prev_lo=lo;
+			prev_hi=hi;
+		}
+		uniq_ms.close();
+
+		store_as_sdsl(positions_hd, b_it_hd, "rrr_map_hd" );	
+		//write_binary_bv_from_pos_vector( positions_hd, b_it_hd, "rrr_map_hd" );
+		store_as_sdsl(positions, b_it, "rrr_map_hd_boundary" );	
+
+	}
+
 	void store_global_color_class_table(){
 		vector<uint64_t> positions;  //wasteful
 		uint64_t b_it = 0;
@@ -652,14 +873,14 @@ public:
 
 		//LogFile log_num_color_in_class;
 		//log_num_color_in_class.init("log_num_color_in_class"); 
-		
-		global_table = new string[M];
+		dedup_bitmatrix_file.rewind();
+		//global_table = new string[M];
 		for(int x=0; x<M; x++){
 			string bv_line;
 			getline(dedup_bitmatrix_file.fs, bv_line);
 			unsigned int idx = lookup(bv_line);		// returns an if in range (0 to M-1) 
 			assert(idx < M);
-			global_table[idx] = bv_line;
+			//global_table[idx] = bv_line;
 			assert(x==idx);
 
 			array_lo[idx] = std::stoull(bv_line.substr(0,std::min(64,int(C))), nullptr, 2) ; 
@@ -679,7 +900,7 @@ public:
 		}
 		dedup_bitmatrix_file.fs.close();
 
-		store_as_binarystring(positions, b_it, "bb_map" );
+		//store_as_binarystring(positions, b_it, "bb_map" );
 		store_as_sdsl(positions, b_it, "rrr_map" );
 
 		cout << "expected_MB_bv_mapping="<<(C*M)/8.0/1024.0/1024.0 << endl;
@@ -688,52 +909,76 @@ public:
 		delete array_lo;
 	}
 
+	void method1_pass1_new(){
 
-	void method1_pass0(){ //load_huffman_table();//int M -> variable string   //writehuffman[in
+	}
+
+	void method1_pass1()
+	{ 
+		string combo_string = "";
+		//DebugFile cases_smc("cases_smc");
+		//DebugFile debuglll("lll");
+		DebugFile skipper;("skipper");
+		DebugFile debug_combo;
+		
+		if(DEBUG_MODE) skipper.init("skipper");
+		if(DEBUG_MODE) debug_combo.init("combo");
+
 		time_start();
 		create_table(dedup_bitmatrix_file.filename, M );
 		time_end("CMPH constructed perfect hash for "+to_string(M)+" keys.");
 
 		time_start();
-		OutputFile cmp_keys("cmp_keys");  // get frequency count
+		bool skip_global_load=false;
+		if(NEW_DEBUG_MODE==true){
+			skip_global_load=true;
+		}
 		
-		cc_ids = new unsigned int[num_kmers];
-		hds = new int[num_kmers];
-		uint64_t prev_bv_lo = 0;
-		uint64_t prev_bv_hi = 0;
+		//OutputFile cmp_keys;
+		if(skip_global_load==false){
+			//cmp_keys.init("cmp_keys");  // get frequency count
+		}
+
+		
+		vector<uint64_t> frequencies_colclass(M, 0);
+		uint32_t prev_col_class, curr_col_class;
 
 		for (uint64_t i=0; i < num_kmers; i+=1){  // read two files of length num_kmers 
-			string bv_line;
-			getline (dup_bitmatrix_file.fs,bv_line);
-			cc_ids[i] = lookup(bv_line);
-			cmp_keys.fs << cc_ids[i] << endl;
-
-			string spss_line;
+			string spss_line, bv_line;
 			getline (spss_boundary_file.fs,spss_line); 
 			spss_boundary.push_back(spss_line[0]); //this kmer starts a simplitig
-			if(spss_line[0]=='1'){
+			if(skip_global_load==false) getline (dup_bitmatrix_file.fs,bv_line);
+			//if(skip_global_load==false) cmp_keys.fs << lookup(bv_line) <<endl;
+			curr_col_class = lookup(bv_line);
+			
+			if(spss_line[0]=='1'){	//start
 				num_simplitig += 1;
+				if(skip_global_load==false) frequencies_colclass[curr_col_class] +=1;
+			}else{
+				if(prev_col_class!=curr_col_class){
+					if(skip_global_load==false) frequencies_colclass[curr_col_class] +=1;
+				}
 			}
-
-			uint64_t curr_bv_lo = std::stoull(bv_line.substr(0,std::min(64, C)), nullptr, 2);
-			uint64_t curr_bv_hi = 0;
-			if(C >= 64){
-				curr_bv_hi = std::stoull(bv_line.substr(64,bv_line.length()-64), nullptr, 2);
-			} 
-			hds[i] = hammingDistance(prev_bv_hi, curr_bv_hi) + hammingDistance(prev_bv_lo, curr_bv_lo);
-
-			prev_bv_hi = curr_bv_hi;
-			prev_bv_lo = curr_bv_lo;
-
+			prev_col_class = curr_col_class;
 		}
-		time_end("CMPH lookup for "+to_string(num_kmers)+"keys.");
-		cmp_keys.close();
 
+		time_end("CMPH lookup for "+to_string(num_kmers)+"keys.");
+		//if(skip_global_load==false) cmp_keys.close();
+
+		OutputFile outfile_freq("frequency_sorted");
+		for (uint32_t i=0; i < M; i+=1){ 
+			outfile_freq.fs<<frequencies_colclass[i]<<endl;
+		}
+		if(skip_global_load==false){
+			time_start();
+			//system("cat cmp_keys | sort -n | uniq -c | rev | cut -f 2 -d\" \" | rev > frequency_sorted");
+			
+			
+			time_end("Sorting and getting freq for "+to_string(num_kmers)+" keys.");
+		}
 		time_start();
-		system("cat cmp_keys | sort -n | uniq -c | rev | cut -f 2 -d\" \" | rev > frequency_sorted");
-		time_end("Sorting and getting freq for "+to_string(num_kmers)+" keys.");
+		outfile_freq.close();
 		
-		time_start();
 		InputFile infile_freq("frequency_sorted");
 		string line;
 		// Build frequency table
@@ -757,20 +1002,16 @@ public:
 		time_end("Build huffman tree on " +to_string(M)+" values.");
 
 		time_start();
-		store_global_color_class_table();
+		store_NONMST_global();
+		//store_global_color_class_table();
 		time_end("Written global table for "+to_string(M)+" values.");
-	}
 
-	void method1_pass1()
-	{ // decide whether to use local hash table, can skip
+		string bv_line;
+		DebugFile optout;
+		if(DEBUG_MODE) optout.init("optout");
 
-		DebugFile optout("optout");
-
-		
-		int optimal_bigD = 0;
-		// int optimal_space = 999999999;
 		vector<uint32_t> optimal_ht;
-		int lmaxrun = ceil(log2(max_run));
+		lmaxrun = ceil(log2(max_run));
 
 		// per simplitig values
 		Hashtable local_hash_table;
@@ -788,9 +1029,15 @@ public:
 		vector<uint64_t> positions_local_table;
 		uint64_t b_it_local_table = 0;
 		// per kmer values
-		int simplitig_start_id = 0;
+		uint64_t simplitig_start_id = 0;
 		int simplitig_it = 0;
 
+
+		uint64_t prev_bv_lo = 0;
+		uint64_t prev_bv_hi = 0;
+		
+		vector<int> per_simplitig_hd;
+		vector<unsigned int> per_simplitig_curr_kmer_cc_id;
 		per_simplitig_l = new int[num_simplitig];
 		per_simplitig_optimal_useLocal = new int[num_simplitig];
 		per_simplitig_optimal_bigD = new int[num_simplitig];
@@ -803,22 +1050,58 @@ public:
 		//	cout<<"U B C S "<<useLocal<<" "<<bigD<<" "<<curr_kmer_cc_id<<" "<<simplitig_it<<endl;		for (; big_d_local_combo < 6; big_d_local_combo++)
 		int big_d_local_combo = 0;
 		uint64_t it_kmer = 0;
+		uint64_t local_it = 0;
+
+		dup_bitmatrix_file.rewind();
+
+	
 		while (true)
 		{
+			//start with it-kmer 0
+			// if (DEBUG_MODE)
+			// 	all_ls.fs << "Start_bigd"
+			// 			  << " " << big_d_local_combo <<it_kmer<<" "<<simplitig_it<<" " << endl;
+
+			if( big_d_local_combo == 0 && spss_boundary[it_kmer] == '1'){ //start of simp
+				local_it = 0;
+				per_simplitig_hd.clear();
+				per_simplitig_curr_kmer_cc_id.clear();
+
+				while(true){
+					getline (dup_bitmatrix_file.fs,bv_line);
+					uint64_t curr_bv_lo = std::stoull(bv_line.substr(0,std::min(64, C)), nullptr, 2);
+					uint64_t curr_bv_hi = 0;
+					if(C >= 64){
+						curr_bv_hi = std::stoull(bv_line.substr(64,bv_line.length()-64), nullptr, 2);
+					} 
+					if(spss_boundary[it_kmer+local_it]=='0'){ //non-start
+						int hd = hammingDistance(prev_bv_hi, curr_bv_hi) + hammingDistance(prev_bv_lo, curr_bv_lo);
+						per_simplitig_hd.push_back(hd);
+					}
+					unsigned int curr_kmer_cc_id = lookup(bv_line); // uint64_t num = bphf->lookup(curr_bv);
+					per_simplitig_curr_kmer_cc_id.push_back(curr_kmer_cc_id);
+
+					prev_bv_hi = curr_bv_hi;
+					prev_bv_lo = curr_bv_lo;
+					
+					if(spss_boundary[(it_kmer+local_it+1)%num_kmers]=='1'){
+						local_it = 0;
+						break;
+					}
+						
+					local_it++;
+				}	
+			}
 			
-			if (DEBUG_MODE)
-				all_ls.fs << "Start_bigd"
-						  << " " << big_d_local_combo <<it_kmer<<" "<<simplitig_it<<" " << endl;
-
-			int hd = hds[it_kmer];
-			unsigned int curr_kmer_cc_id = cc_ids[it_kmer]; // uint64_t num = bphf->lookup(curr_bv);
-
 			int useLocal = (big_d_local_combo / 3);
 			int bigD = big_d_local_combo % 3;
+			int hd = 0;
+			unsigned int curr_kmer_cc_id = per_simplitig_curr_kmer_cc_id[local_it++];
 
 			//cout << "U B C S " << useLocal << " " << bigD << " " << curr_kmer_cc_id << " " << simplitig_it << endl;
 			if (spss_boundary[it_kmer] == '0')
 			{ // non-start
+				hd = per_simplitig_hd[local_it-2];
 				if (hd == 0)
 				{ // CAT=RUN
 					skip += 1;
@@ -828,12 +1111,32 @@ public:
 				{ // CAT=NRUN
 
 					if(skip!=0){
+						skipper.fs<<skip<<endl;
 						if(bigD==0){
 							sum_skip_space += 1; 
 						}else{
 							sum_skip_space += 2; 
 						}
+						if(USE_TEST_METHOD){
+
+							if(skip <= 4){
+								max_run_choice = 0;
+								max_run =  4;
+							}else if(skip <= 16 ){
+								max_run_choice = 1;
+								max_run = 16;
+							} else if (skip <= 128){
+								max_run_choice = 2;
+								max_run = 128;
+							} else{
+								max_run_choice = 3;
+								max_run = 256;
+							}
+							lmaxrun = ceil(log2(max_run));
+							sum_skip_space += 2;
+						}
 						sum_skip_space += floor(skip / max_run) + 1 + lmaxrun ;
+
 					}
 					skip = 0;
 
@@ -882,13 +1185,19 @@ public:
 			if (spss_boundary[(it_kmer + 1) % num_kmers] == '1')
 			{ // end k-mer of simplitig
 
+				local_it = 0; 
 				int l = -1;
 				int ll = -1;
 
 				if (useLocal == 1)
 				{
+
 					l = local_hash_table.curr_id;
 					ll = ceil(log2(l) * 1.0);
+
+					if(bigD == 0){
+						//debuglll.fs<<simplitig_it<<" "<< l<<endl;
+					}
 					vector<uint32_t> local_ht_arr = local_hash_table.get_array();
 					for (uint32_t i = 0; i < local_hash_table.curr_id; i++)
 					{
@@ -899,10 +1208,29 @@ public:
 
 				
 				if(skip!=0){
+					skipper.fs<<skip<<endl;
+
 					if(bigD==0){
 						sum_skip_space += 1; 
 					}else{
 						sum_skip_space += 2; 
+					}
+					if(USE_TEST_METHOD){
+						if(skip <= 4){
+							max_run_choice = 0;
+							max_run =   4;
+						}else if(skip <= 16 ){
+							max_run_choice = 1;
+							max_run = 16;
+						} else if (skip <= 128){
+							max_run_choice = 2;
+							max_run = 128;
+						} else{
+							max_run_choice = 3;
+							max_run = 256;
+						}
+						lmaxrun = ceil(log2(max_run));
+						sum_skip_space += 2;
 					}
 					sum_skip_space += floor(skip / max_run) + 1 + lmaxrun ;
 				}
@@ -927,9 +1255,7 @@ public:
 					per_simplitig_optimal_space[simplitig_it] = per_simplitig_space_needed;
 					per_simplitig_optimal_bigD[simplitig_it] = bigD;
 					per_simplitig_optimal_useLocal[simplitig_it] = useLocal;
-					
 				}
-
 				
 				case_run = case_lm = case_dlc = 0;
 				sum_length_huff_nonrun = sum_length_huff_uniq_nonrun = sum_dlc_space = sum_skip_space = 0;
@@ -937,6 +1263,7 @@ public:
 				if (big_d_local_combo < 5)
 				{
 					it_kmer = simplitig_start_id;
+					local_it = 0;
 					if(useLocal == 1)
 						local_hash_table.clear();
 					big_d_local_combo++;
@@ -946,6 +1273,7 @@ public:
 				else
 				{
 					//it_kmer++;
+					combo_string+=to_string(simplitig_it)+" "+to_string(per_simplitig_optimal_bigD[simplitig_it])+" "+to_string(per_simplitig_optimal_useLocal[simplitig_it])+"\n";
 					write_number_at_loc(positions_local_table, per_simplitig_optimal_bigD[simplitig_it], 2, b_it_local_table);
 					if (per_simplitig_optimal_useLocal[simplitig_it] == 1)
 					{
@@ -967,12 +1295,13 @@ public:
 
 					
 
-					if(DEBUG_MODE)
-						optout.fs << "curr: simp:"<<simplitig_it<<"bigD:"<< bigD<<" ul:"<<useLocal<< " optbigD:"<< per_simplitig_optimal_bigD[simplitig_it] << " optLocal:" << per_simplitig_optimal_useLocal[simplitig_it] << " opspace:" << per_simplitig_optimal_space[simplitig_it] << endl;
+					// if(DEBUG_MODE)
+					// 	optout.fs << "curr: simp:"<<simplitig_it<<"bigD:"<< bigD<<" ul:"<<useLocal<< " optbigD:"<< per_simplitig_optimal_bigD[simplitig_it] << " optLocal:" << per_simplitig_optimal_useLocal[simplitig_it] << " opspace:" << per_simplitig_optimal_space[simplitig_it] << endl;
 
 					// re-init for new simplitig
 					if(useLocal==1)
 						local_hash_table.clear();
+					
 					simplitig_it += 1;
 
 					if (it_kmer != num_kmers)
@@ -982,14 +1311,15 @@ public:
 				
 			}
 
-			
 			it_kmer++;			
 			if (it_kmer == num_kmers)
 				break;
 		}
 		cout << "b_it_local_table_size: " << b_it_local_table << endl;
-		store_as_binarystring(positions_local_table, b_it_local_table, "bb_local_table");
+		//store_as_binarystring(positions_local_table, b_it_local_table, "bb_local_table");
 		store_as_sdsl(positions_local_table, b_it_local_table, "rrr_local_table");
+		debug_combo.fs<<combo_string;
+
 	}
 
 	void method1_pass2()
@@ -997,7 +1327,9 @@ public:
 		vector<uint64_t> positions;
 		uint64_t b_it = 0;
 		dup_bitmatrix_file.rewind();
-		DebugFile cases_smc("cases_smc");
+		//DebugFile cases_smc("cases_smc");
+		//DebugFile cases_skip("cases_skip");
+
 		uint64_t curr_bv_hi = 0;
 		uint64_t curr_bv_lo = 0;
 		uint64_t prev_bv_hi = 0;
@@ -1005,13 +1337,13 @@ public:
 		uint64_t skip = 0;
 
 		//InputFile cmp_keys("cmp_keys");
-		int simplitig_it = 0;
+		uint64_t simplitig_it = 0;
 		int l = per_simplitig_l[0];
 		int ll = ceil(log2(l));
 		int lm_or_ll;
 		
 		Hashtable local_ht;
-		int lmaxrun = ceil(log2(max_run));
+		lmaxrun = ceil(log2(max_run));
 		for (uint64_t i = 0; i < num_kmers; i += 1)
 		{
 			int bigD = per_simplitig_optimal_bigD[simplitig_it];
@@ -1020,8 +1352,8 @@ public:
 			l = per_simplitig_l[simplitig_it];
 			ll = ceil(log2(l));
 
-			if(DEBUG_MODE)
-				all_ls.fs<<bigD<<" "<<useLocal<<" "<<l<<" "<<ll<<endl;
+			// if(DEBUG_MODE)
+			// 	all_ls.fs<<bigD<<" "<<useLocal<<" "<<l<<" "<<ll<<endl;
 			if (useLocal == 1)
 			{
 				lm_or_ll = ll;
@@ -1042,20 +1374,17 @@ public:
 				curr_bv_hi = std::stoull(bv_line.substr(64, bv_line.length() - 64), nullptr, 2);
 			}
 
-			unsigned int curr_kmer_cc_id = cc_ids[i]; //uint64_t num = bphf->lookup(curr_bv);
-			// string curr_kmer_cc_id_str;
-			// getline(cmp_keys.fs, curr_kmer_cc_id_str);
-			// unsigned int curr_kmer_cc_id = std::stoull(curr_kmer_cc_id_str, nullptr, 10);
-
+			unsigned int curr_kmer_cc_id = lookup(bv_line); //uint64_t num = bphf->lookup(curr_bv);
+		
 			if (spss_boundary[i] == '0')
 			{ // non-start
-				int hd = hds[i];
+				int hd = hammingDistance(prev_bv_hi, curr_bv_hi) + hammingDistance(prev_bv_lo, curr_bv_lo);
 
 				if (hd == 0)
 				{ // CATEGORY=RUN
 					skip += 1;
 					// case_run+=1;
-					if(DEBUG_MODE) cases_smc.fs << "r" << endl;
+					// if(DEBUG_MODE) cases_smc.fs << "r" << endl;
 				}
 				else
 				{ // CATEGORY=NOT_RUN
@@ -1063,6 +1392,25 @@ public:
 					{ // not skipped, run break, write lm
 						// paul method
 						{
+							if(USE_TEST_METHOD){
+								// if(DEBUG_MODE) cases_skip.fs << skip << endl;
+								if(skip <= 4){
+									max_run_choice = 0;
+									max_run =   4;
+								}else if(skip <= 16 ){
+									max_run_choice = 1;
+									max_run = 16;
+								} else if (skip <= 128){
+									max_run_choice = 2;
+									max_run = 128;
+								} else{
+									max_run_choice = 3;
+									max_run = 256;
+								}
+								lmaxrun = ceil(log2(max_run));
+								write_number_at_loc(positions, (uint64_t)max_run_choice, (uint64_t)2, b_it);
+
+							}
 							int q, rem;
 							q = floor(skip / max_run);
 							rem = skip % max_run;
@@ -1088,13 +1436,10 @@ public:
 					{ // CATEGORY=LC
 						// if(hd*(lc + 1) < huff_code_map[curr_kmer_cc_id].size() && hd==1 ){ //CATEGORY=LC
 						// if(hd*(lc + 1) < lm && hd==1){ //CATEGORY=LC
-						if(DEBUG_MODE) cases_smc.fs << "d" << endl;
-
+						// if(DEBUG_MODE) cases_smc.fs << "d" << endl;
 
 						//category colvec = 100, 101 //cAT COLVEC = 10 HD = 1 
-						
 						//write_number_at_loc(positions, CATEGORY_COLVEC, 2, b_it);
-
 
 						write_category(positions, b_it, CATEGORY_COLVEC, bigD, hd);
 						for (int i_bit = 0; i_bit < 64 && i_bit < C; i_bit += 1)
@@ -1120,7 +1465,7 @@ public:
 						write_category(positions, b_it, CATEGORY_COLCLASS, bigD, hd);
 						if (useLocal==1)
 						{
-							if(DEBUG_MODE) cases_smc.fs << "l" << endl;
+							// if(DEBUG_MODE) cases_smc.fs << "l" << endl;
 							uint64_t localid = local_ht.put_and_getid(curr_kmer_cc_id);
 							if (ll == 0 && localid == 1)
 							{
@@ -1130,7 +1475,7 @@ public:
 						}
 						else
 						{
-							if(DEBUG_MODE) cases_smc.fs << "m" << endl;
+							// if(DEBUG_MODE) cases_smc.fs << "m" << endl;
 							if (USE_HUFFMAN)
 							{
 								write_binary_vector_at_loc(positions, huff_code_map[curr_kmer_cc_id], b_it);
@@ -1145,8 +1490,6 @@ public:
 			}
 			else
 			{ // start of simplitig, so CAT=LM
-				
-
 				l = per_simplitig_l[simplitig_it];
 				ll = ceil(log2(l));
 				lm_or_ll = ll;
@@ -1157,7 +1500,7 @@ public:
 				write_category(positions, b_it, CATEGORY_COLCLASS, bigD, 0);
 				if (useLocal == 1)
 				{
-					if(DEBUG_MODE) cases_smc.fs << "l" << endl;
+					// if(DEBUG_MODE) cases_smc.fs << "l" << endl;
 					uint64_t localid = local_ht.put_and_getid(curr_kmer_cc_id);
 					if (ll == 0)
 					{
@@ -1167,13 +1510,12 @@ public:
 				}
 				else
 				{
-					if(DEBUG_MODE) cases_smc.fs << "m" << endl;
+					// if(DEBUG_MODE) cases_smc.fs << "m" << endl;
 					if (USE_HUFFMAN==true){
 						write_binary_vector_at_loc(positions, huff_code_map[curr_kmer_cc_id], b_it);
 					}else{
 						write_number_at_loc(positions, curr_kmer_cc_id, lm, b_it);
-					}
-						
+					}	
 					// assert(curr_kmer_cc_id<M && curr_kmer_cc_id>0);
 				}
 			}
@@ -1189,6 +1531,25 @@ public:
 				}
 				if (skip != 0)
 				{ // not skipped, run break, write lm
+					if(USE_TEST_METHOD){
+						// if(DEBUG_MODE) cases_skip.fs << skip << endl;
+						if(skip <= 4){
+							max_run_choice = 0;
+							max_run =   4;
+						}else if(skip <= 16 ){
+							max_run_choice = 1;
+							max_run = 16;
+						} else if (skip <= 128){
+							max_run_choice = 2;
+							max_run = 128;
+						} else{
+							max_run_choice = 3;
+							max_run = 256;
+						}
+						lmaxrun = ceil(log2(max_run));
+						write_number_at_loc(positions, (uint64_t)max_run_choice, (uint64_t)1, b_it);
+
+					}
 					int q, rem;
 					q = floor(skip / max_run);
 					rem = skip % max_run;
@@ -1206,18 +1567,21 @@ public:
 			prev_bv_lo = curr_bv_lo;
 		}
 
-		DebugFile positions_out("positions_out");
-		for (uint64_t tt : positions)
-		{
-			if(DEBUG_MODE) positions_out.fs << tt << endl;
-		}
+		// DebugFile positions_out("positions_out");
+		// for (uint64_t tt : positions)
+		// {
+		// 	if(DEBUG_MODE) positions_out.fs << tt << endl;
+		// }
+
+
 		cout << "b_it_size: " << b_it << endl;
 		store_as_sdsl(positions, b_it, "rrr_main");
-		store_as_binarystring(positions, b_it, "bb_main");
+		//store_as_binarystring(positions, b_it, "bb_main");
 	}
 };
 
 int main (int argc, char* argv[]){
+	cout<<"Version: "<<VERSION_NAME<<endl;
 	//srand(time(nullptr));
 	//srand(0);
 	vector<string> args(argv + 1, argv + argc);
@@ -1225,11 +1589,12 @@ int main (int argc, char* argv[]){
 	//string tmp_dir;
     int M, C;
 	int max_run = 16;
+	
 	uint64_t num_kmers=0;
-	cout<<"Version: Feb 10"<<endl;
+	
     for (auto i = args.begin(); i != args.end(); ++i) {
         if (*i == "-h" || *i == "--help") {
-            cout << "Syntax: tool -i <DE-DUP-bitmatrix> -d <dup-bitmatrix> -c <num-colors> -m <M> -k <num-kmers> -s <spss-bound> -x <max-run>" << endl;
+            cout << "Syntax: tool -g debug -i <DE-DUP-bitmatrix> -d <dup-bitmatrix> -c <num-colors> -m <M> -k <num-kmers> -s <spss-bound> -x <max-run>" << endl;
             return 0;
         } else if (*i == "-i") {
             dedup_bitmatrix_fname = *++i;
@@ -1245,26 +1610,26 @@ int main (int argc, char* argv[]){
             spss_boundary_fname = *++i;
 		}else if (*i == "-x") {
             max_run = std::stoi(*++i);
+		}else if (*i == "-g") {
+            NEW_DEBUG_MODE = true;
 		}
 		// else if (*i == "-t") {
         //     tmp_dir  = *++i;
 		// }
     }
+	max_run = 16;
 
 	COLESS coless(num_kmers, M, C, dedup_bitmatrix_fname, dup_bitmatrix_fname, spss_boundary_fname, max_run);
 	
-	coless.method1_pass0();
 	time_start();
 	coless.method1_pass1();
 	time_end("pass1.");
 
-	time_start();
-	coless.method1_pass2();
-	time_end("pass2.");
-
-
-	//COLESS_Decompress cdec(num_kmers, M, C);
-
+	if(NEW_DEBUG_MODE==false){
+		time_start();
+		coless.method1_pass2();
+		time_end("pass2.");
+	}
 
 	return EXIT_SUCCESS;
 }

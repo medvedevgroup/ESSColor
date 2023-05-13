@@ -8,31 +8,56 @@
 #include "colormatrix.hpp"
 
 using namespace std;
+using namespace sshash;
 
 
-KmerMatrix::KmerMatrix(vector<uint64_t> & dataset, uint64_t k) : num_datasets(1), k(k)
+KmerMatrix::KmerMatrix(uint64_t k, uint64_t num_kmers, uint64_t num_samples, dictionary * dict)
 {
-	this->kmers = dataset;
-	this->colors.resize(dataset.size(), 1);
+	this->k = k;
+	this->num_kmers = num_kmers;
+	this->num_datasets = 0;
+	this->numbers_per_row = (num_samples + 63) / 64;
+	this->colors.resize(num_kmers * this->numbers_per_row, 0);
+	this->dict = dict;
 };
 
-KmerMatrix::KmerMatrix(KmerMatrix && other)
+
+uint64_t KmerMatrix::mphf_get_kmer_id(uint64_t kmer)
 {
-	this->num_datasets = other.num_datasets;
-	this->k = other.k;
-	this->kmers = std::move(other.kmers);
-	this->colors = std::move(other.colors);
+	kmer = translate(kmer);
+	reverse_kmer(kmer);
+	kmer >>= 64 - this->k * 2;
+	uint64_t position = this->dict->lookup_uint(kmer);
+	if (position > this->colors.size())
+	{
+		cerr << "problem position " << position << endl;
+		exit(1);
+	}
+
+	return position;
 };
 
-KmerMatrix& KmerMatrix::operator=(KmerMatrix&& other)
-{
-	this->num_datasets = other.num_datasets;
-	this->k = other.k;
-	this->kmers = std::move(other.kmers);
-	this->colors = std::move(other.colors);
 
-	return *this;
-};
+void KmerMatrix::add_dataset(vector<uint64_t> kmers)
+{
+	if (this->num_datasets >= 64 * this->numbers_per_row)
+	{
+		cerr << "Too many dataset entered in the kmer matrix" << endl;
+		exit(MATRIX_OVERFLOW);
+	}
+
+	uint64_t uint_idx = this->num_datasets / 64;
+	uint64_t bit_idx = this->num_datasets % 64;
+	
+	for (uint64_t kmer : kmers)
+	{
+		uint64_t row_idx = this->mphf_get_kmer_id(kmer);
+		this->colors[row_idx * this->numbers_per_row + uint_idx] |= (1ul << bit_idx);
+	}
+
+	this->num_datasets += 1;
+}
+
 
 void KmerMatrix::get_row(uint64_t row_idx, vector<uint64_t>& to_fill)
 {
@@ -47,23 +72,32 @@ void KmerMatrix::get_row(uint64_t row_idx, vector<uint64_t>& to_fill)
 	}
 }
 
+
 void KmerMatrix::to_color_string_file(const std::string& outfile)
 {
 	ofstream out(outfile);
-
-	const uint64_t num_uints_per_row = (this->num_datasets + 63) / 64;
-	for (uint64_t kmer_idx(0) ; kmer_idx<this->kmers.size() ; kmer_idx++)
+	for (uint64_t row(0) ; row<this->num_kmers ; row++)
 	{
-		for (uint64_t dataset_idx(0) ; dataset_idx<this->num_datasets ; dataset_idx++)
+		uint64_t subvector = 0;
+		for (uint64_t col(0) ; col<this->num_datasets ; col++)
 		{
-			uint64_t subvector = this->colors[kmer_idx * num_uints_per_row + dataset_idx / 64];
-			uint64_t color = (subvector >> (dataset_idx % 64)) & 0b1;
-			out << (color == 0 ? '0' : '1');
+			if (col % 64 == 0)
+			{
+				subvector = this->colors[row * this->numbers_per_row + col / 64];
+				// cout << "subvector " << subvector << endl;
+			}
+
+			out << ((subvector & 0b1) == 0 ? '0' : '1');
+			subvector >>= 1;
 		}
 		out << endl;
 	}
-
 	out.close();
+
+	// cout << "--- MATRIX ---" << endl;
+	// cout << this->colors[0] << endl;
+	// cout << this->colors[1] << endl;
+	// cout << "XXX MATRIX XXX" << endl;
 }
 
 
@@ -88,238 +122,88 @@ void KmerMatrix::to_color_binary_file(const std::string& outfile)
 	out.close();
 }
 
-/** Generates a binary file containing all the sorted kmers that correspond to the matrix rows.
- * All the values are 64bits little endian uints.
- * The 2 first values are the k value and the number of kmers in the file
- * Then each 64bits uint is a kmer with encoding A:0, C:1, G:2, T:3
- **/
-void KmerMatrix::to_kmer_binary_file(const std::string& outfile)
+
+std::string kmer2str(uint64_t kmer, uint64_t k)
 {
-	ofstream out(outfile, ios::out | ios::binary);
+	static const char nucleotides[] = {'A', 'C', 'G', 'T'};
+	std::stringstream ss;
 
-	uint8_t array[8];
-
-	// k value
-	array[0] =  this->k        & 0xFF;
-	array[1] = (this->k >>  8) & 0xFF;
-	array[2] = (this->k >> 16) & 0xFF;
-	array[3] = (this->k >> 24) & 0xFF;
-	array[4] = (this->k >> 32) & 0xFF;
-	array[5] = (this->k >> 40) & 0xFF;
-	array[6] = (this->k >> 48) & 0xFF;
-	array[7] = (this->k >> 56) & 0xFF;
-	out.write((char *)array, 8);
-
-	// number of kmers
-	array[0] =  this->kmers.size()        & 0xFF;
-	array[1] = (this->kmers.size() >>  8) & 0xFF;
-	array[2] = (this->kmers.size() >> 16) & 0xFF;
-	array[3] = (this->kmers.size() >> 24) & 0xFF;
-	array[4] = (this->kmers.size() >> 32) & 0xFF;
-	array[5] = (this->kmers.size() >> 40) & 0xFF;
-	array[6] = (this->kmers.size() >> 48) & 0xFF;
-	array[7] = (this->kmers.size() >> 56) & 0xFF;
-	out.write((char *)array, 8);
-
-	for (const uint64_t kmer : this->kmers)
+	for (uint64_t i(0) ; i<k ; i++)
 	{
-		array[0] =  kmer        & 0xFF;
-		array[1] = (kmer >>  8) & 0xFF;
-		array[2] = (kmer >> 16) & 0xFF;
-		array[3] = (kmer >> 24) & 0xFF;
-		array[4] = (kmer >> 32) & 0xFF;
-		array[5] = (kmer >> 40) & 0xFF;
-		array[6] = (kmer >> 48) & 0xFF;
-		array[7] = (kmer >> 56) & 0xFF;
-		out.write((char *)array, 8);
+		ss << nucleotides[kmer & 0b11];
+		kmer >>= 2;
 	}
 
-	out.close();
-}
+	std::string s = ss.str();
+	std::reverse(s.begin(), s.end());
 
-/** Generates a text file containing all the sorted kmers that correspond to the matrix rows.
- * The file contains one line per kmer
+	return s;
+};
+
+
+const uint64_t encode[256] = {0, 1, 3, 2, 4, 5, 7, 6, 12, 13, 15, 14, 8, 9, 11, 10, 16, 17, 19, 18, 20, 21, 23, 22, 28, 29, 31, 30, 24, 25, 27, 26, 48, 49, 51, 50, 52, 53, 55, 54, 60, 61, 63, 62, 56, 57, 59, 58, 32, 33, 35, 34, 36, 37, 39, 38, 44, 45, 47, 46, 40, 41, 43, 42, 64, 65, 67, 66, 68, 69, 71, 70, 76, 77, 79, 78, 72, 73, 75, 74, 80, 81, 83, 82, 84, 85, 87, 86, 92, 93, 95, 94, 88, 89, 91, 90, 112, 113, 115, 114, 116, 117, 119, 118, 124, 125, 127, 126, 120, 121, 123, 122, 96, 97, 99, 98, 100, 101, 103, 102, 108, 109, 111, 110, 104, 105, 107, 106, 192, 193, 195, 194, 196, 197, 199, 198, 204, 205, 207, 206, 200, 201, 203, 202, 208, 209, 211, 210, 212, 213, 215, 214, 220, 221, 223, 222, 216, 217, 219, 218, 240, 241, 243, 242, 244, 245, 247, 246, 252, 253, 255, 254, 248, 249, 251, 250, 224, 225, 227, 226, 228, 229, 231, 230, 236, 237, 239, 238, 232, 233, 235, 234, 128, 129, 131, 130, 132, 133, 135, 134, 140, 141, 143, 142, 136, 137, 139, 138, 144, 145, 147, 146, 148, 149, 151, 150, 156, 157, 159, 158, 152, 153, 155, 154, 176, 177, 179, 178, 180, 181, 183, 182, 188, 189, 191, 190, 184, 185, 187, 186, 160, 161, 163, 162, 164, 165, 167, 166, 172, 173, 175, 174, 168, 169, 171, 170};
+
+/** Translate a kmer from the alphabetic order encoding {A, C, G, T} to ascii order {A, C, T, G}
  **/
-void KmerMatrix::to_kmer_string_file(const std::string& outfile)
+uint64_t translate(uint64_t kmer)
 {
-	ofstream out(outfile);
+	uint64_t translation = 0;
 
-	for (uint64_t kmer: this->kmers)
-		out << kmer2str(kmer, this->k);
+	for (uint64_t bx(0) ; bx<8 ; bx++)
+	{
+		uint64_t byte = kmer & 0xFF;
+		kmer >>= 8;
+		translation |= encode[byte] << (8 * bx);
+	}
 
-	out.close();
+	return translation;
 };
 
 
 
-/** Add a sorted kmer list to the matrix. Will add 1 bit in each color row and insert absent kmers in the matrix. Both matrices are destroyed in the process
- * @param kmers sorted list of kmers
+/** Reverse a kmer without complementing it. This function do not pas the bits on the right.
+ * @param kmer Kmer to revert
  **/
-void KmerMatrix::merge (KmerMatrix & other)
+void reverse_kmer(uint64_t & kmer)
 {
-	// cout << "MERGING" << endl;
-	// Reserve memory for the merge
-	// size_t max_expected_kmers = this->kmers.size() + other.kmers.size();
-	size_t cleaning_threshold = max(this->kmers.size(), other.kmers.size()) / 10;
-	// const size_t num_colors = this->num_datasets + other.num_datasets;
-	// const size_t num_uints_per_row = (num_colors + 63) / 64;
-	size_t my_color_uint_size = (this->num_datasets + 63) / 64;
-	size_t other_color_uint_size = (other.num_datasets + 63) / 64;
-	size_t my_color_offset = ((this->num_datasets - 1) % 64) + 1;
-	// Empty vectors for the merges
-	vector<uint64_t> my_empty_color_vector(my_color_uint_size, 0);
-	vector<uint64_t> other_empty_color_vector(other_color_uint_size, 0);
+	uint64_t shifted;
+	// 1/2
+	shifted  = kmer << 32;
+	shifted &= 0xFFFFFFFF00000000;
+	kmer   >>= 32;
+	kmer    &= 0x00000000FFFFFFFF;
+	kmer    |= shifted;
 
-	// New datastructs for the merge
-	vector<uint64_t> new_kmers;
-	vector<uint64_t> new_colors;
-	// new_kmers.reserve(max_expected_kmers);
-	// new_colors.reserve(max_expected_kmers * num_uints_per_row);
-	size_t new_idx = 0;
+	// 1/4
+	shifted  = kmer << 16;
+	shifted &= 0xFFFF0000FFFF0000;
+	kmer   >>= 16;
+	kmer    &= 0x0000FFFF0000FFFF;
+	kmer    |= shifted;
 
-	// Setup variable for the merges
-	size_t my_idx = 0, other_idx = 0;
-	vector<uint64_t>::iterator my_color_iter = this->colors.begin();
-	vector<uint64_t>::iterator other_color_iter = other.colors.begin();
+	// 1/8
+	shifted  = kmer << 8;
+	shifted &= 0xFF00FF00FF00FF00;
+	kmer   >>= 8;
+	kmer    &= 0x00FF00FF00FF00FF;
+	kmer    |= shifted;
 
-	// Add the kmers from the dataset using a sorted list fusion procedure
-	while(my_idx < this->kmers.size() and other_idx < other.kmers.size())
-	{
-		if (this->kmers[my_idx] < other.kmers[other_idx])
-		{
-			new_kmers.push_back(this->kmers[my_idx]);
-			// cout << "< " << new_colors.size() << " -> ";
-			new_colors.insert(new_colors.end(), my_color_iter, my_color_iter + my_color_uint_size);
-			// cout << new_colors.size() << " -> ";
-			merge_colors(
-				new_colors, my_color_offset,
-				other_empty_color_vector.begin(), other.num_datasets
-			);
-			// cout << new_colors.size() << endl;
-			my_idx += 1;
-			my_color_iter += my_color_uint_size;
-		}
-		else if (this->kmers[my_idx] > other.kmers[other_idx])
-		{
-			new_kmers.push_back(other.kmers[other_idx]);
-			// cout << "> " << new_colors.size() << " -> ";
-			new_colors.insert(new_colors.end(), my_empty_color_vector.begin(), my_empty_color_vector.end());
-			// cout << new_colors.size() << " -> ";
-			merge_colors(
-				new_colors, my_color_offset,
-				other_color_iter, other.num_datasets
-			);
-			// cout << new_colors.size() << endl;
-			other_idx += 1;
-			other_color_iter += other_color_uint_size;
-		}
-		else
-		{
-			new_kmers.push_back(this->kmers[my_idx]);
-			// cout << "= " << new_colors.size() << " -> ";
-			new_colors.insert(new_colors.end(), my_color_iter, my_color_iter + my_color_uint_size);
-			// cout << new_colors.size() << " -> ";
-			merge_colors(
-				new_colors, my_color_offset,
-				other_color_iter, other.num_datasets
-			);
-			// cout << new_colors.size() << endl;
-			my_idx += 1; my_color_iter += my_color_uint_size;
-			other_idx += 1; other_color_iter += other_color_uint_size;
-		}
-		new_idx += 1;
-		// cout << new_kmers.size() << " " << new_colors.size() << endl;
+	// 1/16
+	shifted  = kmer << 4;
+	shifted &= 0xF0F0F0F0F0F0F0F0;
+	kmer   >>= 4;
+	kmer    &= 0x0F0F0F0F0F0F0F0F;
+	kmer    |= shifted;
 
-		// Memory saving procedure
-		if ((my_idx + other_idx) >= cleaning_threshold)
-		{
-			// cout << "cleaning " << my_idx << "+" << other_idx << " <=> " << cleaning_threshold << endl;
-			// cout << this->kmers.size() << " " << other.kmers.size() << " " << new_kmers.size() << endl;
-			// Modify current matrix
-			this->kmers.erase(this->kmers.begin(), this->kmers.begin()+my_idx);
-			my_idx = 0;
-			this->colors.erase(this->colors.begin(), my_color_iter);
-			my_color_iter = this->colors.begin();
-
-			// Modify the other matrix
-			other.kmers.erase(other.kmers.begin(), other.kmers.begin()+other_idx);
-			other_idx = 0;
-			other.colors.erase(other.colors.begin(), other_color_iter);
-			other_color_iter = other.colors.begin();
-		}
-	}
-
-	// Add the last values
-	for (size_t idx=my_idx ; idx<this->kmers.size() ; idx++)
-	{
-		new_kmers.push_back(this->kmers[idx]);
-		new_colors.insert(new_colors.end(), my_color_iter, my_color_iter + my_color_uint_size);
-		merge_colors(
-			new_colors, my_color_offset,
-			other_empty_color_vector.begin(), other.num_datasets
-		);
-		my_color_iter += my_color_uint_size;
-	}
-	for (size_t idx=other_idx ; idx<other.kmers.size() ; idx++)
-	{
-		new_kmers.push_back(other.kmers[idx]);
-		new_colors.insert(new_colors.end(), my_empty_color_vector.begin(), my_empty_color_vector.end());
-		merge_colors(
-			new_colors, my_color_offset,
-			other_color_iter, other.num_datasets
-		);
-		other_color_iter += other_color_uint_size;
-	}
-
-	// Replace previous vectors
-	this->kmers = new_kmers;
-	this->colors = new_colors;
-	this->num_datasets += other.num_datasets;
-	// cout << "/merging" << endl;
+	// 1/32
+	shifted  = kmer << 2;
+	shifted &= 0xCCCCCCCCCCCCCCCC;
+	kmer   >>= 2;
+	kmer    &= 0x3333333333333333;
+	kmer    |= shifted;
 };
 
 
-/** Merges a subvector pointed by the iterator to_merge inside of the colors vector. The subvector is inserted starting at the last uint of colors at bit first_idx. The function assumes that all the bits after that position are 0.
- * @param colors Vector of colors that will be modified by the merge process
- * @param first_index The first bit of colors where to_merge will be inserted [1-64].
- * @param to_merge Iterator that contains the colors to insert
- * @param size Size of the insertion (in bits)
- **/
-void merge_colors(vector<uint64_t> & colors, size_t first_idx, vector<uint64_t>::iterator to_merge, size_t size)
-{
-	assert(first_idx != 0 and first_idx <= 64);
-
-	size_t colors_idx = colors.size() - 1;
-
-	// occupied bits from the last uint64_t of colors
-	const uint64_t occupied_bits = first_idx;
-	const uint64_t free_bits = 64 - occupied_bits;
-	const uint64_t first_half_mask = occupied_bits == 64 ? 0 : (1 << free_bits) - 1;
-	const uint64_t second_half_mask = ~first_half_mask;
-
-	// Merge the vector one uint64_t at a time
-	while (size > 0)
-	{
-		uint64_t to_merge_uint = *to_merge;
-		// Extract the first part of the current merged uint
-		uint64_t first_half = to_merge_uint & first_half_mask;
-		// Insert the first half in the current color uint
-		colors[colors_idx] |= first_half << occupied_bits;
-
-		size -= min(size, free_bits);
-		if (size == 0)
-			break;
-		colors_idx += 1;
-
-		// Extract the last part of the current to_merge uint
-		uint64_t second_half = to_merge_uint & second_half_mask;
-		second_half >>= free_bits;
-		colors.push_back(second_half);
-
-		size -= min(size, occupied_bits);
-		to_merge++;
-	}
-};
 
 /** Loads a kmer list from a KMC database and sort the kmers.
  * @param db_path path to kmer database
@@ -354,71 +238,9 @@ vector<uint64_t> load_from_file(const string db_path, uint64_t& k)
 	uint32 counter;
 	while (db.ReadNextKmer(kmer, counter)) {
 		kmer.to_long(kmer_uint);
-		kmers[idx++] = kmer_uint[0];
+		kmers[idx] =  kmer_uint[0];;
+		idx++;
 	}
-
-	sort(kmers.begin(), kmers.end());
 
 	return kmers;
-};
-
-
-CascadingMergingMatrix::CascadingMergingMatrix(float trigger_ratio) : trigger_ratio(trigger_ratio) {};
-
-void CascadingMergingMatrix::add_matrix(KmerMatrix & matrix)
-{
-	this->matricies.push_back(move(matrix));
-	this->cascade_merging();
-};
-
-void CascadingMergingMatrix::cascade_merging()
-{
-	while (true)
-	{
-		// No merging for 0 or 1 matrix
-		if (this->matricies.size() < 2)
-			return;
-
-		// Only cascade on proper trigger ratio
-		size_t n = this->matricies.size();
-		if (this->matricies[n-1].kmers.size() < this->trigger_ratio * this->matricies[n-2].kmers.size())
-			return;
-
-		this->matricies[n-2].merge(this->matricies[n-1]);
-		this->matricies.pop_back();
-	}
-};
-
-void CascadingMergingMatrix::force_merging()
-{
-	for (size_t n(this->matricies.size()) ; n > 1 ; n--)
-	{
-		this->matricies[n-2].merge(this->matricies[n-1]);
-		this->matricies.pop_back();
-	}
-};
-
-KmerMatrix& CascadingMergingMatrix::get_matrix()
-{
-	this->force_merging();
-	return this->matricies[0];
-};
-
-
-
-string kmer2str(uint64_t kmer, uint64_t k)
-{
-	static const char nucleotides[] = {'A', 'C', 'G', 'T'};
-	stringstream ss;
-
-	for (uint64_t i(0) ; i<k ; i++)
-	{
-		ss << nucleotides[kmer & 0b11];
-		kmer >>= 2;
-	}
-
-	string s = ss.str();
-	std::reverse(s.begin(), s.end());
-
-	return s;
 };

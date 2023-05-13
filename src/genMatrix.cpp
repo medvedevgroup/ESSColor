@@ -8,11 +8,11 @@
 #include "colormatrix.hpp"
 
 using namespace std;
+using namespace sshash;
 
 
 #define OPT_PARSING_ERROR 01
 #define DB_LIST_ERROR 02
-
 
 
 
@@ -35,14 +35,16 @@ cxxopts::ParseResult parse_args(int argc, char const *argv[])
 		("c,count-list", "[Mandatory] Path to KMC database files. One line per database", cxxopts::value<string>())
 		("d,debug-verif", "Debug flag to verify if the output coresponds to the input (Time consuming).", cxxopts::value<bool>()->default_value("false"))
 		("o,outmatrix", "[Mandatory] Path to the output color matrix", cxxopts::value<string>())
-		("l,kmer-list", "[Mandatory] Path to the output ordered kmer list file", cxxopts::value<string>())
+		("l,spss", "[Mandatory] Path to the corresponding union SPSS", cxxopts::value<string>())
 		("s,strout", "String output", cxxopts::value<bool>()->default_value("false"))
+		("k,kmer-size", "[Mandatory] k-mer size", cxxopts::value<uint64_t>())
 		;
 
 	cxxopts::ParseResult res = options.parse(argc, argv);
 	if ((not test_mandatory_option(res, "count-list"))
 		or (not test_mandatory_option(res, "outmatrix"))
-		or (not test_mandatory_option(res, "kmer-list"))
+		or (not test_mandatory_option(res, "spss"))
+		or (not test_mandatory_option(res, "kmer-size"))
 	) {
 		cerr << endl << options.help() << endl;
 		exit(OPT_PARSING_ERROR);
@@ -84,6 +86,8 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 	uint64_t overpresent_kmers = 0;
 
 	uint64_t dataset_idx = 0;
+	uint64_t uint_idx = 0;
+	uint64_t bit_idx = 0;
 	for (string& db_name : db_list)
 	{
 		cerr << "* Checking file " << db_name << endl;
@@ -92,66 +96,33 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 
 		uint64_t k;
 		vector<uint64_t> kmers = load_from_file(db_name, k);
-		vector<uint64_t> row;
 
-		// Looks for all the kmers from the db
-		uint64_t list_idx=0, matrix_idx=0;
-		while(list_idx < kmers.size() and matrix_idx < matrix.kmers.size())
+		for (uint64_t kmer: kmers)
 		{
-			// Missing kmer from the db
-			if (kmers[list_idx] < matrix.kmers[matrix_idx])
+			uint64_t idx = matrix.mphf_get_kmer_id(kmer);
+			if (idx >= matrix.num_kmers)
 			{
-				cerr << kmer2str(kmers[list_idx], k) << " not in matrix while in db" << endl;
-				db_missing_kmers += 1;
-				list_idx += 1;
-				// exit(1);
+				missing_kmers += 1;
+				continue;
 			}
-			// Kmer from the matrix that is not present inside of the current db
-			else
-			{
-				// Get the current_row
-				matrix.get_row(matrix_idx, row);
-				uint64_t sub_row = row[dataset_idx / 64];
-				bool is_present = 1 == ((sub_row >> (dataset_idx % 64)) & 0b1);
 
-				if (kmers[list_idx] > matrix.kmers[matrix_idx])
-				{
-					if (is_present)
-					{
-						db_overpresent_kmers += 1;
-						cerr << kmer2str(matrix.kmers[matrix_idx], k) << " in matrix while not in db" << endl;
-						// exit(1);
-					}
-					matrix_idx += 1;
-				}
-				else
-				{
-					if (not is_present)
-					{
-						db_missing_kmers += 1;
-						cerr << kmer2str(kmers[list_idx], k) << " not in matrix row while in db" << endl;
-						// exit(1);
-					}
-					matrix_idx += 1;
-					list_idx += 1;
-				}
+			uint64_t subvector = matrix.colors[matrix.numbers_per_row * idx + uint_idx];
+			uint64_t presence = (subvector >> bit_idx) & 0b1;
+			if (presence == 0)
+			{
+				missing_kmers += 1;
+				cerr << kmer2str(kmer, matrix.k) << " in dataset " << db_name << " absent from the matrix" << endl;
 			}
 		}
 
-		// Potential remaining kmers after full consumption of the matrix
-		if (list_idx < kmers.size())
-		{
-			for (uint64_t i(list_idx) ; i<kmers.size() ; i++)
-			{
-				cerr << kmer2str(kmers[i], k) << " not in matrix while in db" << endl;
-				db_missing_kmers += 1;
-			}
-		}
-
-		// Error stats
-		missing_kmers += db_missing_kmers;
-		overpresent_kmers += db_overpresent_kmers;
+		// Update values for the next dataset
 		dataset_idx += 1;
+		bit_idx += 1;
+		if (bit_idx == 64)
+		{
+			uint_idx += 1;
+			bit_idx = 0;
+		}
 	}
 
 	if (missing_kmers == 0 and overpresent_kmers == 0)
@@ -167,44 +138,66 @@ void verif(KmerMatrix & matrix, vector<string> db_list)
 }
 
 
+
+
+void build_mphf(uint64_t k, dictionary * dict, string spss_file) {
+	//write_ess_boundary(spss_file, k);
+	auto m = (int) k/2;
+	if(m<10) m = k;
+	//dictionary dict;
+
+	build_configuration build_config;
+	build_config.k = k;
+	build_config.m = m;
+
+	build_config.canonical_parsing = true;
+	build_config.verbose = true;
+	build_config.print();
+
+	dict->build(spss_file, build_config);
+	assert(dict->k() == k);
+	std::cout<<"dict built complete";
+}
+
 int main(int argc, char const *argv[])
 {
 	auto args = parse_args(argc, argv);
 	vector<string> db_list = get_databases(args["count-list"].as<string>());
 
-	CascadingMergingMatrix cmm(0.9);
+	// Create the sshash dictionnary
+	dictionary * dict = new dictionary();
+	build_mphf(args["kmer-size"].as<uint64_t>(),dict, args["spss"].as<string>());
 
-	// For each file, add it to the cascading matrix constructor
+	// Creates a global matrix
+	KmerMatrix global_matrix(args["k"].as<uint64_t>(), dict->size()/**/, db_list.size(), dict);
+
+	// For each file, add it to the matrix
 	int db_idx = 1;
 	uint64_t k = 0;
 	for (const string& db_name : db_list)
 	{
 		cout << "processing database " << db_idx++ << "/" << db_list.size() << endl;
 		vector<uint64_t> kmers = load_from_file(db_name, k);
-		KmerMatrix matrix(kmers, k);
-		cmm.add_matrix(matrix);
+		global_matrix.add_dataset(kmers);
 	}
 
-	// Get the final matrix after the merging
-	cout << "Finalization of the matrix..." << endl;
-	KmerMatrix& final_matrix = cmm.get_matrix();
 	cout << "Writing the matrix on disk..." << endl;
+	
 	if (args["strout"].as<bool>())
 	{
-		final_matrix.to_color_string_file(args["outmatrix"].as<string>());
-		final_matrix.to_kmer_string_file(args["kmer-list"].as<string>());
+		global_matrix.to_color_string_file(args["outmatrix"].as<string>());
 	}
 	else
 	{
-		final_matrix.to_color_binary_file(args["outmatrix"].as<string>());
-		final_matrix.to_kmer_binary_file(args["kmer-list"].as<string>());
+		global_matrix.to_color_binary_file(args["outmatrix"].as<string>());
 	}
 
 	if (args["debug-verif"].as<bool>())
 	{
-		verif(final_matrix, db_list);
+		verif(global_matrix, db_list);
 	}
+
+	delete dict;
 
 	return 0;
 }
-
