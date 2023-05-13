@@ -460,8 +460,6 @@ int main(int argc, char **argv) {
         }else{
              system(("rm -rf "+stripped_ext).c_str());
             system(("mkdir -p "+stripped_ext).c_str());
-            system("mkdir -p esscolor");
-
         }
         //cout<<inputname.c_str()<<" "<<(stripped_ext+"/"+basename).c_str()<<endl;
         system (("ln -s "+inputname+" "+ OUT_DIR+"/"+stripped_ext+"/"+basename).c_str());
