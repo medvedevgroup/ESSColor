@@ -400,8 +400,6 @@ rule compress:
     benchmark:
         "benchmarks/compress.txt"
     output:
-        "bb_main",
-        "bb_local_table",
         #"bb_map",
         "rrr_main",
         "rrr_local_table",
