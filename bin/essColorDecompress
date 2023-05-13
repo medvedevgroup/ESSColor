@@ -2,14 +2,6 @@
 #!/usr/bin/env bash
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 echo $SCRIPT_DIR
-# dirname "$0":
-
-
-#SCRIPT_DIR="$(abspath $(dirname $0))/../"
-#echo $SCRIPT_DIR
-
-save_arg="${@:1}"
-echo $save_arg
 
 nthreads=8
 
@@ -21,7 +13,7 @@ while getopts ':i:j:h' opt; do
       infile=${OPTARG}
       infile=$(realpath $infile)
       outdir = $(dirname $infile)
-      cmd=$(echo $cmd" -i "$outdir)
+      cmd=$(echo $cmd" -i "$outdir"/esscolor/")
       ;;
     j)
       echo "Processing option 'j'"
@@ -45,6 +37,8 @@ shift "$(($OPTIND -1))"
 echo "out dir is: "$outdir
 cd $outdir
 
+tar -xf esscolor.tar.gz; cd esscolor; gunzip meta.txt.gz; gunzip frequency_sorted.gz; cd ../
+cd esscolor; essAuxMFCompressD mega.essc; essColorAuxKmersDecompress -i mega.essc.d 1; mv kmers.ess mega.essd; cd ../
 $SCRIPT_DIR/essColorAuxMatrixDecompress $cmd
-
-snakemake -s $SCRIPT_DIR/pipeline_decompress.smk -j $nthreads
+cd esscolor; mv dec_ess_color ../matrix.txt; mv mega.essd ../simplitigs.fa; cd ../ "
+rm -rf esscolor
