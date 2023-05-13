@@ -56,7 +56,7 @@ Syntax: ./essColorCompress [parameters]
 mandatory arguments:
 -k [int]          k-mer size (must be >=4)
 -i [input-file]   Path to input file. Input file is a single text file containing the list of multiple fasta/fastq files (one file per line)
--o [output-dir]   Path to output directory.
+-o [output-dir]   Path to output directory. [warning: this directory is also used as temp directory, so make sure it does not contain input files]
 
 optional arguments:
 -a [int]          Default=1. Sets a threshold X, such that k-mers that appear less than X times in the input dataset are filtered out. 
