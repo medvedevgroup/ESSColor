@@ -97,7 +97,7 @@ if config['ess'] == 'tip':
             "stat_m",
             "stat_nkmer_ess",
             #"bb_map",
-            "{OUTPREFIX}.tar.gz",
+            OUTPREFIX+".tar.gz",
             "size_esscolor_mb_tip"
 else:
     rule all:
@@ -120,7 +120,7 @@ else:
             "stat_m",
             "stat_nkmer_ess",
             #"bb_map",
-            "{OUTPREFIX}.tar.gz",
+            OUTPREFIX+".tar.gz",
             "size_esscolor_mb"
 
 
@@ -448,21 +448,21 @@ rule zip_compress:
 if config['ess'] == 'tip':
     rule zip_compress_size_tip_and_cleanup:
         input: 
-            "{OUTPREFIX}.tar.gz"
+            OUTPREFIX+".tar.gz"
         output:
             "size_esscolor_mb_tip"
         shell:
-            "ls -l | grep {OUTPREFIX}.tar.gz | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb_tip;"
+            "ls -l | grep {input} | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb_tip;"
 else:
     rule zip_compress_size_and_cleanup:
         input: 
-            "{OUTPREFIX}.tar.gz"
+            OUTPREFIX+".tar.gz"
         output:
             "size_esscolor_mb"
         params:
             fol=get_ext_folder_level(EXTENSION)+"/",
         shell:
-            "ls -l | grep {OUTPREFIX}.tar.gz | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb; rm -rf {params.fol}; rm list_kmc; rm list_fa"
+            "ls -l | grep {input} | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb; rm -rf {params.fol}; rm list_kmc; rm list_fa"
             #" nkmer=$(cat stat_nkmer_ess); ls -l | grep ess_color.tar.gz | awk -v nk=$nkmer '{{print $5*8.0/$nk}}' > size_esscolor_bitskmer"  
 # rule all_stat:
 #     input: 
