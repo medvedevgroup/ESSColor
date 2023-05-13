@@ -526,4 +526,4 @@ else:
             temp("kb_sec_essauxd"),
             temp("kb_sec_mfc_ess")
         shell:
-            "/usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxc  essColorAuxKmersCompress -k {params.k} -i {input} -t 0; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxd  essColorAuxKmersDecompress -i kmers.ess 1; mv kmers.ess.spss mega.essd; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_mfc_ess   essAuxMFCompressC kmers.ess; mv kmers.ess.mfc mega.essc, rm  kmers.ess"
+            "/usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxc  essColorAuxKmersCompress -k {params.k} -i {input} -t 0; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_essauxd  essColorAuxKmersDecompress -i kmers.ess 1; mv kmers.ess.spss mega.essd; /usr/bin/time  -f \"%M\t%e\" --output-file=kb_sec_mfc_ess   essAuxMFCompressC kmers.ess; mv kmers.ess.mfc mega.essc; rm kmers.ess"
