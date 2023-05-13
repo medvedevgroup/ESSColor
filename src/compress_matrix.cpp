@@ -1615,6 +1615,7 @@ int main (int argc, char* argv[]){
         //     tmp_dir  = *++i;
 		// }
     }
+	max_run = 16;
 
 	COLESS coless(num_kmers, M, C, dedup_bitmatrix_fname, dup_bitmatrix_fname, spss_boundary_fname, max_run);
 	
