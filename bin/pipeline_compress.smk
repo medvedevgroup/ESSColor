@@ -443,7 +443,7 @@ else:
         params:
             fol=get_ext_folder_level0(EXTENSION)+"/",
         shell:
-            "ls -l | grep esscolor.tar.gz | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb; rm -rf {params.fol}; rm list_kmc"
+            "ls -l | grep esscolor.tar.gz | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb; rm -rf {params.fol}; rm list_kmc; rm list_fa"
             #" nkmer=$(cat stat_nkmer_ess); ls -l | grep ess_color.tar.gz | awk -v nk=$nkmer '{{print $5*8.0/$nk}}' > size_esscolor_bitskmer"  
 # rule all_stat:
 #     input: 
