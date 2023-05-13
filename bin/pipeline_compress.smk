@@ -44,7 +44,15 @@ def get_ext_folder(EXTENSION):
 def get_ext_folder_level0(EXTENSION):
     #"fungi/mers31/s5"
     replaced_path = EXTENSION.replace(".", "" )
-    return os.path.abspath("../")+"/"+replaced_path    
+    return os.path.abspath(replaced_path)    
+    #return replaced_path
+
+def get_ext_folder_level(EXTENSION, level=0):
+    #"fungi/mers31/s5"
+    replaced_path = EXTENSION.replace(".", "" )
+    if(level==1):
+        replaced_path = os.path.abspath("../")+"/"+replaced_path
+    return replaced_path
 
 def get_filesize(fname):
     file = open(fname)
@@ -441,7 +449,7 @@ else:
         output:
             "size_esscolor_mb"
         params:
-            fol=get_ext_folder_level0(EXTENSION)+"/",
+            fol=get_ext_folder_level(EXTENSION)+"/",
         shell:
             "ls -l | grep esscolor.tar.gz | awk '{{print $5/1024.0/1024.0}}' >  size_esscolor_mb; rm -rf {params.fol}; rm list_kmc; rm list_fa"
             #" nkmer=$(cat stat_nkmer_ess); ls -l | grep ess_color.tar.gz | awk -v nk=$nkmer '{{print $5*8.0/$nk}}' > size_esscolor_bitskmer"  
