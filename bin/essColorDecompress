@@ -1,0 +1,50 @@
+
+#!/usr/bin/env bash
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+echo $SCRIPT_DIR
+# dirname "$0":
+
+
+#SCRIPT_DIR="$(abspath $(dirname $0))/../"
+#echo $SCRIPT_DIR
+
+save_arg="${@:1}"
+echo $save_arg
+
+nthreads=8
+
+cmd=""
+while getopts ':i:j:h' opt; do
+  case "$opt" in
+    i)
+      echo "Processing option 'i'"
+      infile=${OPTARG}
+      infile=$(realpath $infile)
+      outdir = $(dirname $infile)
+      cmd=$(echo $cmd" -i "$outdir)
+      ;;
+    j)
+      echo "Processing option 'j'"
+      nthreads=${OPTARG}
+      ;;
+    :)
+      echo -e "option requires an argument.\nUsage: $(basename $0) [-a] [-b] [-c arg]"
+      exit 1
+      ;;
+
+    ?)
+      echo -e "Invalid command option.\nUsage: $(basename $0) [-a] [-b] [-c arg]"
+      exit 1
+      ;;
+  esac
+done
+shift "$(($OPTIND -1))"
+
+
+#outdir=$(realpath $outdir)
+echo "out dir is: "$outdir
+cd $outdir
+
+$SCRIPT_DIR/essColorAuxMatrixDecompress $cmd
+
+snakemake -s $SCRIPT_DIR/pipeline_decompress.smk -j $nthreads
