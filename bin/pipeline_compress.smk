@@ -417,7 +417,7 @@ rule zip_compress:
         "mega.essc",
         "meta.txt"
     output:
-        temp("esscolor"),
+        temp(directory("esscolor")),
         "esscolor.tar.gz"
     benchmark:
         "benchmarks/final_gzip.txt"
