@@ -197,7 +197,7 @@ First value is k, second is the number n of kmers, then are n values that are km
 
 
 
-## Citation
+## How to cite
 
 If using ESS-Color in your research, please cite
 * Amatur Rahman, Yoann Dufresne and Paul Medvedev, Compression algorithm for colored de Bruijn graphs, bioRxiv 2023.05.12.540616; doi: https://doi.org/10.1101/2023.05.12.540616
