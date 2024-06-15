@@ -44,6 +44,16 @@ cd ggcat/
 cargo install --path crates/cmdline/ --locked
 ```
 
+If the current ggcat version does not work with ESS-Color, please use the following commit (tested during release of manuscript):
+```
+git clone https://github.com/algbio/ggcat
+git checkout dd64634a27467b9e56c8f7aad619eae7f4e7917a
+git submodule init
+git submodule update --recursive
+cd ggcat/
+cargo install --path crates/cmdline/ --locked
+```
+
 the binary is automatically copied to $HOME/.cargo/bin
 
 
