@@ -25,7 +25,7 @@ First, install all the pre-requisites and make sure the executables are in your 
 You can move/copy ALL the executables in `ESSColor/bin` to the bin directory that is already in your PATH. For instance, considering `/usr/bin` is already in PATH, you need to run the command `mv ESSColor/bin/* /usr/bin` to move all executables for ESS-Color software. An alternative to moving/copying executables is adding the location of `ESSColor/bin` to your PATH.
 
 
-####Rust and ggcat Installation
+### Rust and ggcat Installation
 
 ESS-Color uses a modified implemntation of ESS-Compress. We replace the unitig construction step in ESS-Compress by GGCAT for its optimized implementation. To install ggcat, first install rust.
 
